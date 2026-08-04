@@ -1,0 +1,29 @@
+model Offer {
+  id         String    @id @default(uuid())
+  startDate  DateTime?
+  endDate    DateTime?
+  uses_limit Int?
+  uses_count Int       @default(0)
+  value      Decimal
+
+  teacherId   String?
+  teacher     User?        @relation(fields: [teacherId], references: [id])
+  coupon      Coupon?      @relation(fields: [couponId], references: [id])
+  couponId    String?      @unique
+  courses     Course[]
+  mentorships Mentorship[]
+
+  createdAt    DateTime      @default(now())
+  transactions Transaction[]
+
+  @@index([couponId])
+  @@map("offers")
+}
+
+model Coupon {
+  id    String @id @default(uuid())
+  value String @unique
+  offer Offer?
+
+  @@map("coupons")
+}

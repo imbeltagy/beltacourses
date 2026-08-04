@@ -1,0 +1,116 @@
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Decimal  @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("wallets")
+}
+
+model Withdraw {
+  id            String @id @default(uuid())
+  payoutId      String @unique
+  paypalBatchId String @unique
+  paypalItemId  String
+
+  amount      Decimal
+  paypalEmail String
+  status      WithdrawStatus @default(pending)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  histories WithdrawHistory[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([payoutId])
+  @@index([paypalBatchId])
+  @@map("withdraws")
+}
+
+model WithdrawHistory {
+  id         String         @id @default(uuid())
+  withdrawId String
+  withdraw   Withdraw       @relation(fields: [withdrawId], references: [id])
+  status     WithdrawStatus
+  note       String?
+  createdAt  DateTime       @default(now())
+
+  @@map("withdraw_histories")
+}
+
+enum WithdrawStatus {
+  pending // When withdrawal is created
+  processing // When batch is processing
+  unclaimed // When payout is unclaimed
+  completed // When payout succeeded
+  failed // When payout failed/denied/returned
+  refunded // When payout is refunded
+}
+
+model Transaction {
+  id                   String            @id @default(uuid())
+  studentId            String
+  student              User              @relation("StudentTransactions", fields: [studentId], references: [id])
+  teacherId            String
+  teacher              User              @relation("TeacherTransactions", fields: [teacherId], references: [id])
+  createdAt            DateTime          @default(now())
+  originalPrice        Decimal
+  finalPrice           Decimal
+  paidPrice            Decimal
+  teacherProfitPercent Decimal
+  teacherProfit        Decimal
+  coupon               String?
+  stripePaymentId      String?
+  status               TransactionStatus @default(pending)
+  courseId             String?
+  course               Course?           @relation(fields: [courseId], references: [id])
+  sessionId            String?
+  session              Mentorship?       @relation(fields: [sessionId], references: [id])
+  offerId              String?
+  offer                Offer?            @relation(fields: [offerId], references: [id])
+  ownedLists           OwnedList[]
+  refund               Refund?
+
+  @@index([stripePaymentId])
+  @@index([studentId])
+  @@index([teacherId])
+  @@index([status])
+  @@map("transactions")
+}
+
+enum TransactionStatus {
+  pending
+  completed
+  canceled
+  rejected
+}
+
+model Refund {
+  id            String       @id @default(uuid())
+  message       String
+  response      String?
+  status        RefundStatus
+  createdAt     DateTime     @default(now())
+  reviewedAt    DateTime?
+  transactionId String       @unique
+  transaction   Transaction  @relation(fields: [transactionId], references: [id])
+  user          User?        @relation(fields: [userId], references: [id])
+  userId        String?
+  course        Course?      @relation(fields: [courseId], references: [id])
+  courseId      String?
+
+  @@map("refunds")
+}
+
+// Refund status: waiting | approved | rejected
+enum RefundStatus {
+  waiting
+  approved
+  rejected
+}

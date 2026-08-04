@@ -1,0 +1,47 @@
+model File {
+  id        String @id @default(uuid())
+  key       String
+  url       String
+  name      String
+  size      Int
+  mime_type String
+  bucket    String
+
+  created_at        DateTime         @default(now())
+  deleted_at        DateTime?
+  users             User[]
+  coverCourses      Course[]         @relation("coverFile")
+  introVideoCourses Course[]         @relation("introVideoFile")
+  lectures          Lecture[]
+  multiPartUpload   MultiPartUpload?
+
+  @@map("files")
+}
+
+model MultiPartUpload {
+  id             String @id @default(uuid())
+  uploadId       String
+  fileSize       Int
+  partsCount     Int
+  partsCompleted Int    @default(0)
+  retries        Int    @default(0)
+
+  updatedAt DateTime @default(now()) @updatedAt
+  createdAt DateTime @default(now())
+
+  file          File           @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId        String         @unique
+  uploadedParts UploadedPart[]
+}
+
+model UploadedPart {
+  id         String   @id @default(cuid())
+  partNumber Int
+  etag       String
+  createdAt  DateTime @default(now())
+
+  uploadRecord   MultiPartUpload @relation(fields: [uploadRecordId], references: [id], onDelete: Cascade)
+  uploadRecordId String
+
+  @@unique([uploadRecordId, partNumber])
+}

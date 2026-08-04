@@ -1,0 +1,75 @@
+model User {
+  id      String  @id @default(uuid())
+  email   String  @unique
+  name    String
+  coverId String?
+  cover   File?   @relation(fields: [coverId], references: [id])
+  role    Role    @default(student)
+
+  stripeAccountId String? // Repurposed: stores bank account token ID
+  bankAccountLast4 String? // Last 4 digits of bank account for display
+  bankAccountType String? // "checking" or "savings"
+
+  // Teacher
+  bio String?
+
+  // Employee
+  gender        Gender?
+  date_of_birth String?
+  accessGroupId String?
+  accessGroup   AccessGroup? @relation(fields: [accessGroupId], references: [id])
+
+  created_at           DateTime           @default(now())
+  updated_at           DateTime           @updatedAt
+  mentorships          Mentorship[]
+  saveLists            SaveList[]
+  ownedLists           OwnedList[]
+  completedLectures    CompletedLecture[]
+  wallets              Wallet[]
+  withdraws            Withdraw[]
+  offers               Offer[]
+  refunds              Refund[]
+  spendingTransactions Transaction[]      @relation("StudentTransactions")
+  gettingTransactions  Transaction[]      @relation("TeacherTransactions")
+  courses              Course[]
+
+  @@map("users")
+}
+
+model AccessGroup {
+  id          String       @id @default(uuid())
+  name        String
+  description String?
+  permissions Permission[]
+  users       User[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("access_groups")
+}
+
+model Permission {
+  id            String      @id @default(uuid())
+  key           String
+  accessGroupId String
+  accessGroup   AccessGroup @relation(fields: [accessGroupId], references: [id])
+
+  created_at DateTime @default(now())
+
+  @@unique([key, accessGroupId])
+  @@index(accessGroupId)
+  @@map("permissions")
+}
+
+enum Role {
+  admin
+  employee
+  teacher
+  student
+}
+
+enum Gender {
+  male
+  female
+}

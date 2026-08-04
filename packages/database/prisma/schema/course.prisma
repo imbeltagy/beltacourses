@@ -1,0 +1,93 @@
+model Course {
+  id           String       @id @default(cuid())
+  name         String
+  description  String?
+  price        Decimal      @db.Decimal(10, 2)
+  status       CourseStatus @default(draft)
+  publishedAt  DateTime?
+  coverId      String?
+  cover        File?        @relation("coverFile", fields: [coverId], references: [id])
+  introVideoId String?
+  introVideo   File?        @relation("introVideoFile", fields: [introVideoId], references: [id])
+
+  modules  Module[]
+  lectures Lecture[]
+
+  teacherId String
+  teacher   User    @relation(fields: [teacherId], references: [id])
+  offerId   String?
+  offer     Offer?  @relation(fields: [offerId], references: [id])
+
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  saveLists  SaveList[]
+  ownedLists OwnedList[]
+
+  transactions Transaction[]
+  refunds      Refund[]
+
+  @@map("courses")
+}
+
+model Module {
+  id          String  @id @default(cuid())
+  name        String
+  order       Int
+  description String?
+  duration    String?
+
+  courseId String
+  course   Course    @relation(fields: [courseId], references: [id])
+  lectures Lecture[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("modules")
+}
+
+model Lecture {
+  id                String             @id @default(cuid())
+  name              String
+  order             Int
+  description       String?
+  duration          String?
+  content           String
+  videoId           String?
+  video             File?              @relation(fields: [videoId], references: [id])
+  demo              Boolean            @default(false)
+  moduleId          String
+  module            Module             @relation(fields: [moduleId], references: [id])
+  courseId          String
+  course            Course             @relation(fields: [courseId], references: [id])
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  completedLectures CompletedLecture[]
+
+  @@map("lectures")
+}
+
+model Mentorship {
+  id           String        @id @default(cuid())
+  name         String
+  description  String
+  price        Decimal?
+  duration     String?
+  disabled     Boolean       @default(false)
+  order        Int
+  teacherId    String
+  teacher      User          @relation(fields: [teacherId], references: [id])
+  offerId      String?
+  offer        Offer?        @relation(fields: [offerId], references: [id])
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("mentorships")
+}
+
+enum CourseStatus {
+  draft
+  published
+  archived
+}

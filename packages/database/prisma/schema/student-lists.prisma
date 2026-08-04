@@ -1,0 +1,40 @@
+model SaveList {
+  id        String   @id @default(uuid())
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([studentId, courseId])
+  @@index([studentId])
+  @@index([studentId, courseId])
+  @@map("save_lists")
+}
+
+model OwnedList {
+  id            String      @id @default(uuid())
+  studentId     String
+  student       User        @relation(fields: [studentId], references: [id])
+  courseId      String
+  course        Course      @relation(fields: [courseId], references: [id])
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  createdAt     DateTime    @default(now())
+
+  @@unique([studentId, courseId])
+  @@index([studentId])
+  @@map("owned_lists")
+}
+
+model CompletedLecture {
+  id        String   @id @default(uuid())
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lectureId String
+  lecture   Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([studentId, lectureId])
+  @@map("completed_lectures")
+}
