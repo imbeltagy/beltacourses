@@ -33,20 +33,28 @@ Start the apps:
 pnpm dlx turbo run dev
 ```
 
-## Migrate the database after updating the Prisma schema
+## Database commands
+
+Migrate the database after updating the Prisma schema:
 
 ```sh
 pnpm dlx turbo run db:migrate
 ```
 
-## Deploy migrations to the database
+Deploy migrations to the database:
 
 ```sh
 pnpm dlx turbo run db:deploy
 ```
 
-## Reset the database and seed data
+Reset the database and seed data:
 
 ```sh
 pnpm dlx turbo run db:seed
+```
+
+Live preview the database:
+
+```sh
+pnpm dlx turbo run db:preview
 ```
