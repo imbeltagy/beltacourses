@@ -2,6 +2,7 @@
   "name": "turbo",
   "private": true,
   "scripts": {
+    "postinstall": "turbo run db:generate && turbo run db:build",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",

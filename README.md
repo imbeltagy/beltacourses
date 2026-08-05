@@ -11,13 +11,16 @@
 pnpm install
 ```
 
-## Generate the Prisma client
+This will automatically trigger two commands after finish:
 
-Installs the Prisma client and types used across the app:
-
-```sh
-pnpm dlx turbo run db:generate
 ```
+pnpm dlx turbo run db:generate
+pnpm dlx turbo run db:build
+```
+
+`@repo/db` is consumed as a compiled package (not raw source), so its `dist/`
+output must exist before apps that depend on it (e.g. `backend`) can
+type-check, build, or run
 
 ## Run for development
 
