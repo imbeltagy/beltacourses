@@ -43,6 +43,44 @@ export interface ListUsersQuery {
   search?: string;
 }
 
+/** Postgres names the email index this; it is what a driver-level error reports. */
+const EMAIL_UNIQUE_INDEX = 'users_email_key';
+
+interface UniqueViolationMeta {
+  /** Classic query-engine shape. */
+  target?: string | string[];
+  /** Driver-adapter shape — what `@prisma/adapter-pg` actually produces. */
+  driverAdapterError?: {
+    cause?: { constraint?: { fields?: string[]; index?: string } };
+  };
+}
+
+/**
+ * Which columns a P2002 was raised on. Both shapes are read on purpose: the
+ * driver adapter reports the constraint under `driverAdapterError` and leaves
+ * `meta.target` undefined, so checking only the classic shape silently lets
+ * every real violation through as a 500.
+ */
+const uniqueViolationNames = (meta: UniqueViolationMeta = {}): string[] => {
+  const constraint = meta.driverAdapterError?.cause?.constraint;
+  if (constraint?.fields) return constraint.fields;
+  if (constraint?.index) return [constraint.index];
+  if (Array.isArray(meta.target)) return meta.target;
+  if (typeof meta.target === 'string') return [meta.target];
+  return [];
+};
+
+/**
+ * A duplicate email specifically — a future unique index on another column
+ * keeps reporting its own error rather than being mislabelled.
+ */
+const isEmailUniqueViolation = (error: unknown): boolean =>
+  error instanceof Prisma.PrismaClientKnownRequestError &&
+  error.code === 'P2002' &&
+  uniqueViolationNames(error.meta as UniqueViolationMeta | undefined).some(
+    (name) => name === 'email' || name === EMAIL_UNIQUE_INDEX,
+  );
+
 @Injectable()
 export class UsersService {
   private dummyHash?: Promise<string>;
@@ -93,25 +131,46 @@ export class UsersService {
     }
   }
 
+  /**
+   * The check above is a read followed by a write, so two requests for the same
+   * address can both pass it. The unique index — which spans soft-deleted rows —
+   * is what actually enforces uniqueness; this turns the loser's constraint
+   * violation into the same 409 the check would have produced, instead of a 500.
+   */
+  private async conflictOnDuplicateEmail<T>(write: () => Promise<T>) {
+    try {
+      return await write();
+    } catch (error) {
+      if (isEmailUniqueViolation(error)) {
+        throw new ConflictException('Email already in use');
+      }
+      throw error;
+    }
+  }
+
   async create(input: CreateUserInput): Promise<PublicUser> {
     await this.assertEmailFree(input.email);
     if (input.avatar_id) await this.assertAvatarExists(input.avatar_id);
 
-    return this.repository.create({
-      email: input.email,
-      name: input.name,
-      hashed_password: await this.passwords.hash(input.password),
-      role: input.role,
-      confirmed: input.confirmed,
-      bio: input.bio,
-      gender: input.gender,
-      date_of_birth: input.date_of_birth
-        ? new Date(input.date_of_birth)
-        : undefined,
-      ...(input.avatar_id
-        ? { avatar: { connect: { id: input.avatar_id } } }
-        : {}),
-    });
+    const hashed_password = await this.passwords.hash(input.password);
+
+    return this.conflictOnDuplicateEmail(() =>
+      this.repository.create({
+        email: input.email,
+        name: input.name,
+        hashed_password,
+        role: input.role,
+        confirmed: input.confirmed,
+        bio: input.bio,
+        gender: input.gender,
+        date_of_birth: input.date_of_birth
+          ? new Date(input.date_of_birth)
+          : undefined,
+        ...(input.avatar_id
+          ? { avatar: { connect: { id: input.avatar_id } } }
+          : {}),
+      }),
+    );
   }
 
   async findById(id: string): Promise<PublicUser> {
@@ -154,7 +213,9 @@ export class UsersService {
           : { connect: { id: input.avatar_id } };
     }
 
-    return this.repository.update(id, data);
+    return this.conflictOnDuplicateEmail(() =>
+      this.repository.update(id, data),
+    );
   }
 
   async softDelete(id: string): Promise<void> {

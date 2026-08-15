@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { StorageService } from '@repo/service/storage';
-import { Role, User } from '@repo/db';
+import { Prisma, Role, User } from '@repo/db';
 import { PasswordService } from '../../src/users/password.service';
 import { UsersRepository } from '../../src/users/users.repository';
 import { UsersService } from '../../src/users/users.service';
@@ -27,6 +27,54 @@ const publicUser = (overrides: Partial<PublicUser> = {}): PublicUser =>
     updated_at: new Date('2026-08-01T00:00:00.000Z'),
     ...overrides,
   }) as PublicUser;
+
+/**
+ * What Prisma actually throws when a write loses to a unique index, captured
+ * from a real Postgres run: the pg driver adapter reports the constraint under
+ * `driverAdapterError` and leaves `meta.target` undefined.
+ */
+const uniqueViolation = (column: string) =>
+  new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+    code: 'P2002',
+    clientVersion: 'test',
+    meta: {
+      modelName: 'User',
+      driverAdapterError: {
+        name: 'DriverAdapterError',
+        cause: {
+          originalCode: '23505',
+          kind: 'UniqueConstraintViolation',
+          constraint: { fields: [column] },
+        },
+      },
+    },
+  });
+
+/** Same, but the driver names the index instead of listing the columns. */
+const uniqueViolationByIndex = (index: string) =>
+  new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+    code: 'P2002',
+    clientVersion: 'test',
+    meta: {
+      modelName: 'User',
+      driverAdapterError: {
+        name: 'DriverAdapterError',
+        cause: {
+          originalCode: '23505',
+          kind: 'UniqueConstraintViolation',
+          constraint: { index },
+        },
+      },
+    },
+  });
+
+/** The pre-adapter shape, still produced by the query engine on some paths. */
+const legacyUniqueViolation = (column: string) =>
+  new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+    code: 'P2002',
+    clientVersion: 'test',
+    meta: { target: [column] },
+  });
 
 /** Jest types `mock.calls` as `any[][]`; this keeps the assertions type-safe. */
 const argsOf = (mock: jest.Mock): unknown[][] => mock.mock.calls as unknown[][];
@@ -122,6 +170,41 @@ describe('UsersService', () => {
       );
     });
 
+    it('turns a unique-constraint violation into a 409, not a 500', async () => {
+      // The pre-check passed, so this is the racing request losing to the index.
+      repository.create.mockRejectedValue(uniqueViolation('email'));
+
+      await expect(service.create(createInput)).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('reads the constraint index name when the driver reports no fields', async () => {
+      repository.create.mockRejectedValue(
+        uniqueViolationByIndex('users_email_key'),
+      );
+
+      await expect(service.create(createInput)).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('still recognises the legacy meta.target shape', async () => {
+      repository.create.mockRejectedValue(legacyUniqueViolation('email'));
+
+      await expect(service.create(createInput)).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('does not disguise a violation on some other unique column', async () => {
+      repository.create.mockRejectedValue(uniqueViolation('some_other_column'));
+
+      await expect(service.create(createInput)).rejects.toThrow(
+        Prisma.PrismaClientKnownRequestError,
+      );
+    });
+
     it('rejects an avatar_id that does not resolve with a 400', async () => {
       storage.getById.mockRejectedValue(new NotFoundException('File x'));
 
@@ -211,6 +294,14 @@ describe('UsersService', () => {
 
     it('rejects an email owned by another live user with a 409', async () => {
       repository.findIdByEmail.mockResolvedValue({ id: 'other-id' });
+
+      await expect(
+        service.update('user-id', { email: 'taken@example.com' }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('turns a unique-constraint violation into a 409, not a 500', async () => {
+      repository.update.mockRejectedValue(uniqueViolation('email'));
 
       await expect(
         service.update('user-id', { email: 'taken@example.com' }),
