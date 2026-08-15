@@ -10,5 +10,7 @@ model FileMetadata {
   created_at        DateTime         @default(now())
   deleted_at        DateTime?
 
+  avatar_of User[]
+
   @@map("files")
 }
