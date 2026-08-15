@@ -1,0 +1,36 @@
+model User {
+  id              String  @id @default(uuid())
+  email           String  @unique
+  hashed_password String
+  name            String
+  role            Role    @default(student)
+  confirmed       Boolean @default(false)
+
+  // profile
+  bio           String?
+  gender        Gender?
+  date_of_birth DateTime? @db.Date
+
+  avatar_id String?
+  avatar    FileMetadata? @relation(fields: [avatar_id], references: [id], onDelete: SetNull)
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  @@index([deleted_at])
+  @@map("users")
+}
+
+enum Role {
+  student
+  teacher
+  academy_moderator
+  admin
+  super_admin
+}
+
+enum Gender {
+  male
+  female
+}
