@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StorageService } from '@repo/service/storage';
-import { StorageController } from './storage.controller';
+import { StorageController } from '../../src/storage/storage.controller';
 import { FileMetadata } from '@repo/db';
 
 const metadata = (): FileMetadata =>
