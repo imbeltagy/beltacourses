@@ -6,6 +6,8 @@ import { HealthCheckController } from './health-check.controller';
 import { PrismaModule } from '@repo/service/prisma';
 import { HealthCheckService } from '@repo/service/health-check';
 import { StorageModule } from './storage/storage.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { StorageModule } from './storage/storage.module';
       adapter: ExpressAdapter,
     }),
     StorageModule,
+    UsersModule,
+    AuthModule,
   ],
   controllers: [HealthCheckController],
   providers: [HealthCheckService],
