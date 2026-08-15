@@ -8,7 +8,8 @@
     "S3_ACCESS_KEY_ID",
     "S3_SECRET_ACCESS_KEY",
     "REDIS_HOST",
-    "REDIS_PORT"
+    "REDIS_PORT",
+    "PASSWORD_SALT_ROUNDS"
   ],
   "tasks": {
     "build": {
