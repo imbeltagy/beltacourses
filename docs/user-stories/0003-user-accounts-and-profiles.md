@@ -2,7 +2,7 @@
 
 - **Phase:** Phase 1 — MVP
 - **Tasks:** T-003
-- **Status:** Pending
+- **Status:** Done
 
 ## Story
 
@@ -17,10 +17,21 @@ and what part of the product I belong to.
 
 ## Acceptance criteria
 
-- [ ] Users can be created, read, updated and deleted (soft delete where it matters).
-- [ ] A logged-in user can fetch and update their own profile.
-- [ ] Every user carries exactly one role from the list above.
+- [x] Users can be created, read, updated and deleted (soft delete where it matters).
+- [ ] A logged-in user can fetch and update their own profile. — **deferred to T-004**, see Notes.
+- [x] Every user carries exactly one role from the list above.
 
 ## Notes
 
-_None._
+- **`/users/me` is deferred to T-004.** Fetching "my own" profile needs a logged-in caller, and
+  nothing can log in until sessions exist. T-003 ships `GET /users/:id` and `PATCH /users/:id`, so
+  the capability is there — only the "me" shortcut and the ownership check are missing.
+- **`POST /auth/login` issues no session** (T-003 decision D1). It verifies credentials and returns
+  the profile; no token, cookie or server-side session until T-004.
+- **Login does not check `confirmed`** (D2). Nothing can confirm a user until the email service
+  (T-002) ships, so the gate would lock out every account. `confirmed` is set only through
+  `PATCH /users/:id` for now (D3).
+- **A deleted user's email stays taken** (D4). Re-registering a soft-deleted address returns `409`
+  forever, so a deleted account's history can never reattach to a different person.
+- **Passwords are not updatable** through `PATCH /users/:id` (D7) — changing one needs the current
+  password, which belongs to T-004/T-018.

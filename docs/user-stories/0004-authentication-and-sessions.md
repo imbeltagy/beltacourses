@@ -25,4 +25,11 @@ platform without logging in on every request.
 
 ## Notes
 
-_None._
+Inherited from T-003, which shipped the accounts without any session:
+
+- **`GET /users/me` and `PATCH /users/me`** belong here — they need a logged-in caller. US-0003's
+  "a logged-in user can fetch and update their own profile" is ticked when they land.
+- **`POST /auth/login` currently issues nothing.** `AuthController` and `AuthService` already exist
+  and verify credentials; this task wraps their return value alongside the tokens.
+- **The `confirmed` gate on login** is deliberately absent until the email service (T-002) can
+  actually confirm an account.
