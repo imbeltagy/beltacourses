@@ -37,6 +37,19 @@ Start the apps:
 pnpm dlx turbo run dev
 ```
 
+### API URLs
+
+`apps/api` runs on port **3002** in development.
+
+| URL | What it is |
+| --- | --- |
+| http://localhost:3002/health-check | Liveness check. |
+| http://localhost:3002/docs | Swagger UI — every endpoint, with a request runner. |
+| http://localhost:3002/queues | BullBoard — BullMQ queue monitor: scheduled jobs, run history, logs, and manual re-runs. |
+
+`/docs` and `/queues` are **unauthenticated**. Gate both before exposing the API
+outside local development — BullBoard can trigger and remove jobs.
+
 ## Database commands
 
 Migrate the database after updating the Prisma schema:

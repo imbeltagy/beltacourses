@@ -26,7 +26,7 @@ Rules:
 
 | # | Task | Story | Status | Depends on |
 | --- | --- | --- | --- | --- |
-| T-001 | File upload service | [US-0001](./user-stories/0001-file-upload-service.md) | Pending | — |
+| T-001 | File upload service | [US-0001](./user-stories/0001-file-upload-service.md) | Done | — |
 | T-002 | Email service | [US-0002](./user-stories/0002-email-service.md) | Pending | — |
 | T-003 | Users CRUD + get profile (roles: student, teacher, academy moderator, admin, super admin) | [US-0003](./user-stories/0003-user-accounts-and-profiles.md) | Pending | T-001 |
 | T-004 | Authentication — email/password login, refresh token, JWT + Redis session id, auth guard | [US-0004](./user-stories/0004-authentication-and-sessions.md) | Pending | T-003 |

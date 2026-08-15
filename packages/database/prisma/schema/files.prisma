@@ -1,0 +1,14 @@
+model FileMetadata {
+  id        String @id @default(uuid())
+  key       String
+  url       String
+  name      String
+  size      Int
+  mime_type String
+  bucket    String
+
+  created_at        DateTime         @default(now())
+  deleted_at        DateTime?
+
+  @@map("files")
+}
