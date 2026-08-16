@@ -9,10 +9,15 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBadRequestResponse,
+  ApiBody,
   ApiConflictResponse,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
@@ -35,19 +40,30 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @UseInterceptors(FileInterceptor('avatar'))
   @ApiOperation({
     summary: 'Create a user',
     description:
-      'Unlike /auth/register this accepts a role, so it is how privileged ' +
-      'accounts are made.',
+      'Unlike /auth/register this accepts a role and the full profile, so it ' +
+      'is how privileged accounts are made — any role except super_admin. The ' +
+      'avatar can be uploaded in this request, or referenced by avatar_id if ' +
+      'it was uploaded through POST /storage; sending both is an error. Role ' +
+      'is fixed here: PATCH cannot change it.',
   })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: CreateUserDto })
   @ApiCreatedResponse({ type: UserResponse })
   @ApiConflictResponse({ description: 'Email already in use.' })
   @ApiBadRequestResponse({
-    description: 'Validation failed, or avatar_id does not resolve to a file.',
+    description:
+      'Validation failed, super_admin was requested, avatar_id does not ' +
+      'resolve to a file, or both avatar and avatar_id were sent.',
   })
-  create(@Body() dto: CreateUserDto): Promise<PublicUser> {
-    return this.usersService.create(dto);
+  create(
+    @Body() dto: CreateUserDto,
+    @UploadedFile() avatar?: Express.Multer.File,
+  ): Promise<PublicUser> {
+    return this.usersService.create(dto, avatar);
   }
 
   @Get()
@@ -73,24 +89,32 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @UseInterceptors(FileInterceptor('avatar'))
   @ApiOperation({
     summary: 'Update a user',
     description:
-      'Passwords are not changed here. Send null for bio, gender, ' +
-      'date_of_birth or avatar_id to clear the field.',
+      'Takes the same profile fields as POST /users, including a replacement ' +
+      'avatar, with two exceptions: the password is not changed here, and the ' +
+      'role cannot change at all — it is fixed when the account is created. ' +
+      'Send bio, gender, date_of_birth or avatar_id empty to clear them.',
   })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ type: UpdateUserDto })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: UserResponse })
   @ApiNotFoundResponse({ description: 'Unknown id, or the user was deleted.' })
   @ApiConflictResponse({ description: 'Email already in use by another user.' })
   @ApiBadRequestResponse({
-    description: 'Validation failed, or avatar_id does not resolve to a file.',
+    description:
+      'Validation failed, avatar_id does not resolve to a file, or both ' +
+      'avatar and avatar_id were sent.',
   })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateUserDto,
+    @UploadedFile() avatar?: Express.Multer.File,
   ): Promise<PublicUser> {
-    return this.usersService.update(id, dto);
+    return this.usersService.update(id, dto, avatar);
   }
 
   @Delete(':id')

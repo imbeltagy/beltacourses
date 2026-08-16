@@ -35,3 +35,9 @@ and what part of the product I belong to.
   forever, so a deleted account's history can never reattach to a different person.
 - **Passwords are not updatable** through `PATCH /users/:id` (D7) — changing one needs the current
   password, which belongs to T-004/T-018.
+- **`POST /users` and `PATCH /users/:id` are the admin-facing pair** and take `multipart/form-data`,
+  so a profile picture is uploaded in the same request as the rest of the profile. `avatar` (a file)
+  and `avatar_id` (a file uploaded earlier through `POST /storage`) are mutually exclusive.
+- **A role is chosen once, at creation.** `POST /users` accepts any role except `super_admin`, which
+  is never created over HTTP; `PATCH` cannot change a role at all. Promotion and demotion are
+  privileged acts that belong with the roles guard in T-005.

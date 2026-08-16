@@ -50,18 +50,36 @@ describe('UsersController', () => {
     controller = module.get(UsersController);
   });
 
+  const uploaded = (): Express.Multer.File =>
+    ({
+      buffer: Buffer.from('png-bytes'),
+      originalname: 'avatar.png',
+      mimetype: 'image/png',
+      size: 9,
+    }) as Express.Multer.File;
+
   describe('create', () => {
+    const dto = {
+      email: 'jane@example.com',
+      password: 'super-secret',
+      name: 'Jane',
+    };
+
     it('passes the body through and returns the user', async () => {
       const user = publicUser();
       usersService.create.mockResolvedValue(user);
-      const dto = {
-        email: 'jane@example.com',
-        password: 'super-secret',
-        name: 'Jane',
-      };
 
       await expect(controller.create(dto)).resolves.toBe(user);
-      expect(usersService.create).toHaveBeenCalledWith(dto);
+      expect(usersService.create).toHaveBeenCalledWith(dto, undefined);
+    });
+
+    it('hands the uploaded avatar to the service', async () => {
+      usersService.create.mockResolvedValue(publicUser());
+      const file = uploaded();
+
+      await controller.create(dto, file);
+
+      expect(usersService.create).toHaveBeenCalledWith(dto, file);
     });
   });
 
@@ -104,9 +122,20 @@ describe('UsersController', () => {
       await expect(controller.update('user-id', { name: 'New' })).resolves.toBe(
         user,
       );
-      expect(usersService.update).toHaveBeenCalledWith('user-id', {
-        name: 'New',
-      });
+      expect(usersService.update).toHaveBeenCalledWith(
+        'user-id',
+        { name: 'New' },
+        undefined,
+      );
+    });
+
+    it('hands the replacement avatar to the service', async () => {
+      usersService.update.mockResolvedValue(publicUser());
+      const file = uploaded();
+
+      await controller.update('user-id', {}, file);
+
+      expect(usersService.update).toHaveBeenCalledWith('user-id', {}, file);
     });
   });
 

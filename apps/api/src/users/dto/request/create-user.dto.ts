@@ -4,6 +4,7 @@ import {
   IsDateString,
   IsEmail,
   IsEnum,
+  IsIn,
   IsOptional,
   IsString,
   IsUUID,
@@ -11,7 +12,14 @@ import {
   MinLength,
 } from 'class-validator';
 import { Gender, Role } from '@repo/db';
+import { ASSIGNABLE_ROLES } from '../../users.constants';
+import { ToBoolean } from '../transforms';
 
+/**
+ * Sent as `multipart/form-data`, so an avatar can be uploaded in the same
+ * request as the rest of the profile. Every field therefore arrives as a
+ * string — see the transforms on the non-string ones.
+ */
 export class CreateUserDto {
   @ApiProperty({ format: 'email', example: 'jane@example.com' })
   @IsEmail()
@@ -35,17 +43,21 @@ export class CreateUserDto {
   name: string;
 
   @ApiPropertyOptional({
-    enum: Role,
+    enum: ASSIGNABLE_ROLES,
     default: Role.student,
     description:
-      'Privileged field — the public register endpoint cannot set it.',
+      'Any role except super_admin, which is never created over HTTP. This is ' +
+      'the only place a role can be set — it is immutable afterwards.',
   })
   @IsOptional()
-  @IsEnum(Role)
+  @IsIn(ASSIGNABLE_ROLES, {
+    message: `role must be one of: ${ASSIGNABLE_ROLES.join(', ')}`,
+  })
   role?: Role;
 
   @ApiPropertyOptional({ default: false })
   @IsOptional()
+  @ToBoolean()
   @IsBoolean()
   confirmed?: boolean;
 
@@ -66,8 +78,20 @@ export class CreateUserDto {
   date_of_birth?: string;
 
   @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description:
+      'Profile picture, uploaded with the request. Mutually exclusive with ' +
+      'avatar_id. Bound by the file interceptor, not by validation — a text ' +
+      'field of this name is discarded.',
+  })
+  avatar?: unknown;
+
+  @ApiPropertyOptional({
     format: 'uuid',
-    description: 'Id of an already-uploaded file. Must not be soft-deleted.',
+    description:
+      'Id of an already-uploaded file, for a client that used POST /storage ' +
+      'first. Must not be soft-deleted. Mutually exclusive with avatar.',
   })
   @IsOptional()
   @IsUUID()

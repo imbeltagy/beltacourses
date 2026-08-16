@@ -2,11 +2,13 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { StorageService } from '@repo/service/storage';
+import type { FileToUpload } from '@repo/service/storage';
 import { Gender, Prisma, Role } from '@repo/db';
 import { PasswordService } from './password.service';
 import { UsersRepository } from './users.repository';
@@ -24,11 +26,14 @@ export interface CreateUserInput {
   avatar_id?: string;
 }
 
-/** `null` clears the field; `undefined` leaves it untouched. */
+/**
+ * `null` clears the field; `undefined` leaves it untouched.
+ *
+ * No `role`: it is chosen at creation and immutable afterwards.
+ */
 export interface UpdateUserInput {
   email?: string;
   name?: string;
-  role?: Role;
   confirmed?: boolean;
   bio?: string | null;
   gender?: Gender | null;
@@ -83,6 +88,7 @@ const isEmailUniqueViolation = (error: unknown): boolean =>
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
   private dummyHash?: Promise<string>;
 
   constructor(
@@ -106,6 +112,44 @@ export class UsersService {
       }
       throw error;
     }
+  }
+
+  /**
+   * Turns whichever way the caller supplied an avatar into an id.
+   *
+   * `uploaded` tells the caller whether this run created a file, so a failure
+   * further down can take it back out again — the row is only worth keeping if
+   * a user ends up pointing at it.
+   */
+  private async resolveAvatar(
+    avatarId: string | null | undefined,
+    file: FileToUpload | undefined,
+  ): Promise<{ id?: string | null; uploaded: boolean }> {
+    if (file && avatarId !== undefined) {
+      throw new BadRequestException(
+        'Send either avatar or avatar_id, not both',
+      );
+    }
+
+    if (file) {
+      const { id } = await this.storage.upload(file);
+      return { id, uploaded: true };
+    }
+
+    if (avatarId) await this.assertAvatarExists(avatarId);
+    return { id: avatarId, uploaded: false };
+  }
+
+  /**
+   * Compensating delete for an avatar whose user never made it into the
+   * database. Best-effort and never masks the original failure: the caller is
+   * already throwing, and a leftover file is a smaller problem than losing the
+   * reason the write failed.
+   */
+  private async discardUpload(id: string): Promise<void> {
+    await this.storage.softDelete(id).catch((error) => {
+      this.logger.error(`Orphaned avatar file left behind at ${id}`, error);
+    });
   }
 
   /**
@@ -148,29 +192,38 @@ export class UsersService {
     }
   }
 
-  async create(input: CreateUserInput): Promise<PublicUser> {
+  async create(
+    input: CreateUserInput,
+    avatar?: FileToUpload,
+  ): Promise<PublicUser> {
     await this.assertEmailFree(input.email);
-    if (input.avatar_id) await this.assertAvatarExists(input.avatar_id);
 
+    const resolved = await this.resolveAvatar(input.avatar_id, avatar);
     const hashed_password = await this.passwords.hash(input.password);
 
-    return this.conflictOnDuplicateEmail(() =>
-      this.repository.create({
-        email: input.email,
-        name: input.name,
-        hashed_password,
-        role: input.role,
-        confirmed: input.confirmed,
-        bio: input.bio,
-        gender: input.gender,
-        date_of_birth: input.date_of_birth
-          ? new Date(input.date_of_birth)
-          : undefined,
-        ...(input.avatar_id
-          ? { avatar: { connect: { id: input.avatar_id } } }
-          : {}),
-      }),
-    );
+    try {
+      return await this.conflictOnDuplicateEmail(() =>
+        this.repository.create({
+          email: input.email,
+          name: input.name,
+          hashed_password,
+          role: input.role,
+          confirmed: input.confirmed,
+          bio: input.bio,
+          gender: input.gender,
+          date_of_birth: input.date_of_birth
+            ? new Date(input.date_of_birth)
+            : undefined,
+          ...(resolved.id ? { avatar: { connect: { id: resolved.id } } } : {}),
+        }),
+      );
+    } catch (error) {
+      // Losing the duplicate-email race here is routine, so an avatar uploaded
+      // for a user that was never created must not be left behind.
+      if (resolved.uploaded && resolved.id)
+        await this.discardUpload(resolved.id);
+      throw error;
+    }
   }
 
   async findById(id: string): Promise<PublicUser> {
@@ -184,17 +237,23 @@ export class UsersService {
     return { items, total, page: query.page, limit: query.limit };
   }
 
-  /** Never touches `hashed_password` — a password change belongs to its own flow. */
-  async update(id: string, input: UpdateUserInput): Promise<PublicUser> {
+  /**
+   * Never touches `hashed_password` or `role` — a password change needs the
+   * current password, and a role change is a privileged act of its own.
+   */
+  async update(
+    id: string,
+    input: UpdateUserInput,
+    avatar?: FileToUpload,
+  ): Promise<PublicUser> {
     await this.findById(id);
 
     if (input.email) await this.assertEmailFree(input.email, id);
-    if (input.avatar_id) await this.assertAvatarExists(input.avatar_id);
+    const resolved = await this.resolveAvatar(input.avatar_id, avatar);
 
     const data: Prisma.UserUpdateInput = {
       email: input.email,
       name: input.name,
-      role: input.role,
       confirmed: input.confirmed,
       bio: input.bio,
       gender: input.gender,
@@ -206,16 +265,22 @@ export class UsersService {
             : new Date(input.date_of_birth),
     };
 
-    if (input.avatar_id !== undefined) {
+    if (resolved.id !== undefined) {
       data.avatar =
-        input.avatar_id === null
+        resolved.id === null
           ? { disconnect: true }
-          : { connect: { id: input.avatar_id } };
+          : { connect: { id: resolved.id } };
     }
 
-    return this.conflictOnDuplicateEmail(() =>
-      this.repository.update(id, data),
-    );
+    try {
+      return await this.conflictOnDuplicateEmail(() =>
+        this.repository.update(id, data),
+      );
+    } catch (error) {
+      if (resolved.uploaded && resolved.id)
+        await this.discardUpload(resolved.id);
+      throw error;
+    }
   }
 
   async softDelete(id: string): Promise<void> {

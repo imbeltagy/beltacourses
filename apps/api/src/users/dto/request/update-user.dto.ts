@@ -11,17 +11,22 @@ import {
   MinLength,
   ValidateIf,
 } from 'class-validator';
-import { Gender, Role } from '@repo/db';
+import { Gender } from '@repo/db';
+import { EmptyStringToNull, ToBoolean } from '../transforms';
 
 /**
- * Declared field by field rather than derived from `CreateUserDto`:
- * `PartialType` would re-expose `password` (changing it needs the current one,
- * so it has its own flow), and it applies `@IsOptional()` everywhere, which
- * also lets `null` through for columns that are not nullable.
+ * The multipart twin of `CreateUserDto`, with two fields deliberately absent:
  *
+ * - **`password`** — changing one needs the current password, so it has its own
+ *   flow. `PartialType(CreateUserDto)` would re-expose it.
+ * - **`role`** — a role is chosen when the account is created and immutable
+ *   afterwards. Promoting or demoting someone is a privileged act of its own,
+ *   not a side effect of editing a profile.
+ *
+ * A form cannot send JSON `null`, so a field is cleared by sending it empty.
  * Hence the two shapes below:
- * - `@ValidateIf(isPresent)` — optional, but `null` is a validation error.
- * - `@IsOptional()` — optional, and `null` explicitly clears the value.
+ * - `@ValidateIf(isPresent)` — optional, but empty/`null` is a validation error.
+ * - `@IsOptional()` + `@EmptyStringToNull()` — optional, and empty clears it.
  */
 const isPresent = (_object: unknown, value: unknown) => value !== undefined;
 
@@ -38,24 +43,30 @@ export class UpdateUserDto {
   @MaxLength(100)
   name?: string;
 
-  @ApiPropertyOptional({ enum: Role })
-  @ValidateIf(isPresent)
-  @IsEnum(Role)
-  role?: Role;
-
   @ApiPropertyOptional()
   @ValidateIf(isPresent)
+  @ToBoolean()
   @IsBoolean()
   confirmed?: boolean;
 
-  @ApiPropertyOptional({ maxLength: 1000, nullable: true })
+  @ApiPropertyOptional({
+    maxLength: 1000,
+    nullable: true,
+    description: 'Send empty to clear.',
+  })
   @IsOptional()
+  @EmptyStringToNull()
   @IsString()
   @MaxLength(1000)
   bio?: string | null;
 
-  @ApiPropertyOptional({ enum: Gender, nullable: true })
+  @ApiPropertyOptional({
+    enum: Gender,
+    nullable: true,
+    description: 'Send empty to clear.',
+  })
   @IsOptional()
+  @EmptyStringToNull()
   @IsEnum(Gender)
   gender?: Gender | null;
 
@@ -63,17 +74,31 @@ export class UpdateUserDto {
     format: 'date',
     nullable: true,
     example: '1990-05-17',
+    description: 'Send empty to clear.',
   })
   @IsOptional()
+  @EmptyStringToNull()
   @IsDateString()
   date_of_birth?: string | null;
 
   @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description:
+      'Replacement profile picture, uploaded with the request. Mutually ' +
+      'exclusive with avatar_id.',
+  })
+  avatar?: unknown;
+
+  @ApiPropertyOptional({
     format: 'uuid',
     nullable: true,
-    description: 'Send null to remove the avatar.',
+    description:
+      'Id of an already-uploaded file. Send empty to remove the avatar. ' +
+      'Mutually exclusive with avatar.',
   })
   @IsOptional()
+  @EmptyStringToNull()
   @IsUUID()
   avatar_id?: string | null;
 }

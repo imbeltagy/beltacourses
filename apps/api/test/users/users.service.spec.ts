@@ -1,15 +1,18 @@
 import {
   BadRequestException,
   ConflictException,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { StorageService } from '@repo/service/storage';
+import type { FileToUpload } from '@repo/service/storage';
 import { Prisma, Role, User } from '@repo/db';
 import { PasswordService } from '../../src/users/password.service';
 import { UsersRepository } from '../../src/users/users.repository';
 import { UsersService } from '../../src/users/users.service';
+import type { UpdateUserInput } from '../../src/users/users.service';
 import type { PublicUser } from '../../src/users/users.types';
 
 const publicUser = (overrides: Partial<PublicUser> = {}): PublicUser =>
@@ -76,6 +79,14 @@ const legacyUniqueViolation = (column: string) =>
     meta: { target: [column] },
   });
 
+/** An avatar as the controller hands it over, structurally a FileToUpload. */
+const avatarFile = (): FileToUpload => ({
+  buffer: Buffer.from('png-bytes'),
+  originalname: 'avatar.png',
+  mimetype: 'image/png',
+  size: 9,
+});
+
 /** Jest types `mock.calls` as `any[][]`; this keeps the assertions type-safe. */
 const argsOf = (mock: jest.Mock): unknown[][] => mock.mock.calls as unknown[][];
 
@@ -102,7 +113,7 @@ describe('UsersService', () => {
     softDelete: jest.Mock;
   };
   let passwords: { hash: jest.Mock; compare: jest.Mock };
-  let storage: { getById: jest.Mock };
+  let storage: { getById: jest.Mock; upload: jest.Mock; softDelete: jest.Mock };
 
   beforeEach(async () => {
     repository = {
@@ -118,7 +129,11 @@ describe('UsersService', () => {
       hash: jest.fn().mockResolvedValue('hashed'),
       compare: jest.fn().mockResolvedValue(true),
     };
-    storage = { getById: jest.fn() };
+    storage = {
+      getById: jest.fn(),
+      upload: jest.fn(),
+      softDelete: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -233,6 +248,74 @@ describe('UsersService', () => {
       ).rejects.toThrow('S3 is down');
     });
 
+    it('uploads an avatar sent with the request and connects it', async () => {
+      storage.upload.mockResolvedValue({ id: 'uploaded-id' });
+      repository.create.mockResolvedValue(
+        publicUser({ avatar_id: 'uploaded-id' }),
+      );
+
+      await service.create(createInput, avatarFile());
+
+      expect(storage.upload).toHaveBeenCalledWith(avatarFile());
+      expect(repository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ avatar: { connect: { id: 'uploaded-id' } } }),
+      );
+      // The file came in with the request, so nothing to look up.
+      expect(storage.getById).not.toHaveBeenCalled();
+    });
+
+    it('rejects a request carrying both an avatar and an avatar_id', async () => {
+      await expect(
+        service.create({ ...createInput, avatar_id: 'file-id' }, avatarFile()),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(storage.upload).not.toHaveBeenCalled();
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    it('takes back an uploaded avatar when the user is never created', async () => {
+      storage.upload.mockResolvedValue({ id: 'uploaded-id' });
+      repository.create.mockRejectedValue(uniqueViolation('email'));
+
+      await expect(service.create(createInput, avatarFile())).rejects.toThrow(
+        ConflictException,
+      );
+
+      expect(storage.softDelete).toHaveBeenCalledWith('uploaded-id');
+    });
+
+    it('keeps an avatar_id the caller supplied — it is not ours to delete', async () => {
+      storage.getById.mockResolvedValue({ id: 'file-id' });
+      repository.create.mockRejectedValue(uniqueViolation('email'));
+
+      await expect(
+        service.create({ ...createInput, avatar_id: 'file-id' }),
+      ).rejects.toThrow(ConflictException);
+
+      expect(storage.softDelete).not.toHaveBeenCalled();
+    });
+
+    it('reports the original failure even if the cleanup also fails', async () => {
+      // The orphan is logged, not thrown — silenced here so the suite output
+      // does not look like a failure.
+      const logged = jest
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation(() => undefined);
+      storage.upload.mockResolvedValue({ id: 'uploaded-id' });
+      storage.softDelete.mockRejectedValue(new Error('S3 is down'));
+      repository.create.mockRejectedValue(uniqueViolation('email'));
+
+      await expect(service.create(createInput, avatarFile())).rejects.toThrow(
+        ConflictException,
+      );
+
+      expect(logged).toHaveBeenCalledWith(
+        expect.stringContaining('uploaded-id'),
+        expect.any(Error),
+      );
+      logged.mockRestore();
+    });
+
     it('leaves role and confirmed to the database default when unset', async () => {
       repository.create.mockResolvedValue(publicUser());
 
@@ -337,6 +420,48 @@ describe('UsersService', () => {
 
       const data = argOf(repository.update, 0, 1);
       expect(data).not.toHaveProperty('avatar');
+    });
+
+    it('uploads a replacement avatar and connects it', async () => {
+      storage.upload.mockResolvedValue({ id: 'uploaded-id' });
+
+      await service.update('user-id', {}, avatarFile());
+
+      expect(storage.upload).toHaveBeenCalledWith(avatarFile());
+      const data = argOf(repository.update, 0, 1);
+      expect(data.avatar).toEqual({ connect: { id: 'uploaded-id' } });
+    });
+
+    it('rejects a request carrying both an avatar and an avatar_id', async () => {
+      await expect(
+        service.update('user-id', { avatar_id: null }, avatarFile()),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(storage.upload).not.toHaveBeenCalled();
+      expect(repository.update).not.toHaveBeenCalled();
+    });
+
+    it('takes back a replacement avatar when the update fails', async () => {
+      storage.upload.mockResolvedValue({ id: 'uploaded-id' });
+      repository.update.mockRejectedValue(uniqueViolation('email'));
+
+      await expect(
+        service.update('user-id', { email: 'taken@example.com' }, avatarFile()),
+      ).rejects.toThrow(ConflictException);
+
+      expect(storage.softDelete).toHaveBeenCalledWith('uploaded-id');
+    });
+
+    it('cannot change the role — there is no field for it', async () => {
+      // Typed away at the boundary, so this is the runtime half of the promise:
+      // a role smuggled past the DTO still never reaches the database.
+      await service.update('user-id', {
+        name: 'New',
+        role: Role.super_admin,
+      } as UpdateUserInput);
+
+      const data = argOf(repository.update, 0, 1);
+      expect(data).not.toHaveProperty('role');
     });
 
     it('rejects an avatar_id that does not resolve with a 400', async () => {
