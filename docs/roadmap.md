@@ -28,7 +28,7 @@ Rules:
 | --- | --- | --- | --- | --- |
 | T-001 | File upload service | [US-0001](./user-stories/0001-file-upload-service.md) | Done | — |
 | T-002 | Email service | [US-0002](./user-stories/0002-email-service.md) | Pending | — |
-| T-003 | Users CRUD + get profile (roles: student, teacher, academy moderator, admin, super admin) | [US-0003](./user-stories/0003-user-accounts-and-profiles.md) | Pending | T-001 |
+| T-003 | Users CRUD + get profile (roles: student, teacher, academy moderator, admin, super admin) | [US-0003](./user-stories/0003-user-accounts-and-profiles.md) | Done | T-001 |
 | T-004 | Authentication — email/password login, refresh token, JWT + Redis session id, auth guard | [US-0004](./user-stories/0004-authentication-and-sessions.md) | Pending | T-003 |
 | T-005 | Authorization — roles guard, scopes, admin scope groups (RBAC) | [US-0005](./user-stories/0005-authorization-rbac.md) | Pending | T-004 |
 | T-006 | Video upload service | [US-0006](./user-stories/0006-video-upload-service.md) | Pending | T-001 |

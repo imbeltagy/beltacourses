@@ -13,6 +13,10 @@ async function bootstrap() {
     .setTitle('Courses API')
     .setDescription('HTTP API for the courses platform')
     .setVersion('0.0.1')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'token' },
+      'access-token',
+    )
     .build();
 
   SwaggerModule.setup('docs', app, () =>

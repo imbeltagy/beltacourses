@@ -18,7 +18,7 @@ model User {
   updated_at DateTime  @updatedAt
   deleted_at DateTime?
 
-  @@index([deleted_at])
+  @@index([email])
   @@map("users")
 }
 

@@ -2,7 +2,7 @@
 
 - **Phase:** Phase 1 — MVP
 - **Tasks:** T-003
-- **Status:** Pending
+- **Status:** Done
 
 ## Story
 
@@ -17,9 +17,9 @@ and what part of the product I belong to.
 
 ## Acceptance criteria
 
-- [ ] Users can be created, read, updated and deleted (soft delete where it matters).
-- [ ] A logged-in user can fetch and update their own profile.
-- [ ] Every user carries exactly one role from the list above.
+- [x] Users can be created, read, updated and deleted (soft delete where it matters).
+- [x] A logged-in user can fetch and update their own profile.
+- [x] Every user carries exactly one role from the list above.
 
 ## Notes
 
