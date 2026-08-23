@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PasswordService, TokenService } from '@repo/service/core';
-import type { FileToUpload } from '@repo/service/storage';
+import type { FileToUpload } from '../storage/storage.types';
 import type { PublicUser } from '../users/users.types';
 import { UsersService } from '../users/users.service';
 import type { LoginDto } from './dto/request/login.dto';

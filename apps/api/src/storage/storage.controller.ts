@@ -20,8 +20,8 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { StorageService } from '@repo/service/storage';
-import type { UploadedFile } from '@repo/service/storage';
+import { StorageService } from './storage.service';
+import type { UploadedFile } from './storage.types';
 import { SoftDeleteFilesDto } from './dto/request/soft-delete-files.dto';
 import { FileMetadataResponse } from './dto/response/file-metadata.dto';
 import { SoftDeleteFilesResponse } from './dto/response/soft-delete-files.dto';

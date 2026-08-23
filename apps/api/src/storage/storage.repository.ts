@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma';
+import { PrismaService } from '@repo/service/prisma';
 import { FileMetadata } from '@repo/db';
 
 export interface CreateFileData {
@@ -49,11 +49,10 @@ export class StorageRepository {
     await this.prisma.client.fileMetadata.delete({ where: { id } });
   }
 
-  findSoftDeleted(skip: number, take: number): Promise<FileMetadata[]> {
+  findSoftDeleted(take: number): Promise<FileMetadata[]> {
     return this.prisma.client.fileMetadata.findMany({
       where: { deleted_at: { not: null } },
       orderBy: { deleted_at: 'asc' },
-      skip,
       take,
     });
   }

@@ -6,13 +6,13 @@ Conventions for this repo. Read this before adding a feature.
 
 pnpm + Turborepo. Workspaces are `apps/*` and `packages/*`.
 
-| Path | Package | Role |
-| --- | --- | --- |
-| `apps/api` | `api` | NestJS 11 HTTP app. |
-| `apps/web`, `apps/docs` | — | Frontends. |
-| `packages/service` | `@repo/service` | NestJS **providers** shared across apps. |
-| `packages/database` | `@repo/db` | Prisma 7 schema, generated client, `prisma` singleton. |
-| `packages/ui`, `packages/eslint-config`, `packages/typescript-config` | — | Shared frontend/tooling. |
+| Path                                                                  | Package         | Role                                                   |
+| --------------------------------------------------------------------- | --------------- | ------------------------------------------------------ |
+| `apps/api`                                                            | `api`           | NestJS 11 HTTP app.                                    |
+| `apps/web`, `apps/docs`                                               | —               | Frontends.                                             |
+| `packages/service`                                                    | `@repo/service` | NestJS **providers** shared across apps.               |
+| `packages/database`                                                   | `@repo/db`      | Prisma 7 schema, generated client, `prisma` singleton. |
+| `packages/ui`, `packages/eslint-config`, `packages/typescript-config` | —               | Shared frontend/tooling.                               |
 
 Packages are consumed as **raw TypeScript source**, not compiled output. There is no build step
 inside `packages/service` — apps bundle it.
@@ -41,20 +41,11 @@ every consumer.
    `exports`, which are app-level wiring decisions (which queues, which controllers, whether this app
    runs the worker). Each app declares its own module.
 
-3. **Ship a `nestjs-module.md`** next to the code. Because the package does not export a module, this
-   file is the recipe the app copies. It must contain:
-   - the full `@Module({ imports, controllers, providers, exports })` block, copy-pasteable;
-   - **real import paths** — `import { StorageService } from '@repo/service/storage';`
-   - prerequisites (global modules that must be imported, `forRoot` calls, required env vars);
-   - which providers to export and which are internal.
-
-   See `packages/service/src/storage/nestjs-module.md` for the reference example.
-
-4. **Export the service, not its internals.** Repositories and adapters are exported from `index.ts`
+3. **Export the service, not its internals.** Repositories and adapters are exported from `index.ts`
    for wiring and tests, but the module's `exports` array lists only the service. Other features
    inject the service.
 
-5. **Stay framework-agnostic at the boundary.** Do not accept `Express.Multer.File`, `Request`, or
+4. **Stay framework-agnostic at the boundary.** Do not accept `Express.Multer.File`, `Request`, or
    other app-framework types in a package's public API — define a structural type instead.
 
 ## Layering
@@ -123,7 +114,7 @@ a cron pattern registers a second schedule next to the old one instead of replac
 
 - Read them in a `<feature>.constants.ts`, exported as `string | undefined`. That file must **never
   throw on import** — a package that explodes at import time breaks every test that touches it.
-- Validate in the consuming class's **constructor**, throwing one error that names *all* missing
+- Validate in the consuming class's **constructor**, throwing one error that names _all_ missing
   variables. This fails app boot loudly instead of failing on the first request.
 - Constants are evaluated at import time, so `import 'dotenv/config'` must be the **first** import in
   `apps/<app>/src/main.ts`, before anything that reads `process.env`.
@@ -158,6 +149,7 @@ a cron pattern registers a second schedule next to the old one instead of replac
   Jest `rootDir` is the package root, and `testRegex` still matches `*.spec.ts` **anywhere** — a spec
   accidentally left under `src/` runs and fails loudly rather than being silently skipped. Coverage
   is collected from `src/` only.
+
 - Unit tests mock everything external: no real database, no real Redis, no real third-party API.
 - Add integration tests when the value is in the wiring rather than the logic — multi-step flows
   across stores, or a compensating-delete path. Keep them separate from unit tests.

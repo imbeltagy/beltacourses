@@ -39,22 +39,27 @@ export class StorageProcessor extends WorkerHost implements OnModuleInit {
     // next page is always fetched fresh from the top — no offset needed.
     for (;;) {
       const page = await this.repository.findSoftDeleted(
-        failed,
         STORAGE_CLEANUP_PAGE_SIZE,
       );
       if (page.length === 0) break;
 
+      let removedInPage = 0;
       for (const file of page) {
         try {
           await this.s3.delete(file.key);
           await this.repository.hardDelete(file.id);
           removed += 1;
+          removedInPage += 1;
         } catch (error) {
           // Leave the row in place; the next run retries it.
           failed += 1;
           this.logger.error(`Failed to clean up file ${file.id}`, error);
         }
       }
+
+      // A page with zero progress will come back unchanged forever — stop instead
+      // of spinning on the same unprocessable rows.
+      if (removedInPage === 0) break;
     }
 
     this.logger.log(

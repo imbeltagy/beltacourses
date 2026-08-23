@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { StorageService } from '@repo/service/storage';
+import { StorageService } from '../../src/storage/storage.service';
 import { StorageController } from '../../src/storage/storage.controller';
 import { FileMetadata } from '@repo/db';
 
