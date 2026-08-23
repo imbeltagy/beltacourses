@@ -49,11 +49,18 @@ export class StorageRepository {
     await this.prisma.client.fileMetadata.delete({ where: { id } });
   }
 
-  findSoftDeleted(take: number): Promise<FileMetadata[]> {
+  findSoftDeleted({
+    take,
+    skip,
+  }: {
+    take: number;
+    skip: number;
+  }): Promise<FileMetadata[]> {
     return this.prisma.client.fileMetadata.findMany({
       where: { deleted_at: { not: null } },
       orderBy: { deleted_at: 'asc' },
       take,
+      skip,
     });
   }
 }

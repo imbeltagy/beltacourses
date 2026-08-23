@@ -35,12 +35,12 @@ export class StorageProcessor extends WorkerHost implements OnModuleInit {
     let removed = 0;
     let failed = 0;
 
-    // Page until nothing soft-deleted is left. Rows are removed as we go, so the
-    // next page is always fetched fresh from the top — no offset needed.
+    // Page and skipp failed until nothing left except for failed to try on next scheduled run.
     for (;;) {
-      const page = await this.repository.findSoftDeleted(
-        STORAGE_CLEANUP_PAGE_SIZE,
-      );
+      const page = await this.repository.findSoftDeleted({
+        take: STORAGE_CLEANUP_PAGE_SIZE,
+        skip: failed,
+      });
       if (page.length === 0) break;
 
       let removedInPage = 0;

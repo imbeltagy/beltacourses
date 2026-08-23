@@ -104,7 +104,10 @@ describe('StorageProcessor', () => {
 
       await processor.process();
 
-      expect(repository.findSoftDeleted).toHaveBeenCalledWith(100);
+      expect(repository.findSoftDeleted).toHaveBeenCalledWith({
+        take: 100,
+        skip: 0,
+      });
     });
 
     it('removes the object before the row', async () => {
