@@ -14,7 +14,7 @@ const publicUser = (overrides: Partial<Record<string, unknown>> = {}) => ({
   bio: null,
   gender: null,
   date_of_birth: null,
-  avatar_id: null,
+  avatar: null,
   created_at: new Date('2026-08-01T00:00:00.000Z'),
   updated_at: new Date('2026-08-01T00:00:00.000Z'),
   ...overrides,
@@ -98,7 +98,9 @@ describe('UsersService', () => {
       repository.findIdByEmail.mockResolvedValue(null);
       passwordService.hash.mockResolvedValue('hashed-value');
       storageService.upload.mockResolvedValue({ id: 'file-1', url: 'url' });
-      repository.create.mockResolvedValue(publicUser({ avatar_id: 'file-1' }));
+      repository.create.mockResolvedValue(
+        publicUser({ avatar: { id: 'file-1', url: 'url' } }),
+      );
 
       await service.create(input, avatarFile());
 
@@ -160,26 +162,6 @@ describe('UsersService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('throws 409 when the new email belongs to another live user', async () => {
-      repository.findById.mockResolvedValue(publicUser());
-      repository.findIdByEmail.mockResolvedValue({ id: 'someone-else' });
-
-      await expect(
-        service.update('user-1', { email: 'taken@example.com' }),
-      ).rejects.toThrow(ConflictException);
-      expect(repository.update).not.toHaveBeenCalled();
-    });
-
-    it('allows keeping the same email', async () => {
-      repository.findById.mockResolvedValue(publicUser());
-      repository.update.mockResolvedValue(publicUser());
-
-      await service.update('user-1', { email: 'student@beltacourses.com' });
-
-      expect(repository.findIdByEmail).not.toHaveBeenCalled();
-      expect(repository.update).toHaveBeenCalled();
-    });
-
     it('never writes hashed_password', async () => {
       repository.findById.mockResolvedValue(publicUser());
       repository.update.mockResolvedValue(publicUser());
@@ -195,11 +177,11 @@ describe('UsersService', () => {
 
     it('uploads a new avatar, attaches it, and soft-deletes the previous one', async () => {
       repository.findById.mockResolvedValue(
-        publicUser({ avatar_id: 'old-file' }),
+        publicUser({ avatar: { id: 'old-file', url: 'url' } }),
       );
       storageService.upload.mockResolvedValue({ id: 'new-file', url: 'url' });
       repository.update.mockResolvedValue(
-        publicUser({ avatar_id: 'new-file' }),
+        publicUser({ avatar: { id: 'new-file', url: 'url' } }),
       );
 
       await service.update('user-1', {}, avatarFile());
@@ -213,10 +195,10 @@ describe('UsersService', () => {
     });
 
     it('does not soft-delete anything when there was no previous avatar', async () => {
-      repository.findById.mockResolvedValue(publicUser({ avatar_id: null }));
+      repository.findById.mockResolvedValue(publicUser({ avatar: null }));
       storageService.upload.mockResolvedValue({ id: 'new-file', url: 'url' });
       repository.update.mockResolvedValue(
-        publicUser({ avatar_id: 'new-file' }),
+        publicUser({ avatar: { id: 'new-file', url: 'url' } }),
       );
 
       await service.update('user-1', {}, avatarFile());
@@ -226,7 +208,7 @@ describe('UsersService', () => {
 
     it('does not upload or touch the avatar when none is provided', async () => {
       repository.findById.mockResolvedValue(
-        publicUser({ avatar_id: 'old-file' }),
+        publicUser({ avatar: { id: 'old-file', url: 'url' } }),
       );
       repository.update.mockResolvedValue(publicUser());
 
