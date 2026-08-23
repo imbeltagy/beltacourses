@@ -4,8 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PasswordService } from '@repo/service/core';
-import { StorageService } from '@repo/service/storage';
-import type { FileToUpload } from '@repo/service/storage';
+import { StorageService } from '../storage/storage.service';
+import type { FileToUpload } from '../storage/storage.types';
 import type { User } from '@repo/db';
 import { UsersRepository } from './users.repository';
 import type { CreateUserDto } from './dto/request/create-user.dto';

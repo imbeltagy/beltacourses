@@ -3,7 +3,7 @@ import { Role } from '@repo/db';
 import { PasswordService } from '@repo/service/core';
 import { UsersRepository } from '../../src/users/users.repository';
 import { UsersService } from '../../src/users/users.service';
-import { StorageService } from '@repo/service/storage';
+import { StorageService } from '../../src/storage/storage.service';
 
 const publicUser = (overrides: Partial<Record<string, unknown>> = {}) => ({
   id: 'user-1',

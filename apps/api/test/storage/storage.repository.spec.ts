@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaService } from '../../src/prisma';
+import { PrismaService } from '@repo/service/prisma';
 import { StorageRepository } from '../../src/storage/storage.repository';
 import { FileMetadata } from '@repo/db';
 
@@ -21,7 +21,7 @@ describe('StorageRepository', () => {
   let repository: StorageRepository;
   let prisma: {
     client: {
-      file: {
+      fileMetadata: {
         create: jest.Mock;
         findFirst: jest.Mock;
         findUnique: jest.Mock;
@@ -36,7 +36,7 @@ describe('StorageRepository', () => {
   beforeEach(async () => {
     prisma = {
       client: {
-        file: {
+        fileMetadata: {
           create: jest.fn(),
           findFirst: jest.fn(),
           findUnique: jest.fn(),
@@ -61,7 +61,7 @@ describe('StorageRepository', () => {
   describe('create', () => {
     it('passes the snake_case payload straight through', async () => {
       const row = file();
-      prisma.client.file.create.mockResolvedValue(row);
+      prisma.client.fileMetadata.create.mockResolvedValue(row);
 
       const data = {
         key: '2026/08/abc.png',
@@ -73,23 +73,23 @@ describe('StorageRepository', () => {
       };
 
       await expect(repository.create(data)).resolves.toBe(row);
-      expect(prisma.client.file.create).toHaveBeenCalledWith({ data });
+      expect(prisma.client.fileMetadata.create).toHaveBeenCalledWith({ data });
     });
   });
 
   describe('findById', () => {
     it('filters out soft-deleted rows', async () => {
-      prisma.client.file.findFirst.mockResolvedValue(null);
+      prisma.client.fileMetadata.findFirst.mockResolvedValue(null);
 
       await repository.findById('file-id');
 
-      expect(prisma.client.file.findFirst).toHaveBeenCalledWith({
+      expect(prisma.client.fileMetadata.findFirst).toHaveBeenCalledWith({
         where: { id: 'file-id', deleted_at: null },
       });
     });
 
     it('returns null when nothing live matches', async () => {
-      prisma.client.file.findFirst.mockResolvedValue(null);
+      prisma.client.fileMetadata.findFirst.mockResolvedValue(null);
 
       await expect(repository.findById('file-id')).resolves.toBeNull();
     });
@@ -98,12 +98,12 @@ describe('StorageRepository', () => {
   describe('findByIdIncludingDeleted', () => {
     it('does not filter on deleted_at', async () => {
       const row = file({ deleted_at: new Date() });
-      prisma.client.file.findUnique.mockResolvedValue(row);
+      prisma.client.fileMetadata.findUnique.mockResolvedValue(row);
 
       await expect(
         repository.findByIdIncludingDeleted('file-id'),
       ).resolves.toBe(row);
-      expect(prisma.client.file.findUnique).toHaveBeenCalledWith({
+      expect(prisma.client.fileMetadata.findUnique).toHaveBeenCalledWith({
         where: { id: 'file-id' },
       });
     });
@@ -111,32 +111,34 @@ describe('StorageRepository', () => {
 
   describe('softDelete', () => {
     it('guards on deleted_at: null so a re-delete cannot move the timestamp', async () => {
-      prisma.client.file.updateMany.mockResolvedValue({ count: 1 });
+      prisma.client.fileMetadata.updateMany.mockResolvedValue({ count: 1 });
 
       await repository.softDelete('file-id');
 
-      expect(prisma.client.file.updateMany).toHaveBeenCalledWith({
+      expect(prisma.client.fileMetadata.updateMany).toHaveBeenCalledWith({
         where: { id: 'file-id', deleted_at: null },
         data: { deleted_at: expect.any(Date) as Date },
       });
     });
 
     it('returns the number of rows changed', async () => {
-      prisma.client.file.updateMany.mockResolvedValue({ count: 1 });
+      prisma.client.fileMetadata.updateMany.mockResolvedValue({ count: 1 });
       await expect(repository.softDelete('file-id')).resolves.toBe(1);
 
-      prisma.client.file.updateMany.mockResolvedValue({ count: 0 });
+      prisma.client.fileMetadata.updateMany.mockResolvedValue({ count: 0 });
       await expect(repository.softDelete('file-id')).resolves.toBe(0);
     });
   });
 
   describe('softDeleteMany', () => {
     it('matches on the id list and the deleted_at guard together', async () => {
-      prisma.client.file.updateManyAndReturn.mockResolvedValue([]);
+      prisma.client.fileMetadata.updateManyAndReturn.mockResolvedValue([]);
 
       await repository.softDeleteMany(['a', 'b']);
 
-      expect(prisma.client.file.updateManyAndReturn).toHaveBeenCalledWith({
+      expect(
+        prisma.client.fileMetadata.updateManyAndReturn,
+      ).toHaveBeenCalledWith({
         where: { id: { in: ['a', 'b'] }, deleted_at: null },
         data: { deleted_at: expect.any(Date) as Date },
       });
@@ -144,7 +146,7 @@ describe('StorageRepository', () => {
 
     it('returns only the rows that actually transitioned', async () => {
       const row = file({ id: 'a' });
-      prisma.client.file.updateManyAndReturn.mockResolvedValue([row]);
+      prisma.client.fileMetadata.updateManyAndReturn.mockResolvedValue([row]);
 
       await expect(repository.softDeleteMany(['a', 'b'])).resolves.toEqual([
         row,
@@ -154,11 +156,11 @@ describe('StorageRepository', () => {
 
   describe('hardDelete', () => {
     it('removes the row and never touches S3', async () => {
-      prisma.client.file.delete.mockResolvedValue(file());
+      prisma.client.fileMetadata.delete.mockResolvedValue(file());
 
       await repository.hardDelete('file-id');
 
-      expect(prisma.client.file.delete).toHaveBeenCalledWith({
+      expect(prisma.client.fileMetadata.delete).toHaveBeenCalledWith({
         where: { id: 'file-id' },
       });
     });
@@ -166,11 +168,11 @@ describe('StorageRepository', () => {
 
   describe('findSoftDeleted', () => {
     it('selects deleted rows oldest first, limited to the page size', async () => {
-      prisma.client.file.findMany.mockResolvedValue([]);
+      prisma.client.fileMetadata.findMany.mockResolvedValue([]);
 
-      await repository.findSoftDeleted(0, 100);
+      await repository.findSoftDeleted(100);
 
-      expect(prisma.client.file.findMany).toHaveBeenCalledWith({
+      expect(prisma.client.fileMetadata.findMany).toHaveBeenCalledWith({
         where: { deleted_at: { not: null } },
         orderBy: { deleted_at: 'asc' },
         take: 100,

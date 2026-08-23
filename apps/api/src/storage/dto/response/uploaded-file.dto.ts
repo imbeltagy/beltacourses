@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import type { UploadedFile } from '@repo/service/storage';
+import type { UploadedFile } from '../../storage.types';
 
 export class UploadedFileResponse implements UploadedFile {
   @ApiProperty({

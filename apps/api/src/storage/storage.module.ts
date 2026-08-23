@@ -2,13 +2,11 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
-import {
-  S3Adapter,
-  StorageProcessor,
-  StorageRepository,
-  StorageService,
-  STORAGE_CLEANUP_QUEUE,
-} from '@repo/service/storage';
+import { S3Adapter } from './s3.adapter';
+import { StorageProcessor } from './storage.processor';
+import { StorageRepository } from './storage.repository';
+import { StorageService } from './storage.service';
+import { STORAGE_CLEANUP_QUEUE } from './storage.constants';
 import { StorageController } from './storage.controller';
 
 @Module({
