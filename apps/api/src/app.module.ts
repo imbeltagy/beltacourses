@@ -2,9 +2,8 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
-import { HealthCheckController } from './health-check.controller';
 import { PrismaModule } from '@repo/service/prisma';
-import { HealthCheckService } from '@repo/service/health-check';
+import { HealthCheckModule } from './health-check/health-check.module';
 import { StorageModule } from './storage/storage.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
@@ -22,11 +21,10 @@ import { AuthModule } from './auth/auth.module';
       route: '/queues',
       adapter: ExpressAdapter,
     }),
+    HealthCheckModule,
     StorageModule,
     UsersModule,
     AuthModule,
   ],
-  controllers: [HealthCheckController],
-  providers: [HealthCheckService],
 })
 export class AppModule {}
