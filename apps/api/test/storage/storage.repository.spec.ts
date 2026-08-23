@@ -170,12 +170,13 @@ describe('StorageRepository', () => {
     it('selects deleted rows oldest first, limited to the page size', async () => {
       prisma.client.fileMetadata.findMany.mockResolvedValue([]);
 
-      await repository.findSoftDeleted(100);
+      await repository.findSoftDeleted({ skip: 0, take: 100 });
 
       expect(prisma.client.fileMetadata.findMany).toHaveBeenCalledWith({
         where: { deleted_at: { not: null } },
         orderBy: { deleted_at: 'asc' },
         take: 100,
+        skip: 0,
       });
     });
   });
