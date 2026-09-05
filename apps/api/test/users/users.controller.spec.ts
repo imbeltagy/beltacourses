@@ -1,7 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AccessTokenGuard } from '@repo/service/core';
+import { Role } from '@repo/db';
+import {
+  AccessTokenGuard,
+  PermissionsGuard,
+  RolesGuard,
+} from '@repo/service/core';
+import type { RequestUser } from '@repo/service/core';
 import { UsersController } from '../../src/users/users.controller';
 import { UsersService } from '../../src/users/users.service';
+
+const REQUEST_USER: RequestUser = {
+  id: 'user-1',
+  email: 'student@beltacourses.com',
+  name: 'Jane',
+  role: Role.student,
+};
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -27,6 +40,10 @@ describe('UsersController', () => {
       providers: [{ provide: UsersService, useValue: usersService }],
     })
       .overrideGuard(AccessTokenGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(PermissionsGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
@@ -103,7 +120,7 @@ describe('UsersController', () => {
   it('getMe resolves the profile through the token-derived user id', async () => {
     usersService.findById.mockResolvedValue({ id: 'user-1' });
 
-    await controller.getMe({ id: 'user-1' });
+    await controller.getMe(REQUEST_USER);
 
     expect(usersService.findById).toHaveBeenCalledWith('user-1');
   });
@@ -112,7 +129,7 @@ describe('UsersController', () => {
     const dto = { name: 'New Name' };
     usersService.update.mockResolvedValue({ id: 'user-1', name: 'New Name' });
 
-    await controller.updateMe({ id: 'user-1' }, dto as never);
+    await controller.updateMe(REQUEST_USER, dto as never);
 
     expect(usersService.update).toHaveBeenCalledWith('user-1', dto, undefined);
   });
@@ -122,7 +139,7 @@ describe('UsersController', () => {
     const avatar = { originalname: 'avatar.png' } as Express.Multer.File;
     usersService.update.mockResolvedValue({ id: 'user-1' });
 
-    await controller.updateMe({ id: 'user-1' }, dto as never, avatar);
+    await controller.updateMe(REQUEST_USER, dto as never, avatar);
 
     expect(usersService.update).toHaveBeenCalledWith('user-1', dto, avatar);
   });

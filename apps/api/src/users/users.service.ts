@@ -1,12 +1,13 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PasswordService } from '@repo/service/core';
+import { PasswordService, SessionService } from '@repo/service/core';
+import { Role, type User } from '@repo/db';
 import { StorageService } from '../storage/storage.service';
 import type { FileToUpload } from '../storage/storage.types';
-import type { User } from '@repo/db';
 import { UsersRepository } from './users.repository';
 import type { CreateUserDto } from './dto/request/create-user.dto';
 import type { ListUsersQueryDto } from './dto/request/list-users.dto';
@@ -19,6 +20,7 @@ export class UsersService {
     private readonly usersRepository: UsersRepository,
     private readonly passwordService: PasswordService,
     private readonly storageService: StorageService,
+    private readonly sessionService: SessionService,
   ) {}
 
   async create(
@@ -125,5 +127,32 @@ export class UsersService {
    */
   findByEmailWithPassword(email: string): Promise<User | null> {
     return this.usersRepository.findByEmailWithPassword(email);
+  }
+
+  /**
+   * Not reachable over HTTP — `GroupsService` is its only caller (D18). It
+   * owns the two rules that are about the *user*, while the group's own
+   * existence check stays in `GroupsService`.
+   */
+  async setGroup(userId: string, groupId: string | null): Promise<PublicUser> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) throw new NotFoundException(`User ${userId} not found`);
+
+    if (user.role !== Role.admin) {
+      throw new BadRequestException(
+        'Only an admin can be assigned a permission group',
+      );
+    }
+
+    const updated = await this.usersRepository.update(userId, {
+      group_id: groupId,
+    });
+
+    // Must run after the write, and a Redis failure must propagate as a
+    // 503 — the caller must not be told the change landed cleanly while the
+    // old sessions are still live with the old permissions.
+    await this.sessionService.removeAllUserSessions(userId);
+
+    return updated;
   }
 }

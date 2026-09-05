@@ -1,0 +1,28 @@
+model Group {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+
+  permissions GroupPermission[]
+  users       User[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  @@map("groups")
+}
+
+model GroupPermission {
+  id         String @id @default(uuid())
+  group_id   String
+  permission String
+
+  group Group @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@unique([group_id, permission])
+  @@index([group_id])
+  @@map("group_permissions")
+}

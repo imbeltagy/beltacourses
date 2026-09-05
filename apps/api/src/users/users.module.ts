@@ -2,8 +2,11 @@ import { Module } from '@nestjs/common';
 import {
   AccessTokenGuard,
   PasswordService,
+  PermissionsGuard,
+  PermissionsRepository,
+  RolesGuard,
+  SessionService,
   TokenService,
-  UsersRepository as AccessCheckRepository,
 } from '@repo/service/core';
 import { StorageModule } from '../storage/storage.module';
 import { UsersController } from './users.controller';
@@ -18,8 +21,11 @@ import { UsersService } from './users.service';
     UsersRepository,
     PasswordService,
     TokenService,
-    AccessCheckRepository,
+    SessionService,
+    PermissionsRepository,
     AccessTokenGuard,
+    RolesGuard,
+    PermissionsGuard,
   ],
   exports: [UsersService],
 })

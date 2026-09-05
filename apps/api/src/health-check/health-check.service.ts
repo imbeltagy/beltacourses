@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@repo/service/prisma';
-import Redis from 'ioredis';
-import { REDIS_HOST, REDIS_PORT } from './health-check.constants';
+import { RedisService } from '@repo/service/redis';
 import { HealthStatus, ServiceStatus } from './health-check.types';
 
 @Injectable()
 export class HealthCheckService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   async getStatus(): Promise<HealthStatus> {
     const [postgres, redis] = await Promise.all([
@@ -26,22 +28,6 @@ export class HealthCheckService {
   }
 
   private async checkRedis(): Promise<ServiceStatus> {
-    const redis = new Redis({
-      host: REDIS_HOST ?? 'localhost',
-      port: Number(REDIS_PORT ?? 6379),
-      lazyConnect: true,
-      retryStrategy: () => null,
-      maxRetriesPerRequest: 1,
-    });
-
-    try {
-      await redis.connect();
-      await redis.ping();
-      return 'running';
-    } catch {
-      return 'down';
-    } finally {
-      redis.disconnect();
-    }
+    return (await this.redis.ping()) ? 'running' : 'down';
   }
 }

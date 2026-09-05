@@ -4,7 +4,16 @@ import type { Prisma, User } from '@repo/db';
 import type { ListUsersQueryDto } from './dto/request/list-users.dto';
 import type { PublicUser } from './users.types';
 
-const PUBLIC_USER_OMIT = { hashed_password: true, deleted_at: true } as const;
+const PUBLIC_USER_OMIT = {
+  hashed_password: true,
+  deleted_at: true,
+  group_id: true,
+} as const;
+
+const INCLUDE = {
+  avatar: { select: { id: true, url: true } },
+  group: { select: { id: true, name: true } },
+} as const;
 
 @Injectable()
 export class UsersRepository {
@@ -13,7 +22,7 @@ export class UsersRepository {
   create(data: Prisma.UserUncheckedCreateInput): Promise<PublicUser> {
     return this.prisma.client.user.create({
       data,
-      include: { avatar: { select: { id: true, url: true } } },
+      include: INCLUDE,
       omit: PUBLIC_USER_OMIT,
     });
   }
@@ -21,7 +30,7 @@ export class UsersRepository {
   findById(id: string): Promise<PublicUser | null> {
     return this.prisma.client.user.findFirst({
       where: { id, deleted_at: null },
-      include: { avatar: { select: { id: true, url: true } } },
+      include: INCLUDE,
       omit: PUBLIC_USER_OMIT,
     });
   }
@@ -59,7 +68,7 @@ export class UsersRepository {
     const [items, total] = await this.prisma.client.$transaction([
       this.prisma.client.user.findMany({
         where,
-        include: { avatar: { select: { id: true, url: true } } },
+        include: INCLUDE,
         omit: PUBLIC_USER_OMIT,
         skip: (query.page - 1) * query.limit,
         take: query.limit,
@@ -78,7 +87,7 @@ export class UsersRepository {
     return this.prisma.client.user.update({
       where: { id },
       data,
-      include: { avatar: { select: { id: true, url: true } } },
+      include: INCLUDE,
       omit: PUBLIC_USER_OMIT,
     });
   }
