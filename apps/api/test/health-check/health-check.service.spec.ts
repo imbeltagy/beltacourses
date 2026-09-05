@@ -1,31 +1,24 @@
 import { PrismaService } from '@repo/service/prisma';
+import { RedisService } from '@repo/service/redis';
 import { HealthCheckService } from '../../src/health-check/health-check.service';
-
-const redisInstance = {
-  connect: jest.fn(),
-  ping: jest.fn(),
-  disconnect: jest.fn(),
-};
-
-jest.mock('ioredis', () => ({
-  __esModule: true,
-  default: jest.fn(() => redisInstance),
-}));
 
 describe('HealthCheckService', () => {
   let service: HealthCheckService;
   let prisma: { client: { $queryRaw: jest.Mock } };
+  let redis: { ping: jest.Mock };
 
   beforeEach(() => {
-    jest.clearAllMocks();
     prisma = { client: { $queryRaw: jest.fn() } };
-    service = new HealthCheckService(prisma as unknown as PrismaService);
+    redis = { ping: jest.fn() };
+    service = new HealthCheckService(
+      prisma as unknown as PrismaService,
+      redis as unknown as RedisService,
+    );
   });
 
   it('reports both services as running when reachable', async () => {
     prisma.client.$queryRaw.mockResolvedValue([{ '?column?': 1 }]);
-    redisInstance.connect.mockResolvedValue(undefined);
-    redisInstance.ping.mockResolvedValue('PONG');
+    redis.ping.mockResolvedValue(true);
 
     await expect(service.getStatus()).resolves.toEqual({
       postgres: 'running',
@@ -35,8 +28,7 @@ describe('HealthCheckService', () => {
 
   it('reports postgres as down when the query fails', async () => {
     prisma.client.$queryRaw.mockRejectedValue(new Error('connection refused'));
-    redisInstance.connect.mockResolvedValue(undefined);
-    redisInstance.ping.mockResolvedValue('PONG');
+    redis.ping.mockResolvedValue(true);
 
     await expect(service.getStatus()).resolves.toEqual({
       postgres: 'down',
@@ -44,22 +36,13 @@ describe('HealthCheckService', () => {
     });
   });
 
-  it('reports redis as down when the connection fails', async () => {
+  it('reports redis as down when ping() is false', async () => {
     prisma.client.$queryRaw.mockResolvedValue([{ '?column?': 1 }]);
-    redisInstance.connect.mockRejectedValue(new Error('ECONNREFUSED'));
+    redis.ping.mockResolvedValue(false);
 
     await expect(service.getStatus()).resolves.toEqual({
       postgres: 'running',
       redis: 'down',
     });
-  });
-
-  it('always disconnects the redis client', async () => {
-    prisma.client.$queryRaw.mockResolvedValue([{ '?column?': 1 }]);
-    redisInstance.connect.mockRejectedValue(new Error('ECONNREFUSED'));
-
-    await service.getStatus();
-
-    expect(redisInstance.disconnect).toHaveBeenCalledTimes(1);
   });
 });

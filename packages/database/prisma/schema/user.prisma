@@ -14,11 +14,16 @@ model User {
   avatar_id String?
   avatar    FileMetadata? @relation(fields: [avatar_id], references: [id], onDelete: SetNull)
 
+  // Only an `admin` ever has one. Cleared, not cascaded, if the group goes away.
+  group_id String?
+  group    Group?  @relation(fields: [group_id], references: [id], onDelete: SetNull)
+
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
   deleted_at DateTime?
 
   @@index([email])
+  @@index([group_id])
   @@map("users")
 }
 

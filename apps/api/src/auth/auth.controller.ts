@@ -7,22 +7,34 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiBody,
   ApiConflictResponse,
   ApiConsumes,
   ApiCreatedResponse,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { CurrentUser } from '@repo/service/core';
+import type { RequestUser } from '@repo/service/core';
 import { UserResponse } from '../users/dto/response/user.dto';
 import { REGISTERABLE_ROLES } from '../users/users.constants';
 import { AuthService } from './auth.service';
+import {
+  AUTH_THROTTLE_LIMIT,
+  AUTH_THROTTLE_TTL_SECONDS,
+} from './auth.constants';
+import { Auth } from './decorators/auth.decorator';
 import { LoginDto } from './dto/request/login.dto';
+import { RefreshDto } from './dto/request/refresh.dto';
 import { RegisterDto } from './dto/request/register.dto';
 import { LoginResponse } from './dto/response/login.dto';
+import { RefreshResponse } from './dto/response/refresh.dto';
 
 const REGISTER_BODY = {
   schema: {
@@ -39,6 +51,13 @@ const REGISTER_BODY = {
         description: 'Optional avatar image file.',
       },
     },
+  },
+};
+
+const AUTH_THROTTLE = {
+  default: {
+    limit: AUTH_THROTTLE_LIMIT,
+    ttl: AUTH_THROTTLE_TTL_SECONDS * 1000,
   },
 };
 
@@ -63,10 +82,45 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
-  @ApiOperation({ summary: 'Log in with email and password' })
+  @Throttle(AUTH_THROTTLE)
+  @ApiOperation({ summary: 'Log in with email and password (clients only)' })
   @ApiOkResponse({ type: LoginResponse })
-  @ApiUnauthorizedResponse({ description: 'Invalid email or password.' })
+  @ApiUnauthorizedResponse({ description: 'Invalid credentials.' })
+  @ApiTooManyRequestsResponse({ description: 'Too many attempts.' })
   login(@Body() dto: LoginDto): Promise<LoginResponse> {
     return this.authService.login(dto);
+  }
+
+  @Post('moderators/login')
+  @HttpCode(200)
+  @Throttle(AUTH_THROTTLE)
+  @ApiOperation({ summary: 'Log in as staff (admin or super_admin only)' })
+  @ApiOkResponse({ type: LoginResponse })
+  @ApiUnauthorizedResponse({ description: 'Invalid credentials.' })
+  @ApiTooManyRequestsResponse({ description: 'Too many attempts.' })
+  loginModerator(@Body() dto: LoginDto): Promise<LoginResponse> {
+    return this.authService.loginModerator(dto);
+  }
+
+  @Post('refresh')
+  @HttpCode(200)
+  @Throttle(AUTH_THROTTLE)
+  @ApiOperation({ summary: 'Exchange a refresh token for a new access token' })
+  @ApiOkResponse({ type: RefreshResponse })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid, expired or revoked refresh token.',
+  })
+  @ApiTooManyRequestsResponse({ description: 'Too many attempts.' })
+  refresh(@Body() dto: RefreshDto): Promise<RefreshResponse> {
+    return this.authService.refresh(dto.refresh_token);
+  }
+
+  @Post('logout')
+  @HttpCode(204)
+  @Auth()
+  @ApiOperation({ summary: 'Log out (revokes the moderator session, if any)' })
+  @ApiNoContentResponse()
+  logout(@CurrentUser() user: RequestUser): Promise<void> {
+    return this.authService.logout(user);
   }
 }

@@ -2,6 +2,14 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import {
+  AccessTokenGuard,
+  PermissionsGuard,
+  PermissionsRepository,
+  RolesGuard,
+  SessionService,
+  TokenService,
+} from '@repo/service/core';
 import { S3Adapter } from './s3.adapter';
 import { StorageProcessor } from './storage.processor';
 import { StorageRepository } from './storage.repository';
@@ -18,7 +26,18 @@ import { StorageController } from './storage.controller';
     }),
   ],
   controllers: [StorageController],
-  providers: [StorageService, StorageRepository, S3Adapter, StorageProcessor],
+  providers: [
+    StorageService,
+    StorageRepository,
+    S3Adapter,
+    StorageProcessor,
+    TokenService,
+    SessionService,
+    PermissionsRepository,
+    AccessTokenGuard,
+    RolesGuard,
+    PermissionsGuard,
+  ],
   exports: [StorageService],
 })
 export class StorageModule {}

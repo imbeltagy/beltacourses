@@ -1,6 +1,10 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Role } from '@repo/db';
-import { PasswordService } from '@repo/service/core';
+import { PasswordService, SessionService } from '@repo/service/core';
 import { UsersRepository } from '../../src/users/users.repository';
 import { UsersService } from '../../src/users/users.service';
 import { StorageService } from '../../src/storage/storage.service';
@@ -15,6 +19,7 @@ const publicUser = (overrides: Partial<Record<string, unknown>> = {}) => ({
   gender: null,
   date_of_birth: null,
   avatar: null,
+  group: null,
   created_at: new Date('2026-08-01T00:00:00.000Z'),
   updated_at: new Date('2026-08-01T00:00:00.000Z'),
   ...overrides,
@@ -40,6 +45,7 @@ describe('UsersService', () => {
   };
   let passwordService: { hash: jest.Mock };
   let storageService: { upload: jest.Mock; softDelete: jest.Mock };
+  let sessionService: { removeAllUserSessions: jest.Mock };
 
   beforeEach(() => {
     repository = {
@@ -56,11 +62,15 @@ describe('UsersService', () => {
       upload: jest.fn(),
       softDelete: jest.fn().mockResolvedValue(undefined),
     };
+    sessionService = {
+      removeAllUserSessions: jest.fn().mockResolvedValue(0),
+    };
 
     service = new UsersService(
       repository as unknown as UsersRepository,
       passwordService as unknown as PasswordService,
       storageService as unknown as StorageService,
+      sessionService as unknown as SessionService,
     );
   });
 
@@ -265,6 +275,68 @@ describe('UsersService', () => {
       await expect(
         service.findByEmailWithPassword('unknown@example.com'),
       ).resolves.toBeNull();
+    });
+  });
+
+  describe('setGroup', () => {
+    it('404s an unknown user', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(service.setGroup('unknown', 'group-1')).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(sessionService.removeAllUserSessions).not.toHaveBeenCalled();
+    });
+
+    it('rejects a non-admin target with BadRequestException', async () => {
+      repository.findById.mockResolvedValue(publicUser({ role: Role.teacher }));
+
+      await expect(service.setGroup('user-1', 'group-1')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(repository.update).not.toHaveBeenCalled();
+    });
+
+    it('clears the group on null', async () => {
+      repository.findById.mockResolvedValue(publicUser({ role: Role.admin }));
+      repository.update.mockResolvedValue(
+        publicUser({ role: Role.admin, group: null }),
+      );
+
+      await service.setGroup('user-1', null);
+
+      expect(repository.update).toHaveBeenCalledWith('user-1', {
+        group_id: null,
+      });
+    });
+
+    it('calls removeAllUserSessions after the write, not before', async () => {
+      repository.findById.mockResolvedValue(publicUser({ role: Role.admin }));
+      const callOrder: string[] = [];
+      repository.update.mockImplementation(() => {
+        callOrder.push('update');
+        return Promise.resolve(publicUser({ role: Role.admin }));
+      });
+      sessionService.removeAllUserSessions.mockImplementation(() => {
+        callOrder.push('removeAllUserSessions');
+        return Promise.resolve(1);
+      });
+
+      await service.setGroup('user-1', 'group-1');
+
+      expect(callOrder).toEqual(['update', 'removeAllUserSessions']);
+    });
+
+    it('propagates a removeAllUserSessions failure', async () => {
+      repository.findById.mockResolvedValue(publicUser({ role: Role.admin }));
+      repository.update.mockResolvedValue(publicUser({ role: Role.admin }));
+      sessionService.removeAllUserSessions.mockRejectedValue(
+        new Error('ECONNREFUSED'),
+      );
+
+      await expect(service.setGroup('user-1', 'group-1')).rejects.toThrow(
+        'ECONNREFUSED',
+      );
     });
   });
 });

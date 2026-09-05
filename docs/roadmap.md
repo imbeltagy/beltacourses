@@ -29,8 +29,8 @@ Rules:
 | T-001 | File upload service | [US-0001](./user-stories/0001-file-upload-service.md) | Done | — |
 | T-002 | Email service | [US-0002](./user-stories/0002-email-service.md) | Pending | — |
 | T-003 | Users CRUD + get profile (roles: student, teacher, academy moderator, admin, super admin) | [US-0003](./user-stories/0003-user-accounts-and-profiles.md) | Done | T-001 |
-| T-004 | Authentication — email/password login, refresh token, JWT + Redis session id, auth guard | [US-0004](./user-stories/0004-authentication-and-sessions.md) | Pending | T-003 |
-| T-005 | Authorization — roles guard, scopes, admin scope groups (RBAC) | [US-0005](./user-stories/0005-authorization-rbac.md) | Pending | T-004 |
+| T-004 | Authentication — email/password login, refresh token, JWT + Redis session id, auth guard | [US-0004](./user-stories/0004-authentication-and-sessions.md) | Done | T-003 |
+| T-005 | Authorization — roles guard, permissions, admin permission groups (RBAC) | [US-0005](./user-stories/0005-authorization-rbac.md) | Done | T-004 |
 | T-006 | Video upload service | [US-0006](./user-stories/0006-video-upload-service.md) | Pending | T-001 |
 | T-007 | Course creation — courses, modules, lectures | [US-0007](./user-stories/0007-course-authoring.md) | Pending | T-005, T-006 |
 | T-008 | Course publish (instant) + revert to draft while unpurchased | [US-0008](./user-stories/0008-course-publishing-and-visibility.md) | Pending | T-007 |
@@ -99,10 +99,22 @@ whenever a status changes to `Blocked`, and remove it once the task moves on.
 - **Video delivery** (T-006): raw file streaming vs transcoding + HLS not decided; affects T-028.
 - **Payout provider** (T-012): PayPal Payouts assumed; teacher payout onboarding flow not designed.
 - **Refund split** (T-014): whether the system fee is refunded in full or partially kept is undecided.
+- **Token transport** (T-004): refresh tokens are returned in the JSON body; an httpOnly-cookie
+  transport for `apps/web` is deferred and is a controller-level change (`AuthService` never touches
+  `Request`/`Response`, so it stays a controller-only change when this is revisited).
+- **Rate-limit storage** (T-004): `ThrottlerModule` uses in-memory storage, so limits are per-replica.
+  Switch to a Redis-backed store (e.g. `@nest-lab/throttler-storage-redis`, backed by the
+  `RedisService` that now exists) before running more than one API instance.
+- **`/queues` is unauthenticated** (T-001): Bull Board mounts outside Nest's guard pipeline (it is
+  its own Express router mounted directly, not a Nest controller) and needs basic auth or an ingress
+  rule before production.
 
 ### Current state of the repo
 
-Turborepo workspace with `apps/api` (NestJS), `apps/web`, `apps/docs`, and `packages/database`
-(Prisma). `packages/database/prisma/drafts/schema/` holds a draft schema covering users, courses,
-files, wallets, offers and student lists — it is a draft, not the active schema, so no task above is
-`Done` yet.
+Turborepo workspace with `apps/api` (NestJS), `apps/web`, `apps/docs`, `packages/database` (Prisma)
+and `packages/service` (shared NestJS providers). T-001, T-003, T-004 and T-005 are `Done`: file
+upload, users CRUD, JWT authentication with moderator Redis sessions, and roles/permissions-based
+authorization with admin permission groups. `packages/database/prisma/drafts/` still holds an older,
+inert draft schema (courses, wallets, offers, student lists, and an `AccessGroup`/`Permission` model
+superseded by the `Group`/`GroupPermission` models T-005 introduced) — not the active schema, and not
+imported by anything.

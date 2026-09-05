@@ -1,0 +1,3 @@
+separate prod seed from dev seed\
+prod seed only have the super admin, students, teachers
+dev seed have courses etc...

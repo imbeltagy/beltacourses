@@ -16,7 +16,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --config ./test/integration/jest-integration.json --runInBand"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1111.0",
@@ -28,6 +29,7 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.4.6",
+    "@nestjs/throttler": "^6.4.0",
     "@repo/db": "workspace:*",
     "@repo/service": "workspace:*",
     "bullmq": "^6.1.1",
@@ -74,8 +76,12 @@
     ],
     "rootDir": ".",
     "testRegex": ".*\\.spec\\.ts$",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/test/integration/"
+    ],
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": "tsconfig.jest.json" }]
     },
     "collectCoverageFrom": [
       "src/**/*.(t|j)s"

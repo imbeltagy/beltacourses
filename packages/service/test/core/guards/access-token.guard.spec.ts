@@ -1,7 +1,8 @@
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { Role } from '@repo/db';
 import { AccessTokenGuard } from '../../../src/core/guards/access-token.guard';
+import { SessionService } from '../../../src/core/session.service';
 import { TokenService } from '../../../src/core/token.service';
-import { UsersRepository } from '../../../src/core/users.repository';
 
 function contextWithAuthHeader(header?: string): {
   context: ExecutionContext;
@@ -17,16 +18,16 @@ function contextWithAuthHeader(header?: string): {
 }
 
 describe('AccessTokenGuard', () => {
-  let tokenService: { verify: jest.Mock };
-  let usersRepository: { findById: jest.Mock };
+  let tokenService: { verifyAccessToken: jest.Mock };
+  let sessionService: { hasSession: jest.Mock };
   let guard: AccessTokenGuard;
 
   beforeEach(() => {
-    tokenService = { verify: jest.fn() };
-    usersRepository = { findById: jest.fn() };
+    tokenService = { verifyAccessToken: jest.fn() };
+    sessionService = { hasSession: jest.fn() };
     guard = new AccessTokenGuard(
       tokenService as unknown as TokenService,
-      usersRepository as unknown as UsersRepository,
+      sessionService as unknown as SessionService,
     );
   });
 
@@ -46,22 +47,90 @@ describe('AccessTokenGuard', () => {
     );
   });
 
-  it('rejects a token whose user no longer exists', async () => {
+  it('rejects an invalid token', async () => {
     const { context } = contextWithAuthHeader('Bearer a-token');
-    tokenService.verify.mockReturnValue('user-1');
-    usersRepository.findById.mockResolvedValue(null);
+    tokenService.verifyAccessToken.mockImplementation(() => {
+      throw new UnauthorizedException('Invalid access token');
+    });
 
     await expect(guard.canActivate(context)).rejects.toThrow(
       UnauthorizedException,
     );
   });
 
-  it('attaches only the user id and allows the request through', async () => {
+  it('passes a client token with no Redis call at all', async () => {
     const { context, request } = contextWithAuthHeader('Bearer a-token');
-    tokenService.verify.mockReturnValue('user-1');
-    usersRepository.findById.mockResolvedValue({ id: 'user-1' });
+    tokenService.verifyAccessToken.mockReturnValue({
+      sub: 'user-1',
+      email: 'a@example.com',
+      name: 'A',
+      role: Role.student,
+      typ: 'access',
+    });
 
     await expect(guard.canActivate(context)).resolves.toBe(true);
-    expect(request.user).toEqual({ id: 'user-1' });
+    expect(sessionService.hasSession).not.toHaveBeenCalled();
+    expect(request.user).toEqual({
+      id: 'user-1',
+      email: 'a@example.com',
+      name: 'A',
+      role: Role.student,
+    });
+  });
+
+  it('passes a moderator token with a live session', async () => {
+    const { context, request } = contextWithAuthHeader('Bearer a-token');
+    tokenService.verifyAccessToken.mockReturnValue({
+      sub: 'admin-1',
+      email: 'admin@example.com',
+      name: 'Admin',
+      role: Role.admin,
+      sid: 'sid-1',
+      typ: 'access',
+    });
+    sessionService.hasSession.mockResolvedValue(true);
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+    expect(sessionService.hasSession).toHaveBeenCalledWith('admin-1', 'sid-1');
+    expect(request.user).toEqual({
+      id: 'admin-1',
+      email: 'admin@example.com',
+      name: 'Admin',
+      role: Role.admin,
+      sid: 'sid-1',
+    });
+  });
+
+  it('rejects a moderator token when the session is gone', async () => {
+    const { context } = contextWithAuthHeader('Bearer a-token');
+    tokenService.verifyAccessToken.mockReturnValue({
+      sub: 'admin-1',
+      email: 'admin@example.com',
+      name: 'Admin',
+      role: Role.admin,
+      sid: 'sid-1',
+      typ: 'access',
+    });
+    sessionService.hasSession.mockResolvedValue(false);
+
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      UnauthorizedException,
+    );
+  });
+
+  it('rejects a moderator token missing sid', async () => {
+    const { context } = contextWithAuthHeader('Bearer a-token');
+    tokenService.verifyAccessToken.mockReturnValue({
+      sub: 'admin-1',
+      email: 'admin@example.com',
+      name: 'Admin',
+      role: Role.admin,
+      typ: 'access',
+    });
+
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      UnauthorizedException,
+    );
+    expect(sessionService.hasSession).not.toHaveBeenCalled();
   });
 });

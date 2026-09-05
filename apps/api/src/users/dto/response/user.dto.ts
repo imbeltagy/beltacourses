@@ -30,6 +30,13 @@ export class UserResponse implements PublicUser {
   @ApiProperty({ nullable: true, type: () => UserResponseAvatar })
   avatar: UserResponseAvatar | null;
 
+  @ApiProperty({
+    nullable: true,
+    type: () => UserResponseGroup,
+    description: 'Only an admin ever has one.',
+  })
+  group: UserResponseGroup | null;
+
   @ApiProperty({ format: 'date-time' })
   created_at: Date;
 
@@ -43,4 +50,12 @@ class UserResponseAvatar {
 
   @ApiProperty({ format: 'uri' })
   url: string;
+}
+
+class UserResponseGroup {
+  @ApiProperty({ format: 'uuid' })
+  id: string;
+
+  @ApiProperty({ example: 'Support' })
+  name: string;
 }
