@@ -1,5 +1,12 @@
 # Turborepo Project
 
+## Documentation
+
+- [`docs/roadmap.md`](./docs/roadmap.md) — task board and status.
+- [`docs/user-stories/`](./docs/user-stories/) — the story and acceptance criteria behind each task, with technical details beyond regular user stories.
+- [`docs/architecture/`](./docs/architecture/) — system design references (how a feature actually
+  works end to end, independent of the code).
+
 ## Prerequisites
 
 - [pnpm](https://pnpm.io/)
@@ -41,11 +48,11 @@ pnpm dlx turbo run dev
 
 `apps/api` runs on port **3002** in development.
 
-| URL | What it is |
-| --- | --- |
-| http://localhost:3002/health-check | Liveness check. |
-| http://localhost:3002/docs | Swagger UI — every endpoint, with a request runner. |
-| http://localhost:3002/queues | BullBoard — BullMQ queue monitor: scheduled jobs, run history, logs, and manual re-runs. |
+| URL                                | What it is                                                                               |
+| ---------------------------------- | ---------------------------------------------------------------------------------------- |
+| http://localhost:3002/health-check | Liveness check.                                                                          |
+| http://localhost:3002/docs         | Swagger UI — every endpoint, with a request runner.                                      |
+| http://localhost:3002/queues       | BullBoard — BullMQ queue monitor: scheduled jobs, run history, logs, and manual re-runs. |
 
 `/docs` and `/queues` are **unauthenticated**. Gate both before exposing the API
 outside local development — BullBoard can trigger and remove jobs.
