@@ -16,7 +16,10 @@
     "REFRESH_TOKEN_HASH_SECRET",
     "SUPER_ADMIN_EMAIL",
     "SUPER_ADMIN_PASSWORD",
-    "SUPER_ADMIN_NAME"
+    "SUPER_ADMIN_NAME",
+    "NEXT_PUBLIC_API_URL",
+    "NEXT_PUBLIC_SLACK_WEBHOOK",
+    "NODE_ENV"
   ],
   "tasks": {
     "build": {
