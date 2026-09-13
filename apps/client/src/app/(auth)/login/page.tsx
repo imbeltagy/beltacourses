@@ -4,16 +4,25 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { toast } from "sonner";
-import { Button, Card, CardContent, CardFooter, CardHeader } from "@repo/frontend/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@repo/frontend/ui";
 import { Form } from "@repo/frontend/components/form/form-provider";
 import { RHFInput } from "@repo/frontend/components/form/rhf-input";
+import { loginAction } from "./actions";
 
 interface FormInputs {
   email: string;
+  password: string;
 }
 
 const schema = yup.object().shape({
   email: yup.string().email("Invalid email").required("Email is required"),
+  password: yup.string().required("Password is required"),
 });
 
 export default function LoginPage() {
@@ -27,8 +36,14 @@ export default function LoginPage() {
   } = form;
 
   const onSubmit: SubmitHandler<FormInputs> = async (data) => {
-    console.log(data);
-    toast.success("Logged in (stub) — no request was sent");
+    const result = await loginAction(data);
+
+    if (!result.success) {
+      toast.error(result.message);
+      return;
+    }
+
+    toast.success(result.message);
   };
 
   return (
@@ -39,8 +54,14 @@ export default function LoginPage() {
       </CardHeader>
 
       <CardContent className="p-0">
-        <Form onSubmit={handleSubmit(onSubmit)} methods={form} id="login-form">
+        <Form
+          onSubmit={handleSubmit(onSubmit)}
+          methods={form}
+          id="login-form"
+          className="flex flex-col gap-4"
+        >
           <RHFInput name="email" label="Email" type="email" />
+          <RHFInput name="password" label="Password" type="password" />
         </Form>
       </CardContent>
 

@@ -9,17 +9,17 @@ import { Button, Card, CardContent, CardFooter, CardHeader } from "@repo/fronten
 import { Form } from "@repo/frontend/components/form/form-provider";
 import { RHFInput } from "@repo/frontend/components/form/rhf-input";
 import { RHFRadioGroup } from "@repo/frontend/components/form/rhf-radio-group";
-import { FormInput } from "@repo/frontend/components/form/form-input";
+import { registerAction } from "./actions";
 
 const schema = yup.object().shape({
   name: yup.string().required("Name is required"),
+  email: yup.string().email("Invalid email").required("Email is required"),
+  password: yup.string().required("Password is required"),
   role: yup.string<"student" | "teacher">().required("Role is required"),
   bio: yup.string().default(""),
 });
 
 type FormInputs = yup.InferType<typeof schema>;
-
-const PLACEHOLDER_EMAIL = "invited-user@example.com";
 
 export default function RegisterPage() {
   const [isTeacher, setIsTeacher] = useState(false);
@@ -37,8 +37,19 @@ export default function RegisterPage() {
   } = form;
 
   const onSubmit: SubmitHandler<FormInputs> = async (data) => {
-    console.log({ ...data, email: PLACEHOLDER_EMAIL });
-    toast.success("Registered (stub) — no request was sent");
+    const result = await registerAction({
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      role: data.role,
+    });
+
+    if (!result.success) {
+      toast.error(result.message);
+      return;
+    }
+
+    toast.success(result.message);
   };
 
   return (
@@ -60,12 +71,8 @@ export default function RegisterPage() {
           className="flex flex-col gap-4"
         >
           <RHFInput name="name" label="Full Name" type="text" />
-          <FormInput
-            label="Email"
-            type="email"
-            value={PLACEHOLDER_EMAIL}
-            disabled
-          />
+          <RHFInput name="email" label="Email" type="email" />
+          <RHFInput name="password" label="Password" type="password" />
           <RHFRadioGroup
             name="role"
             label="I'm a..."

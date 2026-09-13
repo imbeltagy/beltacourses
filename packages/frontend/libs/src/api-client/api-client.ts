@@ -1,6 +1,7 @@
 import { buildUrl, extractError } from "./helpers";
 import { APIMethod, ApiClientResponse, RequestOptions } from "./types";
 import { refreshAccessToken } from "./refresh-token";
+import { getCookie, Cookies } from "../cookies";
 
 const UNEXPECTED_ERROR_MESSAGE = "Something went wrong. Please try again.";
 const NETWORK_ERROR_MESSAGE =
@@ -45,7 +46,7 @@ export class ApiClient {
       }
 
       if (!this.guest) {
-        const accessToken = "dump-token";
+        const accessToken = await getCookie(Cookies.ACCESS_TOKEN);
         if (accessToken) {
           headers["Authorization"] = `Bearer ${accessToken}`;
         }
@@ -93,7 +94,11 @@ export class ApiClient {
       // Auth recovery: on 401/403, refresh once and replay the original
       // request. No logout here — a failed refresh (or a second 401/403 on
       // the replay) is just returned as the final error.
-      if ((res.status === 401 || res.status === 403) && !retried && !this.guest) {
+      if (
+        (res.status === 401 || res.status === 403) &&
+        !retried &&
+        !this.guest
+      ) {
         const refreshResult = await refreshAccessToken();
 
         if (refreshResult.success) {
