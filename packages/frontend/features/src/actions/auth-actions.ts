@@ -42,7 +42,10 @@ export async function loginAction(data: LoginRequest): Promise<ActionResult> {
 
   await storeSession(result.data);
 
-  return { success: true, message: result.message };
+  // Not `result.message`: these endpoints return no `message` field, so the
+  // api-client falls back to the literal string "success" — which is what the
+  // user would otherwise read in the toast. Success copy belongs to the action.
+  return { success: true, message: "Welcome back!" };
 }
 
 export async function registerAction(
@@ -64,5 +67,19 @@ export async function registerAction(
 
   // Register returns the new user profile, not tokens — log in immediately
   // after so the caller lands authenticated either way.
-  return loginAction({ email: data.email, password: data.password });
+  const session = await loginAction({
+    email: data.email,
+    password: data.password,
+  });
+
+  if (!session.success) {
+    // The account exists; only the follow-up login failed. Say so, rather than
+    // letting "Invalid email or password" imply the registration was rejected.
+    return {
+      success: false,
+      message: "Account created, but signing you in failed. Please log in.",
+    };
+  }
+
+  return { success: true, message: "Your account is ready." };
 }

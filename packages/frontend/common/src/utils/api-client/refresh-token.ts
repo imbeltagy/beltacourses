@@ -1,5 +1,4 @@
 import { extractError } from "./helpers";
-import { apiBaseUrl } from "./config";
 import { getCookie, setCookie, Cookies } from "../cookies";
 
 type RefreshResult =
@@ -8,6 +7,20 @@ type RefreshResult =
 
 const SESSION_EXPIRED_MESSAGE =
   "Your session has expired. Please log in again.";
+
+/**
+ * The one URL this package builds itself. Every other URL arrives already
+ * absolute from `@repo/frontend-features/configs/endpoints`, which owns the
+ * base URL — but this package cannot import from that one without inverting
+ * the dependency, and the refresh has to happen here, inside the retry.
+ *
+ * Fold this into `ApiClient` when it moves to static methods (see TODO.md).
+ */
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+if (!API_BASE_URL) {
+  throw new Error("NEXT_PUBLIC_API_BASE_URL is not set.");
+}
 
 type RefreshResponsePayload = {
   access_token: string;
@@ -30,7 +43,7 @@ async function performRefresh(): Promise<RefreshResult> {
     };
   }
 
-  const res = await fetch(`${apiBaseUrl()}/auth/refresh`, {
+  const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh_token: refreshToken }),
