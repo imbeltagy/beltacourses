@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...and the template is opted in, same as apps/api. CLAUDE.md requires every
+# new variable to land here as well as in turbo.json's globalEnv.
+!.env.example
 
 # vercel
 .vercel
