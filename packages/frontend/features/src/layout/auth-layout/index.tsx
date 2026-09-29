@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { Logo } from "../../components/logo";
+import { Logo } from "@repo/frontend/components/logo";
 
 export function AuthLayout({
   children,

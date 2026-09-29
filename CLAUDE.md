@@ -4,18 +4,34 @@ Conventions for this repo. Read this before adding a feature.
 
 ## Repo shape
 
-pnpm + Turborepo. Workspaces are `apps/*` and `packages/*`.
+pnpm + Turborepo. Workspaces are `apps/*`, `packages/*` and `packages/frontend/*`.
 
-| Path                                                                  | Package         | Role                                                   |
-| --------------------------------------------------------------------- | --------------- | ------------------------------------------------------ |
-| `apps/api`                                                            | `api`           | NestJS 11 HTTP app.                                    |
-| `apps/web`, `apps/docs`                                               | —               | Frontends.                                             |
-| `packages/service`                                                    | `@repo/service` | NestJS **providers** shared across apps.               |
-| `packages/database`                                                   | `@repo/db`      | Prisma 7 schema, generated client, `prisma` singleton. |
-| `packages/ui`, `packages/eslint-config`, `packages/typescript-config` | —               | Shared frontend/tooling.                               |
+| Path                                                | Package                   | Role                                                   |
+| --------------------------------------------------- | ------------------------- | ------------------------------------------------------ |
+| `apps/api`                                          | `api`                     | NestJS 11 HTTP app.                                    |
+| `apps/client`                                       | `client`                  | Next.js 16 frontend. **Routing only** — see below.     |
+| `packages/service`                                  | `@repo/service`           | NestJS **providers** shared across apps.               |
+| `packages/database`                                 | `@repo/db`                | Prisma 7 schema, generated client, `prisma` singleton. |
+| `packages/frontend/common`                          | `@repo/frontend`          | Design system + non-React utils (api-client, cookies). |
+| `packages/frontend/features`                        | `@repo/frontend-features` | Pages, actions, API types, page layouts.               |
+| `packages/eslint-config`, `packages/typescript-config` | —                      | Shared tooling.                                        |
 
 Packages are consumed as **raw TypeScript source**, not compiled output. There is no build step
-inside `packages/service` — apps bundle it.
+inside `packages/service` — apps bundle it. Frontend packages are listed in the consuming app's
+`transpilePackages`.
+
+## Where does frontend code go?
+
+`apps/client` is a router. A route file re-exports a page and nothing else:
+
+```tsx
+export { default } from "@repo/frontend-features/pages/auth/login";
+```
+
+Only what cannot leave the app stays in it — `middleware.ts`, route handlers, `not-found.tsx`,
+`globals.css`, the root layout. Pages, server actions, API types and page shells go in
+`@repo/frontend-features`; anything a second app would reuse unchanged goes in `@repo/frontend`.
+Each package's README documents its own layout and export pattern.
 
 ## Where does a new service go?
 

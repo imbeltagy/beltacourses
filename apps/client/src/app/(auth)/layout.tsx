@@ -1,4 +1,4 @@
-import { AuthLayout } from "@repo/frontend/layout/auth-layout";
+import { AuthLayout } from "@repo/frontend-features/layout/auth-layout";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return <AuthLayout>{children}</AuthLayout>;

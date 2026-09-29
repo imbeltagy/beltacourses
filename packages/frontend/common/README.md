@@ -1,7 +1,12 @@
 # @repo/frontend
 
-Shared shadcn/ui primitives, theme, fonts, and form/layout components used by every
-frontend app in this repo (`apps/client`, and future frontend apps).
+Shared shadcn/ui primitives, theme, fonts, form components and browser/server
+utilities used by every frontend app in this repo (`apps/client`, and future
+frontend apps).
+
+This package holds only things **more than one app could reuse**. Anything that
+belongs to a single product surface — pages, server actions, API types, page
+layouts — lives in [`@repo/frontend-features`](../features/README.md) instead.
 
 ## Adding a new shadcn component
 
@@ -29,11 +34,28 @@ one line for it to `src/ui/index.ts`: `export * from "./<name>.tsx";`.
   - `src/fonts` — shared Geist font setup, imported as `@repo/frontend/fonts`.
   - `src/theme/<name>` — `app-theme` (theme provider + toaster), imported as
     `@repo/frontend/theme/<name>`.
-  - `src/layout/<name>` — shared page shells (e.g. the auth split-screen layout),
-    imported as `@repo/frontend/layout/<name>`.
   - `src/utils` — the `cn()` helper, imported as `@repo/frontend/utils`.
 
-Two exceptions to the wildcard, both exact keys in `package.json` `exports`:
-`./ui` (barrel is `index.ts`, not `index.tsx`, to match shadcn's own file naming)
-and `./styles/theme.css` (not a JS/TS module) — imported with
+## `src/utils` — the non-React half
+
+Framework-agnostic helpers with no JSX. They sit under `utils/` rather than in a
+second package because splitting them out bought nothing but a second manifest,
+a second tsconfig and a second entry in every consumer's `transpilePackages`.
+
+- `src/utils/api-client` → `@repo/frontend/utils/api-client`. Exports the
+  `ApiClient` class plus two ready-made instances: `api` (sends the access-token
+  cookie) and `apiGuest` (does not). **It never throws** — every path resolves to
+  a discriminated `ApiClientResponse<T>`, so callers branch on `success` rather
+  than wrapping calls in `try`/`catch`. On a 401/403 it refreshes the access
+  token once and replays the original request; a second failure is returned as
+  the final error. Concurrent refreshes share one in-flight promise.
+- `src/utils/cookies` → `@repo/frontend/utils/cookies`. `"use server"` accessors
+  over `next/headers`, keyed by the `Cookies` enum. Auth tokens are stored
+  httpOnly, so they are readable from server actions only — never from the
+  browser.
+
+Both are `index.ts`, not `index.tsx`, so each needs an exact key in the
+`package.json` `exports` map — the `./*` wildcard only resolves `.tsx` barrels.
+The same applies to `./ui` (matching shadcn's own file naming) and
+`./styles/theme.css` (not a JS/TS module at all), imported with
 `@import "@repo/frontend/styles/theme.css";`.

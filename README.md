@@ -24,7 +24,7 @@ This will automatically trigger this command after finish:
 pnpm dlx turbo run db:generate
 ```
 
-`@repo/db` (like `@repo/service` and `@repo/ui`) is consumed as raw TypeScript
+`@repo/db` (like `@repo/service` and the `@repo/frontend*` packages) is consumed as raw TypeScript
 source, not a compiled package — apps bundle it themselves. `db:generate`
 still has to run first though: it's Prisma codegen (into the gitignored
 `packages/database/generated/`), not a package build, and both `@repo/db`'s
@@ -93,8 +93,8 @@ pnpm dlx turbo run db:preview
 
 NestJS apps (like `apps/api`) run through webpack so they can import
 `@repo/*` workspace packages as raw source with no build step, live-reloading
-on every edit — the same relationship `apps/web` has with `@repo/ui` via
-Next.js's own bundler. `apps/api` is the template; a plain `nest new` app
+on every edit — the same relationship `apps/client` has with `@repo/frontend`
+via Next.js's own bundler. `apps/api` is the template; a plain `nest new` app
 doesn't have this wired up by default.
 
 1. Scaffold it: `npm i -g @nestjs/cli`, then from the repo root

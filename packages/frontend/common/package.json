@@ -4,6 +4,8 @@
   "private": true,
   "exports": {
     "./ui": "./src/ui/index.ts",
+    "./utils/api-client": "./src/utils/api-client/index.ts",
+    "./utils/cookies": "./src/utils/cookies/index.ts",
     "./*": "./src/*/index.tsx",
     "./styles/theme.css": "./src/styles/theme.css"
   },

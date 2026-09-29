@@ -36,3 +36,6 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Scratch backlog — never committed. See the note at the top of the file.
+TODO.md
