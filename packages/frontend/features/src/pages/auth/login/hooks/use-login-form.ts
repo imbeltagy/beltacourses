@@ -4,6 +4,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { toast } from "sonner";
+import { loginAction } from "../../../../actions/auth-actions";
 
 const schema = yup.object().shape({
   email: yup.string().email("Invalid email").required("Email is required"),
@@ -20,9 +21,15 @@ export type LoginFormInputs = yup.InferType<typeof schema>;
 export function useLoginForm() {
   const form = useForm<LoginFormInputs>({ resolver: yupResolver(schema) });
 
-  const submit: SubmitHandler<LoginFormInputs> = async () => {
-    // TODO: call loginAction once `src/actions` lands.
-    toast.error("Login is not connected to the API yet.");
+  const submit: SubmitHandler<LoginFormInputs> = async (data) => {
+    const result = await loginAction(data);
+
+    if (!result.success) {
+      toast.error(result.message);
+      return;
+    }
+
+    toast.success(result.message);
   };
 
   return { form, onSubmit: form.handleSubmit(submit) };

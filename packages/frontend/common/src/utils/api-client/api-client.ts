@@ -1,3 +1,8 @@
+// `RequestOptions.next` is Next's augmentation of `RequestInit`, so the
+// reference lives here rather than in a package-level `global.d.ts` — it has to
+// reach every package that type-checks this file, not just this one.
+/// <reference types="next/types/global" />
+
 import { buildUrl, extractError } from "./helpers";
 import { APIMethod, ApiClientResponse, RequestOptions } from "./types";
 import { refreshAccessToken } from "./refresh-token";

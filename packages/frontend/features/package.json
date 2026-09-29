@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
+    "./actions/*": "./src/actions/*.ts",
+    "./types/*": "./src/types/*.ts",
+    "./configs/*": "./src/configs/*.ts",
     "./*": "./src/*/index.tsx"
   },
   "scripts": {

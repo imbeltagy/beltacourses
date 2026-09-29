@@ -1,4 +1,5 @@
 import { extractError } from "./helpers";
+import { apiBaseUrl } from "./config";
 import { getCookie, setCookie, Cookies } from "../cookies";
 
 type RefreshResult =
@@ -7,13 +8,6 @@ type RefreshResult =
 
 const SESSION_EXPIRED_MESSAGE =
   "Your session has expired. Please log in again.";
-
-if (!process.env.NEXT_PUBLIC_API_URL) {
-  throw new Error(
-    "NEXT_PUBLIC_API_URL is not set — cannot build the /auth/refresh URL.",
-  );
-}
-const refreshTokenApiUrl = `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`;
 
 type RefreshResponsePayload = {
   access_token: string;
@@ -36,7 +30,7 @@ async function performRefresh(): Promise<RefreshResult> {
     };
   }
 
-  const res = await fetch(refreshTokenApiUrl, {
+  const res = await fetch(`${apiBaseUrl()}/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh_token: refreshToken }),
