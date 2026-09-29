@@ -7,7 +7,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:preview": "prisma studio",
-    "dev": "prisma studio"
+    "dev": "prisma studio --browser none --port 3003"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
