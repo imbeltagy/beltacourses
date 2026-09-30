@@ -1,23 +1,14 @@
 "use server";
 
-import { apiGuest } from "@repo/frontend/utils/api-client";
-import { Cookies, setCookie } from "@repo/frontend/utils/cookies";
+import { api, apiGuest } from "@repo/frontend/utils/api-client";
+import { Cookies, deleteCookie, setCookie } from "@repo/frontend/utils/cookies";
 import { endpoints } from "../configs/endpoints";
+import type { ActionResult } from "../types/action";
 import type {
   LoginRequest,
   LoginResponse,
   RegisterRequest,
 } from "../types/api/auth";
-
-/**
- * What every action in this file resolves to. Actions never throw and never
- * leak a status code to the UI — a page's hook branches on `success` and shows
- * `message`.
- */
-export type ActionResult = {
-  success: boolean;
-  message: string;
-};
 
 /**
  * The API returns both tokens in the JSON body (see the "Token transport" open
@@ -82,4 +73,45 @@ export async function registerAction(
   }
 
   return { success: true, message: "Your account is ready." };
+}
+
+/**
+ * Staff sign-in for the admin panel. Same credentials shape and same response
+ * as `loginAction`, but a different endpoint: `POST /auth/moderators/login`
+ * rejects anyone who is not an `admin` or `super_admin`, and issues a much
+ * shorter-lived access token (5 min vs 30) backed by a Redis session the API
+ * can revoke.
+ */
+export async function loginModeratorAction(
+  data: LoginRequest,
+): Promise<ActionResult> {
+  const result = await apiGuest.post<LoginResponse>(
+    endpoints.auth.moderatorLogin(),
+    data,
+  );
+
+  if (!result.success) {
+    return { success: false, message: result.message };
+  }
+
+  await storeSession(result.data);
+
+  return { success: true, message: "Welcome back!" };
+}
+
+/**
+ * Revoke first, then clear: `POST /auth/logout` is behind `@Auth()`, so it
+ * needs the access-token cookie that the next two lines remove.
+ *
+ * The result of the revoke is deliberately ignored. A moderator session that
+ * the API refused to kill is a server-side problem; leaving the browser holding
+ * cookies it believes are live would make it the user's problem too.
+ */
+export async function logoutAction(): Promise<ActionResult> {
+  await api.post(endpoints.auth.logout(), {});
+
+  await deleteCookie(Cookies.ACCESS_TOKEN);
+  await deleteCookie(Cookies.REFRESH_TOKEN);
+
+  return { success: true, message: "Signed out." };
 }

@@ -1,3 +1,15 @@
+/*
+ * Tailwind does not scan node_modules, and both frontend packages reach an app
+ * through a workspace symlink — so without these every class used only in a
+ * package is silently absent from the build. Silently: no error, no warning,
+ * just an unstyled element.
+ *
+ * They live here, next to the theme every app already imports, so a new app
+ * gets them by importing one file. Paths resolve relative to THIS file.
+ */
+@source "../";
+@source "../../../features/src";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

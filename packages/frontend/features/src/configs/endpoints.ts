@@ -14,9 +14,22 @@ if (!apiBaseUrl) {
 export const endpoints = {
   auth: {
     login: () => `${apiBaseUrl}/auth/login`,
+    /** Staff sign-in. Rejects anyone who is not an admin or super_admin. */
+    moderatorLogin: () => `${apiBaseUrl}/auth/moderators/login`,
     register: () => `${apiBaseUrl}/auth/register`,
+    logout: () => `${apiBaseUrl}/auth/logout`,
   },
   users: {
+    list: () => `${apiBaseUrl}/users`,
+    me: () => `${apiBaseUrl}/users/me`,
     byId: (userId: string) => `${apiBaseUrl}/users/${userId}`,
+  },
+  groups: {
+    list: () => `${apiBaseUrl}/groups`,
+    /** Must stay above `byId` in any route-order-sensitive reasoning. */
+    permissions: () => `${apiBaseUrl}/groups/permissions`,
+    byId: (groupId: string) => `${apiBaseUrl}/groups/${groupId}`,
+    user: (groupId: string, userId: string) =>
+      `${apiBaseUrl}/groups/${groupId}/users/${userId}`,
   },
 };

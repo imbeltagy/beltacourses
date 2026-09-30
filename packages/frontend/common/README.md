@@ -21,6 +21,17 @@ pnpm dlx shadcn@latest add <component>
 The CLI writes a flat `src/ui/<name>.tsx` file, same as any shadcn project — add
 one line for it to `src/ui/index.ts`: `export * from "./<name>.tsx";`.
 
+Two things it gets wrong here, both of which need fixing by hand afterwards:
+
+- **It rewrites `cn` to an npm package.** It resolves the `utils` alias in
+  `components.json` to a real (unrelated) package called `cn` on npm, writes
+  `import { cn } from "cn"`, and adds it to `dependencies`. Change the import to
+  `from "../utils"` to match every other file here, and drop the dependency.
+- **It needs the aliases to resolve.** The `paths` block in `tsconfig.json`
+  exists only for the CLI — nothing in `src` imports through those aliases,
+  because a path alias inside a package does not survive into the consuming
+  app's bundler. Do not start using them in source.
+
 ## Layout
 
 - `src/ui/<name>.tsx` — shadcn primitives (`button`, `card`, `input`, ...), flat

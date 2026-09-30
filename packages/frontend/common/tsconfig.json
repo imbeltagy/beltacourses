@@ -4,7 +4,19 @@
     "outDir": "dist",
     "strictNullChecks": true,
     "noEmit": true,
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    // Only so the shadcn CLI can resolve the aliases in components.json — the
+    // source itself imports relatively (`../utils`), because a path alias in a
+    // package does not survive into the consuming app's bundler.
+    "paths": {
+      "@repo/frontend/ui/*": ["./src/ui/*"],
+      "@repo/frontend/components": ["./src/components"],
+      "@repo/frontend/components/*": ["./src/components/*"],
+      "@repo/frontend/hooks": ["./src/hooks"],
+      "@repo/frontend/hooks/*": ["./src/hooks/*"],
+      "@repo/frontend/utils": ["./src/utils/index.tsx"],
+      "@repo/frontend": ["./src"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

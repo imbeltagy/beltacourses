@@ -1,4 +1,4 @@
 @import "tailwindcss";
-@source "../../../../packages/frontend/common/src";
 @import "tw-animate-css";
+/* Also declares the @source roots for both frontend packages. */
 @import "@repo/frontend/styles/theme.css";

@@ -35,7 +35,7 @@ source and anything importing it need that generated client to exist.
 Start the database:
 
 ```sh
-docker compose -f ./compose/dev.yml up --build -d
+docker compose up -d
 ```
 
 Start the apps:
@@ -44,15 +44,27 @@ Start the apps:
 pnpm dlx turbo run dev
 ```
 
-### API URLs
+### Ports
 
-`apps/api` runs on port **3002** in development.
+`turbo run dev` starts everything at once, so each process has its own port.
+
+| Port     | What                                             |
+| -------- | ------------------------------------------------ |
+| **3000** | `apps/api` — NestJS. `PORT` overrides it.        |
+| **3001** | `apps/client` — the public Next.js frontend.     |
+| **3002** | `apps/admin` — the staff control panel.          |
+| **3003** | Prisma Studio (`@repo/db`'s `dev` script).       |
+
+Both frontends read the API's location from `NEXT_PUBLIC_API_BASE_URL`; each has
+a `.env.example` to copy.
+
+### API URLs
 
 | URL                                | What it is                                                                               |
 | ---------------------------------- | ---------------------------------------------------------------------------------------- |
-| http://localhost:3002/health-check | Liveness check.                                                                          |
-| http://localhost:3002/docs         | Swagger UI — every endpoint, with a request runner.                                      |
-| http://localhost:3002/queues       | BullBoard — BullMQ queue monitor: scheduled jobs, run history, logs, and manual re-runs. |
+| http://localhost:3000/health-check | Liveness check.                                                                          |
+| http://localhost:3000/docs         | Swagger UI — every endpoint, with a request runner.                                      |
+| http://localhost:3000/queues       | BullBoard — BullMQ queue monitor: scheduled jobs, run history, logs, and manual re-runs. |
 
 `/docs` and `/queues` are **unauthenticated**. Gate both before exposing the API
 outside local development — BullBoard can trigger and remove jobs.
@@ -88,6 +100,34 @@ Live preview the database:
 ```sh
 pnpm dlx turbo run db:preview
 ```
+
+## Adding a new frontend app
+
+Frontend apps are **routers**. `apps/client` and `apps/admin` are both a root
+layout plus route files that re-export a page:
+
+```tsx
+// apps/<name>/src/app/users/page.tsx
+export { default } from "@repo/frontend-features/pages/admin/users";
+```
+
+Copy `apps/admin` as the template, then:
+
+1. Rename it in `package.json` and pick a free port for `dev`/`start`
+   (see [Ports](#ports)).
+2. Keep `transpilePackages: ["@repo/frontend", "@repo/frontend-features"]` in
+   `next.config.ts` — both packages ship raw TypeScript.
+3. Keep `src/app/globals.css` as-is. It imports `@repo/frontend/styles/theme.css`,
+   which declares the `@source` roots for both packages. **Without those,
+   Tailwind silently emits no CSS for any class used only inside a package** —
+   no error, just unstyled elements.
+4. Copy `.env.example` to `.env` and set `NEXT_PUBLIC_API_BASE_URL`.
+5. Put pages in `@repo/frontend-features`, not in the app. Only what genuinely
+   cannot leave the app stays: `middleware.ts`, route handlers, `not-found.tsx`,
+   the root layout, and route-group layouts that guard access.
+
+Note that `public/assets` is currently duplicated per app — see the static-files
+item on the backlog.
 
 ## Adding a new NestJS app
 

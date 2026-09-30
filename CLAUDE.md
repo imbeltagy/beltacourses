@@ -9,7 +9,8 @@ pnpm + Turborepo. Workspaces are `apps/*`, `packages/*` and `packages/frontend/*
 | Path                                                | Package                   | Role                                                   |
 | --------------------------------------------------- | ------------------------- | ------------------------------------------------------ |
 | `apps/api`                                          | `api`                     | NestJS 11 HTTP app.                                    |
-| `apps/client`                                       | `client`                  | Next.js 16 frontend. **Routing only** — see below.     |
+| `apps/client`                                       | `client`                  | Next.js 16 public frontend. **Routing only** — see below. |
+| `apps/admin`                                        | `admin`                   | Next.js 16 staff control panel. **Routing only.**      |
 | `packages/service`                                  | `@repo/service`           | NestJS **providers** shared across apps.               |
 | `packages/database`                                 | `@repo/db`                | Prisma 7 schema, generated client, `prisma` singleton. |
 | `packages/frontend/common`                          | `@repo/frontend`          | Design system + non-React utils (api-client, cookies). |
@@ -29,9 +30,19 @@ export { default } from "@repo/frontend-features/pages/auth/login";
 ```
 
 Only what cannot leave the app stays in it — `middleware.ts`, route handlers, `not-found.tsx`,
-`globals.css`, the root layout. Pages, server actions, API types and page shells go in
-`@repo/frontend-features`; anything a second app would reuse unchanged goes in `@repo/frontend`.
-Each package's README documents its own layout and export pattern.
+`globals.css`, the root layout, and route-group layouts that guard access. Pages, server actions,
+API types and page shells go in `@repo/frontend-features`; anything a second app would reuse
+unchanged goes in `@repo/frontend`. Each package's README documents its own layout and export
+pattern.
+
+A page directory splits three ways, so each part changes for one reason: `index.tsx` is a server
+component holding the static half, `components/` is the `"use client"` markup, and `hooks/` owns the
+schema, form instance and submit handler. List state (page, search, filters) lives in the URL, which
+is what keeps a list page a server component.
+
+**Tailwind does not scan `node_modules`.** `@repo/frontend/styles/theme.css` declares the `@source`
+roots for both frontend packages, and every app imports it from `globals.css`. Drop that import and
+classes used only inside a package silently produce no CSS.
 
 ## Where does a new service go?
 
