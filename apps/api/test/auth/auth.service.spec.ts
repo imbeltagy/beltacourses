@@ -4,7 +4,7 @@ import {
   PasswordService,
   SessionService,
   TokenService,
-} from '@repo/service/core';
+} from '@repo/backend/core';
 import { AuthService } from '../../src/auth/auth.service';
 import { UsersService } from '../../src/users/users.service';
 

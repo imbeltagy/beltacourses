@@ -23,8 +23,8 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { CurrentUser, MODERATOR_ROLES, PERMISSIONS } from '@repo/service/core';
-import type { RequestUser } from '@repo/service/core';
+import { CurrentUser, MODERATOR_ROLES, PERMISSIONS } from '@repo/backend/core';
+import type { RequestUser } from '@repo/backend/core';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { CreateUserDto } from './dto/request/create-user.dto';
 import { ListUsersQueryDto } from './dto/request/list-users.dto';

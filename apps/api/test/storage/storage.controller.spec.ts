@@ -3,7 +3,7 @@ import {
   AccessTokenGuard,
   PermissionsGuard,
   RolesGuard,
-} from '@repo/service/core';
+} from '@repo/backend/core';
 import { StorageService } from '../../src/storage/storage.service';
 import { StorageController } from '../../src/storage/storage.controller';
 import { FileMetadata } from '@repo/db';

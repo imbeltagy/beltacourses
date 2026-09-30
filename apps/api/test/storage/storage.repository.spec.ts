@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaService } from '@repo/service/prisma';
+import { PrismaService } from '@repo/backend/prisma';
 import { StorageRepository } from '../../src/storage/storage.repository';
 import { FileMetadata } from '@repo/db';
 

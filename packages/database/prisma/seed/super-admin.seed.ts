@@ -5,9 +5,9 @@ const DEFAULT_SALT_ROUNDS = 12;
 
 /**
  * Re-implements the exact hashing scheme from
- * `packages/service/src/core/password.service.ts` (`plain + PASSWORD_SALT`,
+ * `packages/backend/src/core/password.service.ts` (`plain + PASSWORD_SALT`,
  * `PASSWORD_SALT_ROUNDS` defaulting to 12) — `@repo/db` cannot import
- * `PasswordService` back without a cycle, since `@repo/service` depends on
+ * `PasswordService` back without a cycle, since `@repo/backend` depends on
  * `@repo/db`. If either scheme changes and the other does not, the seeded
  * account silently cannot log in.
  */

@@ -6,7 +6,7 @@ import {
   RolesGuard,
   SessionService,
   TokenService,
-} from '@repo/service/core';
+} from '@repo/backend/core';
 import { UsersModule } from '../users/users.module';
 import { GroupsController } from './groups.controller';
 import { GroupsRepository } from './groups.repository';

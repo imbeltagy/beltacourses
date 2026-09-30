@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PERMISSION_GROUPS } from '@repo/service/core';
+import { PERMISSION_GROUPS } from '@repo/backend/core';
 import type { PublicUser } from '../users/users.types';
 import { UsersService } from '../users/users.service';
 import type { CreateGroupDto } from './dto/request/create-group.dto';

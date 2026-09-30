@@ -1,4 +1,4 @@
-import { PERMISSION_GROUPS } from '@repo/service/core';
+import { PERMISSION_GROUPS } from '@repo/backend/core';
 
 /**
  * Documents the shape of `PERMISSION_GROUPS` — a nested object of

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@repo/service/prisma';
+import { PrismaService } from '@repo/backend/prisma';
 import type { Prisma } from '@repo/db';
 import type { ListGroupsQueryDto } from './dto/request/list-groups.dto';
 import type { PublicGroup } from './groups.types';

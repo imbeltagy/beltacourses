@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@repo/service/prisma';
-import { RedisService } from '@repo/service/redis';
+import { PrismaService } from '@repo/backend/prisma';
+import { RedisService } from '@repo/backend/redis';
 import { HealthStatus, ServiceStatus } from './health-check.types';
 
 @Injectable()

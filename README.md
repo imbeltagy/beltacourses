@@ -24,7 +24,7 @@ This will automatically trigger this command after finish:
 pnpm dlx turbo run db:generate
 ```
 
-`@repo/db` (like `@repo/service` and the `@repo/frontend*` packages) is consumed as raw TypeScript
+`@repo/db` (like `@repo/backend` and the `@repo/frontend*` packages) is consumed as raw TypeScript
 source, not a compiled package — apps bundle it themselves. `db:generate`
 still has to run first though: it's Prisma codegen (into the gitignored
 `packages/database/generated/`), not a package build, and both `@repo/db`'s
@@ -146,7 +146,7 @@ doesn't have this wired up by default.
    needs editing per-package.
 3. Add `webpack-node-externals` to `devDependencies` (`webpack.config.js`
    requires it directly).
-4. If the app imports `@repo/db` transitively (e.g. via `@repo/service`),
+4. If the app imports `@repo/db` transitively (e.g. via `@repo/backend`),
    TypeScript's `nodenext` module resolution (the repo default) will fail on
    Prisma's generated client, which uses extensionless relative imports.
    Fix by overriding `module`/`moduleResolution` to `esnext`/`bundler` in the
@@ -155,16 +155,16 @@ doesn't have this wired up by default.
    unaffected.
 5. Add the workspace packages you need as normal `workspace:*` dependencies.
 
-## Adding a new NestJS service package
+## Adding a new NestJS package
 
-Service packages (like `packages/service`) are libraries, not apps — no
+Backend packages (like `packages/backend`) are libraries, not apps — no
 `main.ts`/bootstrap, imported as raw source by whichever app bundles them.
 
 1. Scaffold it: `nest new packages/<name>`.
 2. Rename it in `package.json` to `@repo/<name>`.
 3. Delete `src/main.ts` and the `test/` e2e scaffolding — those are for a
    runnable app, not a library.
-4. Set `exports` to the source pattern used by `@repo/service`, matching
+4. Set `exports` to the source pattern used by `@repo/backend`, matching
    whatever subpath layout you want callers to use (directory-per-feature
    with an `index.ts` barrel, e.g. `@repo/<name>/health-check`):
    ```json

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@repo/service/prisma';
+import { PrismaService } from '@repo/backend/prisma';
 import { FileMetadata } from '@repo/db';
 
 export interface CreateFileData {

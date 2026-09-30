@@ -112,7 +112,7 @@ whenever a status changes to `Blocked`, and remove it once the task moves on.
 ### Current state of the repo
 
 Turborepo workspace with `apps/api` (NestJS), `apps/web`, `apps/docs`, `packages/database` (Prisma)
-and `packages/service` (shared NestJS providers). T-001, T-003, T-004 and T-005 are `Done`: file
+and `packages/backend` (shared NestJS providers). T-001, T-003, T-004 and T-005 are `Done`: file
 upload, users CRUD, JWT authentication with moderator Redis sessions, and roles/permissions-based
 authorization with admin permission groups. `packages/database/prisma/drafts/` still holds an older,
 inert draft schema (courses, wallets, offers, student lists, and an `AccessGroup`/`Permission` model

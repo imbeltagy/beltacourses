@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { RedisService } from '@repo/service/redis';
+import { RedisService } from '@repo/backend/redis';
 import { REFRESH_TOKEN_HASH_SECRET } from './core.constants';
 import {
   MODERATOR_REFRESH_TOKEN_TTL_SECONDS,

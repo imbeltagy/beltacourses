@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Role } from '@repo/db';
-import { AccessTokenGuard } from '@repo/service/core';
+import { AccessTokenGuard } from '@repo/backend/core';
 import { AuthController } from '../../src/auth/auth.controller';
 import { AuthService } from '../../src/auth/auth.service';
 

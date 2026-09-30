@@ -1,5 +1,5 @@
-import { PrismaService } from '@repo/service/prisma';
-import { RedisService } from '@repo/service/redis';
+import { PrismaService } from '@repo/backend/prisma';
+import { RedisService } from '@repo/backend/redis';
 import { HealthCheckService } from '../../src/health-check/health-check.service';
 
 describe('HealthCheckService', () => {

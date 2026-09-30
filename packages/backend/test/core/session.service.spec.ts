@@ -1,4 +1,4 @@
-import { RedisService } from '@repo/service/redis';
+import { RedisService } from '@repo/backend/redis';
 
 type SessionServiceCtor =
   typeof import('../../src/core/session.service').SessionService;

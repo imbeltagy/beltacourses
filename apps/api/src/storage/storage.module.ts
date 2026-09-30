@@ -9,7 +9,7 @@ import {
   RolesGuard,
   SessionService,
   TokenService,
-} from '@repo/service/core';
+} from '@repo/backend/core';
 import { S3Adapter } from './s3.adapter';
 import { StorageProcessor } from './storage.processor';
 import { StorageRepository } from './storage.repository';

@@ -11,14 +11,14 @@ pnpm + Turborepo. Workspaces are `apps/*`, `packages/*` and `packages/frontend/*
 | `apps/api`                                          | `api`                     | NestJS 11 HTTP app.                                    |
 | `apps/client`                                       | `client`                  | Next.js 16 public frontend. **Routing only** — see below. |
 | `apps/admin`                                        | `admin`                   | Next.js 16 staff control panel. **Routing only.**      |
-| `packages/service`                                  | `@repo/service`           | NestJS **providers** shared across apps.               |
+| `packages/backend`                                  | `@repo/backend`           | NestJS **providers** shared across apps.               |
 | `packages/database`                                 | `@repo/db`                | Prisma 7 schema, generated client, `prisma` singleton. |
 | `packages/frontend/common`                          | `@repo/frontend`          | Design system + non-React utils (api-client, cookies). |
 | `packages/frontend/features`                        | `@repo/frontend-features` | Pages, actions, API types, page layouts.               |
 | `packages/eslint-config`, `packages/typescript-config` | —                      | Shared tooling.                                        |
 
 Packages are consumed as **raw TypeScript source**, not compiled output. There is no build step
-inside `packages/service` — apps bundle it. Frontend packages are listed in the consuming app's
+inside `packages/backend` — apps bundle it. Frontend packages are listed in the consuming app's
 `transpilePackages`.
 
 ## Where does frontend code go?
@@ -48,20 +48,20 @@ classes used only inside a package silently produce no CSS.
 
 This is the first decision for any backend feature.
 
-**Used by more than one app** → `packages/service/src/<name>/`, imported as `@repo/service/<name>`.
+**Used by more than one app** → `packages/backend/src/<name>/`, imported as `@repo/backend/<name>`.
 Example: the storage service — the API, and later a worker or admin app, all upload files.
 
 **Used by exactly one app** → keep it inside that app, e.g. `apps/api/src/users/`. Do not put it in
-`packages/service` "in case someone needs it later." Move it when a second app actually needs it.
+`packages/backend` "in case someone needs it later." Move it when a second app actually needs it.
 
 When unsure, start app-local. Promoting later is a file move; demoting is a dependency cleanup across
 every consumer.
 
-## Rules for services in `packages/service`
+## Rules for services in `packages/backend`
 
-1. **`index.ts` is mandatory.** `packages/service/package.json` has
+1. **`index.ts` is mandatory.** `packages/backend/package.json` has
    `"exports": { "./*": "./src/*/index.ts" }`, so a directory only becomes importable as
-   `@repo/service/<name>` once it has an `index.ts`. Never edit the `exports` field to add a service —
+   `@repo/backend/<name>` once it has an `index.ts`. Never edit the `exports` field to add a service —
    the wildcard already covers it.
 
 2. **Providers only — no `@Module`, no `@Controller`.** Modules declare `imports`/`providers`/
@@ -128,7 +128,7 @@ a cron pattern registers a second schedule next to the old one instead of replac
 - Every controller is documented: `@ApiTags` on the class, `@ApiOperation` plus a response decorator
   on each route, `@ApiParam` for path params, and `@ApiNotFoundResponse` (etc.) for the error paths a
   caller must handle.
-- **Swagger stays in the app.** Never put `@ApiProperty` on a type in `packages/service` — OpenAPI is
+- **Swagger stays in the app.** Never put `@ApiProperty` on a type in `packages/backend` — OpenAPI is
   a transport concern, and doing so drags `@nestjs/swagger` into shared providers.
 - When a package exposes a plain type and the app needs a documented schema, declare a response class
   in the app that `implements` the package type. The compiler then catches drift between the
@@ -153,7 +153,7 @@ a cron pattern registers a second schedule next to the old one instead of replac
   `prisma/drafts/` are not active.
 - Field names are **snake_case in the Prisma client too** (`mime_type`, `created_at`) — only tables
   are remapped via `@@map`.
-- Access Prisma through `PrismaService` from `@repo/service/prisma`, not by importing `prisma`
+- Access Prisma through `PrismaService` from `@repo/backend/prisma`, not by importing `prisma`
   directly. `PrismaModule` is `@Global()`; the handle is `this.prisma.client`.
 - Soft delete convention: a nullable `deleted_at`. Read paths filter `deleted_at: null`, and a
   soft-deleted row reads as **not found**. Guard re-deletes with `deleted_at: null` in the `where` so
@@ -168,7 +168,7 @@ a cron pattern registers a second schedule next to the old one instead of replac
   when a feature has as many spec files as source files:
 
   ```
-  packages/service/
+  packages/backend/
   ├── src/storage/storage.service.ts
   └── test/storage/storage.service.spec.ts
   ```

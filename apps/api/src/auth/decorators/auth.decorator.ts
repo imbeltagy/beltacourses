@@ -11,7 +11,7 @@ import {
   Roles,
   RolesGuard,
   type Permission,
-} from '@repo/service/core';
+} from '@repo/backend/core';
 import type { Role } from '@repo/db';
 
 export type AuthOptions = {

@@ -1,5 +1,5 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { PERMISSION_GROUPS } from '@repo/service/core';
+import { PERMISSION_GROUPS } from '@repo/backend/core';
 import { GroupsRepository } from '../../src/groups/groups.repository';
 import { GroupsService } from '../../src/groups/groups.service';
 import { UsersService } from '../../src/users/users.service';

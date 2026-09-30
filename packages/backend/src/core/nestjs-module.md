@@ -1,6 +1,6 @@
 # core (app-side)
 
-`@repo/service/core` ships providers only, like every package here — no module, no controller.
+`@repo/backend/core` ships providers only, like every package here — no module, no controller.
 There is no single orchestrating service and no one `CoreModule` to wire: `core` is a set of
 independent, dependency-light primitives (password hashing, JWT signing/verification, the
 moderator session store, the permission matcher + repository, the three guards, and the metadata
@@ -25,7 +25,7 @@ import {
   RolesGuard,
   SessionService,
   TokenService,
-} from '@repo/service/core';
+} from '@repo/backend/core';
 
 @Module({
   providers: [
@@ -56,7 +56,7 @@ both read `request.user`, so they must run after it.
 The sugar decorator that composes the three guards with `@Roles()`/`@Permissions()` and applies
 `@nestjs/swagger` decorators (`ApiBearerAuth`, `ApiUnauthorizedResponse`, `ApiForbiddenResponse`)
 lives in `apps/api/src/auth/decorators/auth.decorator.ts`, not here. `CLAUDE.md`'s Swagger section
-forbids putting `@ApiProperty`/`@nestjs/swagger` in `packages/service` — OpenAPI is a transport
+forbids putting `@ApiProperty`/`@nestjs/swagger` in `packages/backend` — OpenAPI is a transport
 concern — so anything that touches Swagger has to be app-local.
 
 ## Env vars
@@ -66,7 +66,7 @@ concern — so anything that touches Swagger has to be app-local.
 - `ACCESS_TOKEN_SECRET` and `REFRESH_TOKEN_SECRET` (both required, must differ) — read by
   `TokenService`, validated in its constructor with one error naming every missing name at once.
 - `REFRESH_TOKEN_HASH_SECRET` (required) — read by `SessionService`, validated in its constructor.
-- Both `PrismaModule` (`@repo/service/prisma`) and `RedisModule` (`@repo/service/redis`) must be
+- Both `PrismaModule` (`@repo/backend/prisma`) and `RedisModule` (`@repo/backend/redis`) must be
   imported somewhere in the app — both are `@Global()`. `PermissionsRepository` depends on
   `PrismaService`; `SessionService` depends on `RedisService`.
 

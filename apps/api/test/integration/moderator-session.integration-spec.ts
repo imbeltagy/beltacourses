@@ -4,9 +4,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 import { Role } from '@repo/db';
-import { PasswordService, SessionService } from '@repo/service/core';
-import { PrismaService } from '@repo/service/prisma';
-import { RedisService } from '@repo/service/redis';
+import { PasswordService, SessionService } from '@repo/backend/core';
+import { PrismaService } from '@repo/backend/prisma';
+import { RedisService } from '@repo/backend/redis';
 import { AppModule } from '../../src/app.module';
 
 /** A dedicated Redis DB index — never the default one BullMQ/dev use. */

@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Role } from '@repo/db';
-import { PasswordService, SessionService } from '@repo/service/core';
+import { PasswordService, SessionService } from '@repo/backend/core';
 import { UsersRepository } from '../../src/users/users.repository';
 import { UsersService } from '../../src/users/users.service';
 import { StorageService } from '../../src/storage/storage.service';

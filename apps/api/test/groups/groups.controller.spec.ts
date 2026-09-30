@@ -3,7 +3,7 @@ import {
   AccessTokenGuard,
   PermissionsGuard,
   RolesGuard,
-} from '@repo/service/core';
+} from '@repo/backend/core';
 import { GroupsController } from '../../src/groups/groups.controller';
 import { GroupsService } from '../../src/groups/groups.service';
 

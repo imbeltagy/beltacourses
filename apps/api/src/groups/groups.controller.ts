@@ -20,7 +20,7 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { MODERATOR_ROLES, PERMISSIONS } from '@repo/service/core';
+import { MODERATOR_ROLES, PERMISSIONS } from '@repo/backend/core';
 import { Role } from '@repo/db';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { UserResponse } from '../users/dto/response/user.dto';

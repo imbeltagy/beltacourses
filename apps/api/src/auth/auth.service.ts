@@ -9,8 +9,8 @@ import {
   PasswordService,
   SessionService,
   TokenService,
-} from '@repo/service/core';
-import type { RequestUser, TokenUser } from '@repo/service/core';
+} from '@repo/backend/core';
+import type { RequestUser, TokenUser } from '@repo/backend/core';
 import type { FileToUpload } from '../storage/storage.types';
 import type { PublicUser } from '../users/users.types';
 import { UsersService } from '../users/users.service';

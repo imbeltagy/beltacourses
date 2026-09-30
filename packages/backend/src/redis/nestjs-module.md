@@ -1,7 +1,7 @@
 # redis
 
-`@repo/service/redis` ships the one shared Redis handle for the app, modelled on
-`@repo/service/prisma` — a single connection must be shared app-wide, so this is the one package
+`@repo/backend/redis` ships the one shared Redis handle for the app, modelled on
+`@repo/backend/prisma` — a single connection must be shared app-wide, so this is the one package
 here that does ship a module.
 
 ## Wiring
@@ -9,7 +9,7 @@ here that does ship a module.
 Import `RedisModule` once in `AppModule`:
 
 ```ts
-import { RedisModule } from '@repo/service/redis';
+import { RedisModule } from '@repo/backend/redis';
 
 @Module({ imports: [RedisModule /* ... */] })
 export class AppModule {}

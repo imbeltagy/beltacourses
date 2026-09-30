@@ -18,7 +18,7 @@ import type { TokenClaims, TokenPair, TokenUser } from './auth.types';
  * Signs and verifies both token kinds with **separate** secrets (D13) — a
  * leaked access secret must not be able to mint refresh tokens. Two private
  * `JwtService` instances are constructed directly (D17): `JwtModule` is a
- * `@Module`, and `packages/service` ships providers only.
+ * `@Module`, and `packages/backend` ships providers only.
  */
 @Injectable()
 export class TokenService {

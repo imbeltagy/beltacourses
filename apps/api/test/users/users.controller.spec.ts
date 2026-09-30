@@ -4,8 +4,8 @@ import {
   AccessTokenGuard,
   PermissionsGuard,
   RolesGuard,
-} from '@repo/service/core';
-import type { RequestUser } from '@repo/service/core';
+} from '@repo/backend/core';
+import type { RequestUser } from '@repo/backend/core';
 import { UsersController } from '../../src/users/users.controller';
 import { UsersService } from '../../src/users/users.service';
 

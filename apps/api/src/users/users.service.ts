@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PasswordService, SessionService } from '@repo/service/core';
+import { PasswordService, SessionService } from '@repo/backend/core';
 import { Role, type User } from '@repo/db';
 import { StorageService } from '../storage/storage.service';
 import type { FileToUpload } from '../storage/storage.types';

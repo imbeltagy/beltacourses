@@ -20,8 +20,8 @@ import {
   ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { CurrentUser } from '@repo/service/core';
-import type { RequestUser } from '@repo/service/core';
+import { CurrentUser } from '@repo/backend/core';
+import type { RequestUser } from '@repo/backend/core';
 import { UserResponse } from '../users/dto/response/user.dto';
 import { REGISTERABLE_ROLES } from '../users/users.constants';
 import { AuthService } from './auth.service';
