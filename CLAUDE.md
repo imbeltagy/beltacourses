@@ -2,6 +2,11 @@
 
 Conventions for this repo. Read this before adding a feature.
 
+This file is the rulebook — what to do, in imperative form. The map lives in
+[`docs/architecture/file-structure.md`](./docs/architecture/file-structure.md): the full tree for
+both halves of the repo, a "where does X go?" table, and the Tailwind `@source` trap that fails
+silently. Keep the two in step; do not redraw the tree here.
+
 ## Repo shape
 
 pnpm + Turborepo. Workspaces are `apps/*`, `packages/*` and `packages/frontend/*`.
