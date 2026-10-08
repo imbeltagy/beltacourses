@@ -2,9 +2,6 @@
   "extends": "@repo/typescript-config/react-library.json",
   "compilerOptions": {
     "outDir": "dist",
-    "strictNullChecks": true,
-    "noEmit": true,
-    "allowImportingTsExtensions": true,
     // Only so the shadcn CLI can resolve the aliases in components.json — the
     // source itself imports relatively (`../utils`), because a path alias in a
     // package does not survive into the consuming app's bundler.

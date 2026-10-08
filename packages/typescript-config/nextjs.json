@@ -3,9 +3,13 @@
   "extends": "./base.json",
   "compilerOptions": {
     "plugins": [{ "name": "next" }],
+    "lib": ["es2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
     "allowJs": true,
+    "declaration": false,
+    "declarationMap": false,
     "jsx": "preserve",
     "noEmit": true
   }

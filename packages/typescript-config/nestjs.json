@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./base.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "incremental": true,
+    "lib": ["es2023"],
+    "removeComments": true,
+    "resolvePackageJsonExports": true,
+    "sourceMap": true,
+    "target": "ES2023",
+    // DTO and entity classes are populated by class-transformer / Prisma, not
+    // by a constructor, so Nest code opts out of this one strict flag.
+    "strictPropertyInitialization": false,
+    "types": ["node", "jest"]
+  }
+}
