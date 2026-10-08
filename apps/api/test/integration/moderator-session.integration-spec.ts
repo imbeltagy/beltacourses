@@ -12,6 +12,11 @@ import { AppModule } from '../../src/app.module';
 /** A dedicated Redis DB index — never the default one BullMQ/dev use. */
 const TEST_REDIS_DB = 15;
 
+function decodeClaims<T>(jwt: string): T {
+  const payload = jwt.split('.')[1] ?? '';
+  return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as T;
+}
+
 describe('Moderator session lifecycle (integration)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
@@ -85,13 +90,11 @@ describe('Moderator session lifecycle (integration)', () => {
     expect(access_token).toEqual(expect.any(String));
     expect(refresh_token).toEqual(expect.any(String));
 
-    const claims = JSON.parse(
-      Buffer.from(access_token.split('.')[1], 'base64url').toString('utf8'),
-    ) as { sub: string; sid: string };
+    const claims = decodeClaims<{ sub: string; sid: string }>(access_token);
 
     const sessionKeys = await redis.client.keys(`session:${claims.sub}:*`);
     expect(sessionKeys.length).toBe(1);
-    const ttl = await redis.client.ttl(sessionKeys[0]);
+    const ttl = await redis.client.ttl(sessionKeys[0]!);
     expect(ttl).toBeGreaterThan(0);
     expect(ttl).toBeLessThanOrEqual(10 * 60 * 60);
 
@@ -116,9 +119,7 @@ describe('Moderator session lifecycle (integration)', () => {
     const newAccessToken = refreshBody.access_token;
     expect(refreshBody.refresh_token).toBeUndefined();
 
-    const newClaims = JSON.parse(
-      Buffer.from(newAccessToken.split('.')[1], 'base64url').toString('utf8'),
-    ) as { sid: string };
+    const newClaims = decodeClaims<{ sid: string }>(newAccessToken);
     expect(newClaims.sid).toBe(claims.sid);
 
     await request(app.getHttpServer())
@@ -168,16 +169,8 @@ describe('Moderator session lifecycle (integration)', () => {
     const firstBody = first.body as { access_token: string };
     const secondBody = second.body as { access_token: string };
 
-    const firstClaims = JSON.parse(
-      Buffer.from(firstBody.access_token.split('.')[1], 'base64url').toString(
-        'utf8',
-      ),
-    ) as { sub: string; sid: string };
-    const secondClaims = JSON.parse(
-      Buffer.from(secondBody.access_token.split('.')[1], 'base64url').toString(
-        'utf8',
-      ),
-    ) as { sub: string; sid: string };
+    const firstClaims = decodeClaims<{ sub: string; sid: string }>(firstBody.access_token);
+    const secondClaims = decodeClaims<{ sub: string; sid: string }>(secondBody.access_token);
 
     const indexMembers = await redis.client.smembers(
       `sessions:${firstClaims.sub}`,
