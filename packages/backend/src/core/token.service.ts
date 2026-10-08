@@ -1,10 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { Role } from '@repo/db';
-import {
-  ACCESS_TOKEN_SECRET,
-  REFRESH_TOKEN_SECRET,
-} from './core.constants';
+import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from './core.constants';
 import {
   CLIENT_ACCESS_TOKEN_TTL_SECONDS,
   CLIENT_REFRESH_TOKEN_TTL_SECONDS,

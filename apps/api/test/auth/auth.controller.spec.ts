@@ -63,9 +63,8 @@ describe('AuthController', () => {
   });
 
   it('login delegates to the service and responds 200, not 201', () => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     const { login } = controller;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     const decoratedStatus: number = Reflect.getMetadata('__httpCode__', login);
 
     expect(decoratedStatus).toBe(200);
@@ -114,9 +113,8 @@ describe('AuthController', () => {
   });
 
   it('logout delegates to the service and responds 204', async () => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     const { logout } = controller;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     const decoratedStatus: number = Reflect.getMetadata('__httpCode__', logout);
     expect(decoratedStatus).toBe(204);
 

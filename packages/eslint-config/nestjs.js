@@ -43,6 +43,8 @@ export function createConfig({ tsconfigRootDir }) {
       files: ["**/*.{js,mjs,cjs}"],
       extends: [tseslint.configs.disableTypeChecked],
       languageOptions: { globals: globals.node },
+      // Tooling configs (webpack, jest) are CommonJS.
+      rules: { "@typescript-eslint/no-require-imports": "off" },
     },
     {
       // Specs mock freely: jest.fn() and expect.any() are typed `any`.
@@ -53,6 +55,7 @@ export function createConfig({ tsconfigRootDir }) {
         "@typescript-eslint/no-unsafe-call": "off",
         "@typescript-eslint/unbound-method": "off",
         "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-non-null-assertion": "off",
         "no-console": "off",
       },
     },

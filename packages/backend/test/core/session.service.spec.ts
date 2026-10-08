@@ -7,7 +7,7 @@ function loadSessionService(secret?: string): SessionServiceCtor {
   jest.resetModules();
   if (secret === undefined) delete process.env.REFRESH_TOKEN_HASH_SECRET;
   else process.env.REFRESH_TOKEN_HASH_SECRET = secret;
-  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-return
   return require('../../src/core/session.service').SessionService;
 }
 

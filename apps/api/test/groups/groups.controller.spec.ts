@@ -96,9 +96,8 @@ describe('GroupsController', () => {
   });
 
   it('softDelete returns no body (204)', async () => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     const { softDelete } = controller;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     const decoratedStatus: number = Reflect.getMetadata(
       '__httpCode__',
       softDelete,
@@ -125,9 +124,8 @@ describe('GroupsController', () => {
   });
 
   it('unassignUser returns no body (204)', async () => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     const { unassignUser } = controller;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     const decoratedStatus: number = Reflect.getMetadata(
       '__httpCode__',
       unassignUser,

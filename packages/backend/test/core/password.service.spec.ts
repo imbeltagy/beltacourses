@@ -17,7 +17,7 @@ function loadPasswordService(env: {
   jest.resetModules();
   setEnv('PASSWORD_SALT', env.PASSWORD_SALT);
   setEnv('PASSWORD_SALT_ROUNDS', env.PASSWORD_SALT_ROUNDS);
-  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-return
   return require('../../src/core/password.service').PasswordService;
 }
 

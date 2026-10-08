@@ -1,6 +1,8 @@
+import { JwtService } from '@nestjs/jwt';
 import { Role } from '@repo/db';
 
-type TokenServiceCtor = typeof import('../../src/core/token.service').TokenService;
+type TokenServiceCtor =
+  typeof import('../../src/core/token.service').TokenService;
 
 const CLIENT_USER = {
   id: 'user-1',
@@ -25,7 +27,7 @@ function loadTokenService(env: {
   else process.env.ACCESS_TOKEN_SECRET = env.access;
   if (env.refresh === undefined) delete process.env.REFRESH_TOKEN_SECRET;
   else process.env.REFRESH_TOKEN_SECRET = env.refresh;
-  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-return
   return require('../../src/core/token.service').TokenService;
 }
 
@@ -134,7 +136,7 @@ describe('TokenService', () => {
     let expiredMessage = '';
     try {
       // A negative expiresIn signs an already-expired token.
-      const jwt = new (require('@nestjs/jwt').JwtService)({
+      const jwt = new JwtService({
         secret: 'access-secret',
       });
       const expiredToken = jwt.sign(

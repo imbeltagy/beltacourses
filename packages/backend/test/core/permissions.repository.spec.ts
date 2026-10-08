@@ -41,7 +41,10 @@ describe('PermissionsRepository', () => {
 
   it('returns [] for a soft-deleted group', async () => {
     prisma.client.user.findFirst.mockResolvedValue({
-      group: { deleted_at: new Date(), permissions: [{ permission: 'users:*' }] },
+      group: {
+        deleted_at: new Date(),
+        permissions: [{ permission: 'users:*' }],
+      },
     });
 
     await expect(repository.findByUserId('admin-1')).resolves.toEqual([]);

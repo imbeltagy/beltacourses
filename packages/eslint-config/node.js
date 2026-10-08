@@ -11,4 +11,8 @@ export const config = [
   {
     languageOptions: { globals: globals.node },
   },
+  {
+    // Seed and migration scripts report progress on stdout; that is their output.
+    rules: { "no-console": "off" },
+  },
 ];

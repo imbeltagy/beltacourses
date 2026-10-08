@@ -14,7 +14,10 @@ export class PermissionsRepository {
       where: { id: userId, deleted_at: null },
       select: {
         group: {
-          select: { deleted_at: true, permissions: { select: { permission: true } } },
+          select: {
+            deleted_at: true,
+            permissions: { select: { permission: true } },
+          },
         },
       },
     });

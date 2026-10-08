@@ -14,7 +14,9 @@ export function Permissions(...permissions: Permission[]) {
   }
   const unknown = permissions.filter((p) => !isPermission(p));
   if (unknown.length > 0) {
-    throw new Error(`@Permissions() got unknown permission(s): ${unknown.join(', ')}`);
+    throw new Error(
+      `@Permissions() got unknown permission(s): ${unknown.join(', ')}`,
+    );
   }
   return SetMetadata(PERMISSIONS_KEY, permissions);
 }

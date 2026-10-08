@@ -169,8 +169,12 @@ describe('Moderator session lifecycle (integration)', () => {
     const firstBody = first.body as { access_token: string };
     const secondBody = second.body as { access_token: string };
 
-    const firstClaims = decodeClaims<{ sub: string; sid: string }>(firstBody.access_token);
-    const secondClaims = decodeClaims<{ sub: string; sid: string }>(secondBody.access_token);
+    const firstClaims = decodeClaims<{ sub: string; sid: string }>(
+      firstBody.access_token,
+    );
+    const secondClaims = decodeClaims<{ sub: string; sid: string }>(
+      secondBody.access_token,
+    );
 
     const indexMembers = await redis.client.smembers(
       `sessions:${firstClaims.sub}`,

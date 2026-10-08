@@ -29,16 +29,22 @@ export class S3Adapter {
       .filter(([, value]) => !value)
       .map(([name]) => name);
 
-    if (missing.length > 0) {
+    if (
+      missing.length > 0 ||
+      !S3_REGION ||
+      !S3_BUCKET ||
+      !S3_ACCESS_KEY_ID ||
+      !S3_SECRET_ACCESS_KEY
+    ) {
       throw new Error(
         `S3Adapter: missing required environment variables: ${missing.join(', ')}`,
       );
     }
 
-    this.region = S3_REGION!;
-    this.bucket = S3_BUCKET!;
-    this.accessKeyId = S3_ACCESS_KEY_ID!;
-    this.secretAccessKey = S3_SECRET_ACCESS_KEY!;
+    this.region = S3_REGION;
+    this.bucket = S3_BUCKET;
+    this.accessKeyId = S3_ACCESS_KEY_ID;
+    this.secretAccessKey = S3_SECRET_ACCESS_KEY;
 
     this.client = new S3Client({
       region: this.region,

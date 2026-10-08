@@ -1,4 +1,7 @@
-import { hasAllPermissions, matchesPermission } from '../../src/core/permissions';
+import {
+  hasAllPermissions,
+  matchesPermission,
+} from '../../src/core/permissions';
 
 describe('matchesPermission', () => {
   const cases: Array<[string, string, boolean]> = [
@@ -13,9 +16,12 @@ describe('matchesPermission', () => {
     ['users:read:own', 'users:read', false],
   ];
 
-  it.each(cases)('matchesPermission(%s, %s) -> %s', (granted, required, expected) => {
-    expect(matchesPermission(granted, required)).toBe(expected);
-  });
+  it.each(cases)(
+    'matchesPermission(%s, %s) -> %s',
+    (granted, required, expected) => {
+      expect(matchesPermission(granted, required)).toBe(expected);
+    },
+  );
 });
 
 describe('hasAllPermissions', () => {

@@ -29,17 +29,17 @@ describe('RolesGuard', () => {
   it('throws InternalServerErrorException when no metadata is present', () => {
     reflector.getAllAndOverride.mockReturnValue(undefined);
 
-    expect(() => guard.canActivate(contextWithUser({ role: Role.admin }))).toThrow(
-      InternalServerErrorException,
-    );
+    expect(() =>
+      guard.canActivate(contextWithUser({ role: Role.admin })),
+    ).toThrow(InternalServerErrorException);
   });
 
   it('throws InternalServerErrorException for an empty array', () => {
     reflector.getAllAndOverride.mockReturnValue([]);
 
-    expect(() => guard.canActivate(contextWithUser({ role: Role.admin }))).toThrow(
-      InternalServerErrorException,
-    );
+    expect(() =>
+      guard.canActivate(contextWithUser({ role: Role.admin })),
+    ).toThrow(InternalServerErrorException);
   });
 
   it('throws UnauthorizedException when request.user is absent', () => {
@@ -59,8 +59,8 @@ describe('RolesGuard', () => {
   it('throws ForbiddenException for a non-matching role', () => {
     reflector.getAllAndOverride.mockReturnValue([Role.super_admin]);
 
-    expect(() => guard.canActivate(contextWithUser({ role: Role.admin }))).toThrow(
-      ForbiddenException,
-    );
+    expect(() =>
+      guard.canActivate(contextWithUser({ role: Role.admin })),
+    ).toThrow(ForbiddenException);
   });
 });
