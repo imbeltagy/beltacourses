@@ -252,7 +252,7 @@ packages/frontend/common/src/           @repo/frontend
 ├── styles/theme.css     design tokens — and the @source roots (see below)
 └── utils/
     ├── index.tsx        cn()
-    ├── api-client/      ApiClient, `api` / `apiGuest`  → @repo/frontend/utils/api-client
+    ├── api-client/      static ApiClient (`{ guest: true }` per call) → @repo/frontend/utils/api-client
     └── cookies/         "use server" cookie accessors  → @repo/frontend/utils/cookies
 ```
 

@@ -1,6 +1,6 @@
 "use server";
 
-import { api } from "@repo/frontend/utils/api-client";
+import { ApiClient } from "@repo/frontend/utils/api-client";
 import { endpoints } from "../configs/endpoints";
 import type { DataResult } from "../types/action";
 import type {
@@ -13,7 +13,7 @@ import type {
 export async function listGroupsAction(
   query: ListGroupsQuery = {},
 ): Promise<DataResult<ListGroupsResponse>> {
-  const result = await api.get<ListGroupsResponse>(endpoints.groups.list(), {
+  const result = await ApiClient.get<ListGroupsResponse>(endpoints.groups.list(), {
     queries: { ...query },
     cache: "no-store",
   });
@@ -26,7 +26,7 @@ export async function listGroupsAction(
 }
 
 export async function getGroupAction(id: string): Promise<DataResult<Group>> {
-  const result = await api.get<Group>(endpoints.groups.byId(id), {
+  const result = await ApiClient.get<Group>(endpoints.groups.byId(id), {
     cache: "no-store",
   });
 
@@ -45,7 +45,7 @@ export async function getGroupAction(id: string): Promise<DataResult<Group>> {
 export async function getPermissionCatalogAction(): Promise<
   DataResult<PermissionCatalog>
 > {
-  const result = await api.get<PermissionCatalog>(
+  const result = await ApiClient.get<PermissionCatalog>(
     endpoints.groups.permissions(),
   );
 

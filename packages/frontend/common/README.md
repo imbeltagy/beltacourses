@@ -54,8 +54,10 @@ second package because splitting them out bought nothing but a second manifest,
 a second tsconfig and a second entry in every consumer's `transpilePackages`.
 
 - `src/utils/api-client` → `@repo/frontend/utils/api-client`. Exports the
-  `ApiClient` class plus two ready-made instances: `api` (sends the access-token
-  cookie) and `apiGuest` (does not). **It never throws** — every path resolves to
+  static-only `ApiClient` class: `ApiClient.get/post/put/patch/delete`. Calls send
+  the access-token cookie unless given `{ guest: true }`. The app must call
+  `ApiClient.configure({ refreshUrl })` once (`endpoints.ts` does) so the client
+  knows where to refresh. **It never throws** — every path resolves to
   a discriminated `ApiClientResponse<T>`, so callers branch on `success` rather
   than wrapping calls in `try`/`catch`. On a 401/403 it refreshes the access
   token once and replays the original request; a second failure is returned as

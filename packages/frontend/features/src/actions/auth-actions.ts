@@ -1,6 +1,6 @@
 "use server";
 
-import { api, apiGuest } from "@repo/frontend/utils/api-client";
+import { ApiClient } from "@repo/frontend/utils/api-client";
 import { Cookies, deleteCookie, setCookie } from "@repo/frontend/utils/cookies";
 import { endpoints } from "../configs/endpoints";
 import type { ActionResult } from "../types/action";
@@ -22,9 +22,10 @@ async function storeSession(tokens: LoginResponse): Promise<void> {
 }
 
 export async function loginAction(data: LoginRequest): Promise<ActionResult> {
-  const result = await apiGuest.post<LoginResponse>(
+  const result = await ApiClient.post<LoginResponse>(
     endpoints.auth.login(),
     data,
+    { guest: true },
   );
 
   if (!result.success) {
@@ -50,7 +51,9 @@ export async function registerAction(
   body.set("name", data.name);
   body.set("role", data.role);
 
-  const result = await apiGuest.post(endpoints.auth.register(), body);
+  const result = await ApiClient.post(endpoints.auth.register(), body, {
+    guest: true,
+  });
 
   if (!result.success) {
     return { success: false, message: result.message };
@@ -85,9 +88,10 @@ export async function registerAction(
 export async function loginModeratorAction(
   data: LoginRequest,
 ): Promise<ActionResult> {
-  const result = await apiGuest.post<LoginResponse>(
+  const result = await ApiClient.post<LoginResponse>(
     endpoints.auth.moderatorLogin(),
     data,
+    { guest: true },
   );
 
   if (!result.success) {
@@ -108,7 +112,7 @@ export async function loginModeratorAction(
  * cookies it believes are live would make it the user's problem too.
  */
 export async function logoutAction(): Promise<ActionResult> {
-  await api.post(endpoints.auth.logout(), {});
+  await ApiClient.post(endpoints.auth.logout(), {});
 
   await deleteCookie(Cookies.ACCESS_TOKEN);
   await deleteCookie(Cookies.REFRESH_TOKEN);

@@ -15,6 +15,8 @@ export type RequestOptions = {
   queries?: Queries; // ?query=value&query2=value2
   params?: Params; // URL/:param/:param2
   body?: object | FormData;
+  // Skip the access-token cookie and the refresh-and-replay on 401/403.
+  guest?: boolean;
 };
 
 export type ApiClientSuccessResponse<T> = {

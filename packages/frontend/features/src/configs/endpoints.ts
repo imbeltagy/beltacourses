@@ -1,3 +1,5 @@
+import { ApiClient } from "@repo/frontend/utils/api-client";
+
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 if (!apiBaseUrl) {
@@ -5,6 +7,10 @@ if (!apiBaseUrl) {
     "NEXT_PUBLIC_API_BASE_URL is not set — add it to the app's .env.",
   );
 }
+
+// Every action imports this file, so the client is configured before its first
+// request. It is the only place the refresh URL is built.
+ApiClient.configure({ refreshUrl: `${apiBaseUrl}/auth/refresh` });
 
 /**
  * Every API URL the frontend knows, grouped by the API area that owns it.
