@@ -3,17 +3,18 @@
 // reach every package that type-checks this file, not just this one.
 /// <reference types="next/types/global" />
 
-import { buildUrl, extractError } from "./helpers";
-import { APIMethod, ApiClientResponse, RequestOptions } from "./types";
+import { buildUrl, parseErrorBody } from "./helpers";
+import {
+  APIMethod,
+  ApiClientErrorResponse,
+  ApiClientResponse,
+  ClientErrorCode,
+  RequestOptions,
+} from "./types";
 import { getCookie, setCookie, Cookies } from "../cookies";
+import { ErrorNotifier } from "../error-notifier";
 
-const UNEXPECTED_ERROR_MESSAGE = "Something went wrong. Please try again.";
-const NETWORK_ERROR_MESSAGE =
-  "We couldn't reach the server. Please check your internet connection and try again.";
-
-type RefreshResult =
-  | { success: true }
-  | { success: false; status: number; error: string; message: string };
+type RefreshResult = { success: true } | ApiClientErrorResponse;
 
 type RefreshResponsePayload = {
   access_token: string;
@@ -21,10 +22,21 @@ type RefreshResponsePayload = {
   expires_in: number;
 };
 
-const SESSION_EXPIRED_MESSAGE =
-  "Your session has expired. Please log in again.";
-const REFRESH_NETWORK_ERROR_MESSAGE =
-  "We couldn't reach the server to refresh your session. Please check your internet connection and try again.";
+/** An error response the client produced itself, with no API body behind it. */
+function failure(
+  status: number,
+  error: string,
+  message?: string,
+): ApiClientErrorResponse {
+  return {
+    success: false,
+    data: null,
+    status,
+    code: status,
+    error,
+    ...(message ? { message } : {}),
+  };
+}
 
 /**
  * Static-only: there is one client, and the token-refresh state lives on it.
@@ -56,12 +68,7 @@ export class ApiClient {
 
     const refreshToken = await getCookie(Cookies.REFRESH_TOKEN);
     if (!refreshToken) {
-      return {
-        success: false,
-        status: 401,
-        error: "NO_REFRESH_TOKEN",
-        message: SESSION_EXPIRED_MESSAGE,
-      };
+      return failure(401, ClientErrorCode.NO_REFRESH_TOKEN);
     }
 
     const res = await fetch(ApiClient.refreshUrl, {
@@ -81,13 +88,14 @@ export class ApiClient {
     }
 
     if (!res.ok) {
-      const extracted = extractError(payload);
-      return {
-        success: false,
-        status: res.status,
-        error: extracted?.error ?? "REFRESH_FAILED",
-        message: extracted?.message ?? SESSION_EXPIRED_MESSAGE,
-      };
+      const body = parseErrorBody(payload);
+      return body
+        ? { success: false, data: null, status: res.status, ...body }
+        : failure(
+            res.status,
+            ClientErrorCode.INVALID_ERROR_RESPONSE,
+            undefined,
+          );
     }
 
     // No refresh_token rotation — only the access token cookie is refreshed.
@@ -100,14 +108,7 @@ export class ApiClient {
   private static refreshAccessToken(): Promise<RefreshResult> {
     if (!ApiClient.refreshPromise) {
       ApiClient.refreshPromise = ApiClient.performRefresh()
-        .catch(
-          (): RefreshResult => ({
-            success: false,
-            status: 0,
-            error: "NETWORK_ERROR",
-            message: REFRESH_NETWORK_ERROR_MESSAGE,
-          }),
-        )
+        .catch((): RefreshResult => failure(0, ClientErrorCode.NETWORK_ERROR))
         .finally(() => {
           ApiClient.refreshPromise = null;
         });
@@ -116,17 +117,28 @@ export class ApiClient {
     return ApiClient.refreshPromise;
   }
 
-  private static reportFailure(params: {
-    method: APIMethod;
-    url: string;
-    status: number;
-    payload?: unknown;
-    body?: RequestOptions["body"];
-  }) {
-    if (process.env.NODE_ENV === "development") {
-      console.error(`[${params.method}] ${params.url} failed`, params);
-      return;
-    }
+  /** Reports a failed response to the error notifier, then returns it. */
+  private static fail(
+    context: {
+      method: APIMethod;
+      url: string;
+      body?: RequestOptions["body"];
+      responsePayload?: unknown;
+    },
+    response: ApiClientErrorResponse,
+  ): ApiClientErrorResponse {
+    ErrorNotifier.notify({
+      source: "api-client",
+      method: context.method,
+      url: context.url,
+      status: response.status,
+      error: response.error,
+      message: response.message,
+      requestBody: context.body,
+      responsePayload: context.responsePayload,
+    });
+
+    return response;
   }
 
   // Never throws — every path resolves to an ApiClientResponse.
@@ -178,18 +190,10 @@ export class ApiClient {
       const isSuccess = res.status >= 200 && res.status < 400;
 
       if (isSuccess) {
-        const message =
-          payload &&
-          typeof payload === "object" &&
-          typeof (payload as Record<string, unknown>).message === "string"
-            ? ((payload as Record<string, unknown>).message as string)
-            : "success";
-
         return {
           success: true,
           data: payload as ResponseType,
           status: res.status,
-          message,
         };
       }
 
@@ -207,48 +211,36 @@ export class ApiClient {
           return ApiClient.apiRequest<ResponseType>(url, method, options, true);
         }
 
-        ApiClient.reportFailure({
-          method,
-          url: fullUrl,
-          status: refreshResult.status,
-        });
-
-        return {
-          success: false,
-          data: null,
-          status: refreshResult.status,
-          error: refreshResult.error,
-          message: refreshResult.message,
-        };
+        return ApiClient.fail(
+          { method, url: fullUrl, body: options?.body },
+          refreshResult,
+        );
       }
 
-      const extracted = extractError(payload);
+      const body = parseErrorBody(payload);
 
-      ApiClient.reportFailure({
-        method,
-        url: fullUrl,
-        status: res.status,
-        payload,
-        body: options?.body,
-      });
+      if (!body) {
+        // A non-2xx that broke the `{ code, error, message? }` contract.
+        return ApiClient.fail(
+          {
+            method,
+            url: fullUrl,
+            body: options?.body,
+            responsePayload: payload,
+          },
+          failure(res.status, ClientErrorCode.INVALID_ERROR_RESPONSE),
+        );
+      }
 
-      return {
-        success: false,
-        data: null,
-        status: res.status,
-        error: extracted?.error ?? "REQUEST_FAILED",
-        message: extracted?.message ?? UNEXPECTED_ERROR_MESSAGE,
-      };
+      return ApiClient.fail(
+        { method, url: fullUrl, body: options?.body },
+        { success: false, data: null, status: res.status, ...body },
+      );
     } catch {
-      ApiClient.reportFailure({ method, url, status: 0, body: options?.body });
-
-      return {
-        success: false,
-        data: null,
-        status: 0,
-        error: "NETWORK_ERROR",
-        message: NETWORK_ERROR_MESSAGE,
-      };
+      return ApiClient.fail(
+        { method, url: fullUrl, body: options?.body },
+        failure(0, ClientErrorCode.NETWORK_ERROR),
+      );
     }
   }
 

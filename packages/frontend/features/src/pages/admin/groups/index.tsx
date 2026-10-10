@@ -4,6 +4,7 @@ import { listGroupsAction } from "../../../actions/groups-actions";
 import { PageWrapper } from "../../../components/page-wrapper";
 import { TablePagination } from "../../../components/table-pagination";
 import { TableSearch } from "../../../components/table-search";
+import { localizeError } from "../../../utils/localize-error";
 import { DEFAULT_PAGE_SIZE } from "../../../types/api/common";
 import { GroupsTable } from "./components/groups-table";
 
@@ -12,9 +13,10 @@ export default async function GroupsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [params, t] = await Promise.all([
+  const [params, t, tErrors] = await Promise.all([
     searchParams,
     getTranslations("admin.groups"),
+    getTranslations("errors"),
   ]);
 
   const page = toPositiveInt(params.page) ?? 1;
@@ -37,7 +39,9 @@ export default async function GroupsPage({
 
       {!result.success ? (
         <Alert variant="destructive">
-          <AlertTitle>{result.message}</AlertTitle>
+          <AlertTitle>
+            {localizeError(tErrors, result.error, "listGroups")}
+          </AlertTitle>
         </Alert>
       ) : (
         <>

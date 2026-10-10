@@ -7,6 +7,7 @@
     "./ui": "./src/ui/index.ts",
     "./utils/api-client": "./src/utils/api-client/index.ts",
     "./utils/cookies": "./src/utils/cookies/index.ts",
+    "./utils/error-notifier": "./src/utils/error-notifier/index.ts",
     "./*": "./src/*/index.tsx",
     "./styles/theme.css": "./src/styles/theme.css"
   },

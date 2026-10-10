@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import * as yup from "yup";
 import { toast } from "sonner";
 import { useRouter } from "@repo/frontend/i18n/navigation";
+import { localizeError } from "../../../../utils/localize-error";
 import { loginModeratorAction } from "../../../../actions/auth-actions";
 
 type T = ReturnType<typeof useTranslations<"validation">>;
@@ -23,6 +24,8 @@ export type ModeratorLoginInputs = yup.InferType<
 export function useModeratorLoginForm() {
   const router = useRouter();
   const t = useTranslations("validation");
+  const tErrors = useTranslations("errors");
+  const tActions = useTranslations("actions");
   const form = useForm<ModeratorLoginInputs>({
     resolver: yupResolver(buildSchema(t)),
   });
@@ -31,11 +34,11 @@ export function useModeratorLoginForm() {
     const result = await loginModeratorAction(data);
 
     if (!result.success) {
-      toast.error(result.message);
+      toast.error(localizeError(tErrors, result.error, "login"));
       return;
     }
 
-    toast.success(result.message);
+    toast.success(tActions("welcomeBack"));
     // `replace` so Back does not return to the login form, and `refresh` so
     // the guarded layout re-runs with the cookies that were just set.
     router.replace("/");

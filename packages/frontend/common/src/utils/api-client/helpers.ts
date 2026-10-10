@@ -1,4 +1,4 @@
-import { Query, Params, Queries } from "./types";
+import { Query, Params, Queries, ApiErrorBody } from "./types";
 
 export const convertQueriesIntoString = (queries?: Queries) => {
   if (!queries) return "";
@@ -68,27 +68,22 @@ export function formDataToObject(formData: FormData): object {
   return object;
 }
 
-// Pull a { error, message } pair out of a common API error response shape.
-// An array is reduced to its first item before anything else is checked.
-export function extractError(
-  payload: unknown,
-): { error: string; message: string } | undefined {
-  const source = Array.isArray(payload) ? payload[0] : payload;
-
-  if (typeof source === "string" && source.trim()) {
-    return { error: source, message: source };
+/**
+ * Validates the error contract: `{ code: number, error: string, message?: string }`.
+ * Returns `undefined` for anything else — a proxy's HTML 502, a framework
+ * default body — so the caller can report a contract violation rather than
+ * guess at a code.
+ */
+export function parseErrorBody(payload: unknown): ApiErrorBody | undefined {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return undefined;
   }
 
-  if (!source || typeof source !== "object") return undefined;
+  const { code, error, message } = payload as Record<string, unknown>;
 
-  const record = source as Record<string, unknown>;
-  const error = typeof record.error === "string" ? record.error.trim() : "";
-  const message =
-    typeof record.message === "string" ? record.message.trim() : "";
+  if (typeof code !== "number" || !Number.isInteger(code)) return undefined;
+  if (typeof error !== "string" || !error.trim()) return undefined;
+  if (message !== undefined && typeof message !== "string") return undefined;
 
-  if (error && message) return { error, message };
-  if (message) return { error: message, message };
-  if (error) return { error, message: error };
-
-  return undefined;
+  return { code, error, ...(message ? { message } : {}) };
 }

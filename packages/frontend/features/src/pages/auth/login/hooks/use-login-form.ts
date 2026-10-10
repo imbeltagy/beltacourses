@@ -5,6 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslations } from "next-intl";
 import * as yup from "yup";
 import { toast } from "sonner";
+import { localizeError } from "../../../../utils/localize-error";
 import { loginAction } from "../../../../actions/auth-actions";
 
 type T = ReturnType<typeof useTranslations<"validation">>;
@@ -24,6 +25,8 @@ export type LoginFormInputs = yup.InferType<ReturnType<typeof buildSchema>>;
  */
 export function useLoginForm() {
   const t = useTranslations("validation");
+  const tErrors = useTranslations("errors");
+  const tActions = useTranslations("actions");
   const form = useForm<LoginFormInputs>({
     resolver: yupResolver(buildSchema(t)),
   });
@@ -32,11 +35,11 @@ export function useLoginForm() {
     const result = await loginAction(data);
 
     if (!result.success) {
-      toast.error(result.message);
+      toast.error(localizeError(tErrors, result.error, "login"));
       return;
     }
 
-    toast.success(result.message);
+    toast.success(tActions("welcomeBack"));
   };
 
   return { form, onSubmit: form.handleSubmit(submit) };

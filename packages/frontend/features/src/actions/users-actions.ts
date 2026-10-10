@@ -30,10 +30,10 @@ export async function listUsersAction(
   );
 
   if (!result.success) {
-    return { success: false, message: "Couldn't load the users list." };
+    return { success: false, error: result.error };
   }
 
-  return { success: true, message: result.message, data: result.data };
+  return { success: true, data: result.data };
 }
 
 export async function getUserAction(id: string): Promise<DataResult<User>> {
@@ -42,8 +42,8 @@ export async function getUserAction(id: string): Promise<DataResult<User>> {
   });
 
   if (!result.success) {
-    return { success: false, message: "Couldn't load that user." };
+    return { success: false, error: result.error };
   }
 
-  return { success: true, message: result.message, data: result.data };
+  return { success: true, data: result.data };
 }

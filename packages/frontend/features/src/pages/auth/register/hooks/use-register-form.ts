@@ -5,6 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslations } from "next-intl";
 import * as yup from "yup";
 import { toast } from "sonner";
+import { localizeError } from "../../../../utils/localize-error";
 import { registerAction } from "../../../../actions/auth-actions";
 import type { RegisterableRole } from "../../../../types/api/auth";
 
@@ -42,6 +43,8 @@ const REGISTERABLE_ROLES = [
 export function useRegisterForm() {
   const tValidation = useTranslations("validation");
   const tRoles = useTranslations("roles");
+  const tErrors = useTranslations("errors");
+  const tActions = useTranslations("actions");
   const form = useForm<RegisterFormInputs>({
     resolver: yupResolver(buildSchema(tValidation)),
     defaultValues: { role: "student" },
@@ -58,11 +61,11 @@ export function useRegisterForm() {
     });
 
     if (!result.success) {
-      toast.error(result.message);
+      toast.error(localizeError(tErrors, result.error, "register"));
       return;
     }
 
-    toast.success(result.message);
+    toast.success(tActions("accountReady"));
   };
 
   return {

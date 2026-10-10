@@ -17,11 +17,13 @@ import {
   DropdownMenuTrigger,
 } from "@repo/frontend/ui";
 import { useRouter } from "@repo/frontend/i18n/navigation";
+import { localizeError } from "../../../utils/localize-error";
 import { logoutAction } from "../../../actions/auth-actions";
 import type { User } from "../../../types/api/users";
 
 export function AccountMenu({ user }: { user: User | null }) {
   const t = useTranslations("nav");
+  const tErrors = useTranslations("errors");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -29,7 +31,7 @@ export function AccountMenu({ user }: { user: User | null }) {
     startTransition(async () => {
       const result = await logoutAction();
       if (!result.success) {
-        toast.error(result.message);
+        toast.error(localizeError(tErrors, result.error, "logout"));
         return;
       }
       // `replace`, not `push`: a signed-out user must not be able to press

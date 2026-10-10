@@ -4,6 +4,7 @@ import { listUsersAction } from "../../../actions/users-actions";
 import { PageWrapper } from "../../../components/page-wrapper";
 import { TablePagination } from "../../../components/table-pagination";
 import { TableSearch } from "../../../components/table-search";
+import { localizeError } from "../../../utils/localize-error";
 import { DEFAULT_PAGE_SIZE } from "../../../types/api/common";
 import { ROLES, type Role } from "../../../types/api/users";
 import { RoleFilter } from "./components/role-filter";
@@ -19,9 +20,10 @@ export default async function UsersPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [params, t] = await Promise.all([
+  const [params, t, tErrors] = await Promise.all([
     searchParams,
     getTranslations("admin.users"),
+    getTranslations("errors"),
   ]);
 
   const page = toPositiveInt(params.page) ?? 1;
@@ -47,7 +49,9 @@ export default async function UsersPage({
 
       {!result.success ? (
         <Alert variant="destructive">
-          <AlertTitle>{result.message}</AlertTitle>
+          <AlertTitle>
+            {localizeError(tErrors, result.error, "listUsers")}
+          </AlertTitle>
         </Alert>
       ) : (
         <>

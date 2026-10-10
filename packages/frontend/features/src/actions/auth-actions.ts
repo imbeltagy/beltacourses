@@ -1,6 +1,5 @@
 "use server";
 
-import { getTranslations } from "next-intl/server";
 import { ApiClient } from "@repo/frontend/utils/api-client";
 import { Cookies, deleteCookie, setCookie } from "@repo/frontend/utils/cookies";
 import { endpoints } from "../configs/endpoints";
@@ -29,17 +28,11 @@ export async function loginAction(data: LoginRequest): Promise<ActionResult> {
     { guest: true },
   );
 
-  if (!result.success) {
-    return { success: false, message: result.message };
-  }
+  if (!result.success) return { success: false, error: result.error };
 
   await storeSession(result.data);
 
-  // Not `result.message`: these endpoints return no `message` field, so the
-  // api-client falls back to the literal string "success" — which is what the
-  // user would otherwise read in the toast. Success copy belongs to the action.
-  const t = await getTranslations("actions");
-  return { success: true, message: t("welcomeBack") };
+  return { success: true };
 }
 
 export async function registerAction(
@@ -57,9 +50,7 @@ export async function registerAction(
     guest: true,
   });
 
-  if (!result.success) {
-    return { success: false, message: result.message };
-  }
+  if (!result.success) return { success: false, error: result.error };
 
   // Register returns the new user profile, not tokens — log in immediately
   // after so the caller lands authenticated either way.
@@ -68,18 +59,13 @@ export async function registerAction(
     password: data.password,
   });
 
-  const t = await getTranslations("actions");
-
   if (!session.success) {
     // The account exists; only the follow-up login failed. Say so, rather than
-    // letting "Invalid email or password" imply the registration was rejected.
-    return {
-      success: false,
-      message: t("accountCreatedLoginFailed"),
-    };
+    // letting INVALID_CREDENTIALS imply the registration was rejected.
+    return { success: false, error: "ACCOUNT_CREATED_LOGIN_FAILED" };
   }
 
-  return { success: true, message: t("accountReady") };
+  return { success: true };
 }
 
 /**
@@ -98,14 +84,11 @@ export async function loginModeratorAction(
     { guest: true },
   );
 
-  if (!result.success) {
-    return { success: false, message: result.message };
-  }
+  if (!result.success) return { success: false, error: result.error };
 
   await storeSession(result.data);
 
-  const t = await getTranslations("actions");
-  return { success: true, message: t("welcomeBack") };
+  return { success: true };
 }
 
 /**
@@ -122,6 +105,5 @@ export async function logoutAction(): Promise<ActionResult> {
   await deleteCookie(Cookies.ACCESS_TOKEN);
   await deleteCookie(Cookies.REFRESH_TOKEN);
 
-  const t = await getTranslations("actions");
-  return { success: true, message: t("signedOut") };
+  return { success: true };
 }

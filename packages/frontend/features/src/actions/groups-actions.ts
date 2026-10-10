@@ -22,10 +22,10 @@ export async function listGroupsAction(
   );
 
   if (!result.success) {
-    return { success: false, message: "Couldn't load the groups list." };
+    return { success: false, error: result.error };
   }
 
-  return { success: true, message: result.message, data: result.data };
+  return { success: true, data: result.data };
 }
 
 export async function getGroupAction(id: string): Promise<DataResult<Group>> {
@@ -34,10 +34,10 @@ export async function getGroupAction(id: string): Promise<DataResult<Group>> {
   });
 
   if (!result.success) {
-    return { success: false, message: "Couldn't load that group." };
+    return { success: false, error: result.error };
   }
 
-  return { success: true, message: result.message, data: result.data };
+  return { success: true, data: result.data };
 }
 
 /**
@@ -53,8 +53,8 @@ export async function getPermissionCatalogAction(): Promise<
   );
 
   if (!result.success) {
-    return { success: false, message: "Couldn't load the permission catalog." };
+    return { success: false, error: result.error };
   }
 
-  return { success: true, message: result.message, data: result.data };
+  return { success: true, data: result.data };
 }
