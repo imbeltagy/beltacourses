@@ -1,4 +1,3 @@
-import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 import { config as baseConfig } from "./base.js";
@@ -19,7 +18,6 @@ export function createConfig({ tsconfigRootDir }) {
   return tseslint.config(
     ...baseConfig,
     ...tseslint.configs.recommendedTypeChecked,
-    eslintPluginPrettierRecommended,
     {
       languageOptions: {
         globals: { ...globals.node, ...globals.jest },
@@ -35,7 +33,6 @@ export function createConfig({ tsconfigRootDir }) {
         "@typescript-eslint/no-unsafe-argument": "warn",
         "@typescript-eslint/no-unnecessary-type-assertion": "warn",
         "@typescript-eslint/only-throw-error": "error",
-        "prettier/prettier": ["error", { endOfLine: "auto" }],
       },
     },
     {

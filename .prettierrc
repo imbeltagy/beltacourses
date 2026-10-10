@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/prettierrc",
+  "trailingComma": "all",
+  "overrides": [
+    {
+      "files": ["apps/api/**", "packages/backend/**"],
+      "options": { "singleQuote": true }
+    }
+  ]
+}

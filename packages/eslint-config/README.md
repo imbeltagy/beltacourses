@@ -33,6 +33,6 @@ export default createConfig({ tsconfigRootDir: import.meta.dirname });
 
 `react` adds the rules of hooks and `react-hooks/exhaustive-deps` (both
 errors), `jsx-a11y`, and the usual React correctness rules. `nestjs` adds
-type-aware promise rules and Prettier.
+type-aware promise rules.
 
 Lint runs with `--max-warnings 0`, so a warning fails the task.

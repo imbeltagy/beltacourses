@@ -1,0 +1,5 @@
+# .gitignore is honoured too; this covers tracked files nobody hand-formats.
+pnpm-lock.yaml
+generated
+packages/database/prisma/migrations
+.claude
