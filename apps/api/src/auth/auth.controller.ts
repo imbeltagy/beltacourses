@@ -1,3 +1,4 @@
+import { ErrorResponse } from '../common/dto/response/error.dto';
 import {
   Body,
   Controller,
@@ -72,7 +73,10 @@ export class AuthController {
   @ApiBody(REGISTER_BODY)
   @ApiOperation({ summary: 'Register as a student or a teacher' })
   @ApiCreatedResponse({ type: UserResponse })
-  @ApiConflictResponse({ description: 'Email already in use.' })
+  @ApiConflictResponse({
+    type: ErrorResponse,
+    description: 'Email already in use.',
+  })
   register(
     @Body() dto: RegisterDto,
     @UploadedFile() avatar?: Express.Multer.File,
@@ -85,8 +89,14 @@ export class AuthController {
   @Throttle(AUTH_THROTTLE)
   @ApiOperation({ summary: 'Log in with email and password (clients only)' })
   @ApiOkResponse({ type: LoginResponse })
-  @ApiUnauthorizedResponse({ description: 'Invalid credentials.' })
-  @ApiTooManyRequestsResponse({ description: 'Too many attempts.' })
+  @ApiUnauthorizedResponse({
+    type: ErrorResponse,
+    description: 'Invalid credentials.',
+  })
+  @ApiTooManyRequestsResponse({
+    type: ErrorResponse,
+    description: 'Too many attempts.',
+  })
   login(@Body() dto: LoginDto): Promise<LoginResponse> {
     return this.authService.login(dto);
   }
@@ -96,8 +106,14 @@ export class AuthController {
   @Throttle(AUTH_THROTTLE)
   @ApiOperation({ summary: 'Log in as staff (admin or super_admin only)' })
   @ApiOkResponse({ type: LoginResponse })
-  @ApiUnauthorizedResponse({ description: 'Invalid credentials.' })
-  @ApiTooManyRequestsResponse({ description: 'Too many attempts.' })
+  @ApiUnauthorizedResponse({
+    type: ErrorResponse,
+    description: 'Invalid credentials.',
+  })
+  @ApiTooManyRequestsResponse({
+    type: ErrorResponse,
+    description: 'Too many attempts.',
+  })
   loginModerator(@Body() dto: LoginDto): Promise<LoginResponse> {
     return this.authService.loginModerator(dto);
   }
@@ -108,9 +124,13 @@ export class AuthController {
   @ApiOperation({ summary: 'Exchange a refresh token for a new access token' })
   @ApiOkResponse({ type: RefreshResponse })
   @ApiUnauthorizedResponse({
+    type: ErrorResponse,
     description: 'Invalid, expired or revoked refresh token.',
   })
-  @ApiTooManyRequestsResponse({ description: 'Too many attempts.' })
+  @ApiTooManyRequestsResponse({
+    type: ErrorResponse,
+    description: 'Too many attempts.',
+  })
   refresh(@Body() dto: RefreshDto): Promise<RefreshResponse> {
     return this.authService.refresh(dto.refresh_token);
   }

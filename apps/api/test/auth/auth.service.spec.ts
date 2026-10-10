@@ -1,4 +1,5 @@
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { errorWith } from '../helpers/error-with';
+import { AppException, ErrorCode } from '@repo/backend/errors';
 import { Role } from '@repo/db';
 import {
   PasswordService,
@@ -157,7 +158,7 @@ describe('AuthService', () => {
 
       await expect(
         service.verifyCredentials('unknown@example.com', 'whatever'),
-      ).rejects.toThrow(UnauthorizedException);
+      ).rejects.toThrow(errorWith(ErrorCode.INVALID_CREDENTIALS));
       expect(passwordService.compare).not.toHaveBeenCalled();
     });
 
@@ -170,7 +171,7 @@ describe('AuthService', () => {
 
       await expect(
         service.verifyCredentials('student@beltacourses.com', 'wrong-password'),
-      ).rejects.toThrow(UnauthorizedException);
+      ).rejects.toThrow(errorWith(ErrorCode.INVALID_CREDENTIALS));
       expect(usersService.findById).not.toHaveBeenCalled();
     });
   });
@@ -189,7 +190,7 @@ describe('AuthService', () => {
           email: 'admin@beltacourses.com',
           password: 'password',
         }),
-      ).rejects.toThrow(UnauthorizedException);
+      ).rejects.toThrow(errorWith(ErrorCode.INVALID_CREDENTIALS));
       expect(tokenService.signPair).not.toHaveBeenCalled();
     });
 
@@ -236,7 +237,7 @@ describe('AuthService', () => {
           email: 'student@beltacourses.com',
           password: 'password',
         }),
-      ).rejects.toThrow(UnauthorizedException);
+      ).rejects.toThrow(errorWith(ErrorCode.INVALID_CREDENTIALS));
       expect(sessionService.saveSession).not.toHaveBeenCalled();
     });
 
@@ -372,7 +373,7 @@ describe('AuthService', () => {
       sessionService.verifySession.mockResolvedValue(false);
 
       await expect(service.refresh('a-refresh-token')).rejects.toThrow(
-        UnauthorizedException,
+        errorWith(ErrorCode.INVALID_REFRESH_TOKEN),
       );
     });
 
@@ -384,22 +385,22 @@ describe('AuthService', () => {
       usersService.findById.mockResolvedValue(moderatorUser());
 
       await expect(service.refresh('a-refresh-token')).rejects.toThrow(
-        UnauthorizedException,
+        errorWith(ErrorCode.INVALID_REFRESH_TOKEN),
       );
       expect(sessionService.verifySession).not.toHaveBeenCalled();
     });
 
-    it('401s a soft-deleted or unknown user (NotFoundException mapped to 401)', async () => {
+    it('401s a soft-deleted or unknown user (missing resource mapped to 401)', async () => {
       tokenService.verifyRefreshToken.mockReturnValue({
         sub: 'unknown',
         typ: 'refresh',
       });
       usersService.findById.mockRejectedValue(
-        new NotFoundException('User unknown not found'),
+        new AppException(ErrorCode.USER_NOT_FOUND),
       );
 
       await expect(service.refresh('a-refresh-token')).rejects.toThrow(
-        UnauthorizedException,
+        errorWith(ErrorCode.INVALID_REFRESH_TOKEN),
       );
     });
 

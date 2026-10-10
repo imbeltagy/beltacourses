@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { BullModule } from '@nestjs/bullmq';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
 import { ThrottlerGuard, ThrottlerModule, seconds } from '@nestjs/throttler';
 import { PrismaModule } from '@repo/backend/prisma';
+import { AppExceptionFilter } from '@repo/backend/errors';
 import { RedisModule } from '@repo/backend/redis';
 import { HealthCheckModule } from './health-check/health-check.module';
 import { StorageModule } from './storage/storage.module';
@@ -33,6 +34,9 @@ import { GroupsModule } from './groups/groups.module';
     AuthModule,
     GroupsModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_FILTER, useClass: AppExceptionFilter },
+  ],
 })
 export class AppModule {}

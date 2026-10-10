@@ -1,3 +1,5 @@
+import { errorWith } from '../helpers/error-with';
+import { ErrorCode } from '../../src/errors';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@repo/db';
 
@@ -92,7 +94,7 @@ describe('TokenService', () => {
     const refreshToken = service.signRefreshToken(CLIENT_USER);
 
     expect(() => service.verifyAccessToken(refreshToken)).toThrow(
-      'Invalid access token',
+      errorWith(ErrorCode.INVALID_ACCESS_TOKEN),
     );
   });
 
@@ -105,7 +107,7 @@ describe('TokenService', () => {
     const accessToken = service.signAccessToken(CLIENT_USER);
 
     expect(() => service.verifyRefreshToken(accessToken)).toThrow(
-      'Invalid refresh token',
+      errorWith(ErrorCode.INVALID_REFRESH_TOKEN),
     );
   });
 
@@ -122,18 +124,18 @@ describe('TokenService', () => {
     }))();
 
     expect(() => verifier.verifyAccessToken(token)).toThrow(
-      'Invalid access token',
+      errorWith(ErrorCode.INVALID_ACCESS_TOKEN),
     );
   });
 
-  it('gives an expired token the exact same message as a forged one', () => {
+  it('gives an expired token the exact same error as a forged one', () => {
     const TokenService = loadTokenService({
       access: 'access-secret',
       refresh: 'refresh-secret',
     });
     const service = new TokenService();
 
-    let expiredMessage = '';
+    let expiredError = '';
     try {
       // A negative expiresIn signs an already-expired token.
       const jwt = new JwtService({
@@ -145,19 +147,18 @@ describe('TokenService', () => {
       );
       service.verifyAccessToken(expiredToken);
     } catch (error) {
-      expiredMessage = (error as Error).message;
+      expiredError = (error as { error: string }).error;
     }
 
-    let forgedMessage = '';
+    let forgedError = '';
     try {
       service.verifyAccessToken('not-a-token');
     } catch (error) {
-      forgedMessage = (error as Error).message;
+      forgedError = (error as { error: string }).error;
     }
 
-    expect(expiredMessage).toBe('Invalid access token');
-    expect(forgedMessage).toBe('Invalid access token');
-    expect(expiredMessage).toBe(forgedMessage);
+    expect(expiredError).toBe(ErrorCode.INVALID_ACCESS_TOKEN);
+    expect(forgedError).toBe(ErrorCode.INVALID_ACCESS_TOKEN);
   });
 
   it('signs client and moderator TTLs into exp', () => {

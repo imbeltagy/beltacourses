@@ -1,9 +1,6 @@
-import {
-  ExecutionContext,
-  ForbiddenException,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { errorWith } from '../../helpers/error-with';
+import { ErrorCode } from '../../../src/errors';
+import { ExecutionContext, InternalServerErrorException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@repo/db';
 import { RolesGuard } from '../../../src/core/guards/roles.guard';
@@ -42,11 +39,11 @@ describe('RolesGuard', () => {
     ).toThrow(InternalServerErrorException);
   });
 
-  it('throws UnauthorizedException when request.user is absent', () => {
+  it('responds 401 when request.user is absent', () => {
     reflector.getAllAndOverride.mockReturnValue([Role.admin]);
 
     expect(() => guard.canActivate(contextWithUser(undefined))).toThrow(
-      UnauthorizedException,
+      errorWith(ErrorCode.UNAUTHORIZED),
     );
   });
 
@@ -56,11 +53,11 @@ describe('RolesGuard', () => {
     expect(guard.canActivate(contextWithUser({ role: Role.admin }))).toBe(true);
   });
 
-  it('throws ForbiddenException for a non-matching role', () => {
+  it('responds 403 for a non-matching role', () => {
     reflector.getAllAndOverride.mockReturnValue([Role.super_admin]);
 
     expect(() =>
       guard.canActivate(contextWithUser({ role: Role.admin })),
-    ).toThrow(ForbiddenException);
+    ).toThrow(errorWith(ErrorCode.FORBIDDEN));
   });
 });

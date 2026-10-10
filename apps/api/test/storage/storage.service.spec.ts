@@ -1,4 +1,6 @@
-import { Logger, NotFoundException } from '@nestjs/common';
+import { errorWith } from '../helpers/error-with';
+import { ErrorCode } from '@repo/backend/errors';
+import { Logger } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { S3Adapter } from '../../src/storage/s3.adapter';
 import { StorageRepository } from '../../src/storage/storage.repository';
@@ -228,11 +230,11 @@ describe('StorageService', () => {
       await expect(service.getById('file-id')).resolves.toBe(row);
     });
 
-    it('throws NotFoundException when the repository finds nothing', async () => {
+    it('throws missing resource when the repository finds nothing', async () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.getById('file-id')).rejects.toThrow(
-        NotFoundException,
+        errorWith(ErrorCode.FILE_NOT_FOUND),
       );
     });
   });
@@ -244,11 +246,11 @@ describe('StorageService', () => {
       await expect(service.softDelete('file-id')).resolves.toBeUndefined();
     });
 
-    it('throws NotFoundException when nothing changed', async () => {
+    it('throws missing resource when nothing changed', async () => {
       repository.softDelete.mockResolvedValue(0);
 
       await expect(service.softDelete('file-id')).rejects.toThrow(
-        NotFoundException,
+        errorWith(ErrorCode.FILE_NOT_FOUND),
       );
     });
 
@@ -320,11 +322,11 @@ describe('StorageService', () => {
       expect(repository.hardDelete).not.toHaveBeenCalled();
     });
 
-    it('throws NotFoundException for an unknown id', async () => {
+    it('throws missing resource for an unknown id', async () => {
       repository.findByIdIncludingDeleted.mockResolvedValue(null);
 
       await expect(service.hardDelete('file-id')).rejects.toThrow(
-        NotFoundException,
+        errorWith(ErrorCode.FILE_NOT_FOUND),
       );
       expect(s3.delete).not.toHaveBeenCalled();
     });

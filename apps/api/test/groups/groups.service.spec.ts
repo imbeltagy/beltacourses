@@ -1,4 +1,5 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { errorWith } from '../helpers/error-with';
+import { ErrorCode } from '@repo/backend/errors';
 import { PERMISSION_GROUPS } from '@repo/backend/core';
 import { GroupsRepository } from '../../src/groups/groups.repository';
 import { GroupsService } from '../../src/groups/groups.service';
@@ -44,33 +45,33 @@ describe('GroupsService', () => {
   });
 
   describe('create', () => {
-    it('rejects a duplicate name with ConflictException', async () => {
+    it('rejects a duplicate name with conflict', async () => {
       groupsRepository.findIdByName.mockResolvedValue({ id: 'other' });
 
       await expect(
         service.create({ name: 'Support', permissions: ['users:read'] }),
-      ).rejects.toThrow(ConflictException);
+      ).rejects.toThrow(errorWith(ErrorCode.GROUP_NAME_ALREADY_EXISTS));
       expect(groupsRepository.create).not.toHaveBeenCalled();
     });
   });
 
   describe('findById', () => {
-    it('throws NotFoundException for a missing or soft-deleted group', async () => {
+    it('throws missing resource for a missing or soft-deleted group', async () => {
       groupsRepository.findById.mockResolvedValue(null);
 
       await expect(service.findById('group-1')).rejects.toThrow(
-        NotFoundException,
+        errorWith(ErrorCode.GROUP_NOT_FOUND),
       );
     });
   });
 
   describe('update', () => {
-    it('throws NotFoundException for a missing group', async () => {
+    it('throws missing resource for a missing group', async () => {
       groupsRepository.findById.mockResolvedValue(null);
 
       await expect(
         service.update('group-1', { name: 'New Name' }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(errorWith(ErrorCode.GROUP_NOT_FOUND));
     });
 
     it('rejects a rename onto an existing name', async () => {
@@ -79,16 +80,16 @@ describe('GroupsService', () => {
 
       await expect(
         service.update('group-1', { name: 'Existing Name' }),
-      ).rejects.toThrow(ConflictException);
+      ).rejects.toThrow(errorWith(ErrorCode.GROUP_NAME_ALREADY_EXISTS));
     });
   });
 
   describe('softDelete', () => {
-    it('throws NotFoundException for a missing group', async () => {
+    it('throws missing resource for a missing group', async () => {
       groupsRepository.softDelete.mockResolvedValue(0);
 
       await expect(service.softDelete('group-1')).rejects.toThrow(
-        NotFoundException,
+        errorWith(ErrorCode.GROUP_NOT_FOUND),
       );
     });
 
@@ -96,7 +97,7 @@ describe('GroupsService', () => {
       groupsRepository.softDelete.mockResolvedValue(0);
 
       await expect(service.softDelete('group-1')).rejects.toThrow(
-        NotFoundException,
+        errorWith(ErrorCode.GROUP_NOT_FOUND),
       );
     });
   });
@@ -112,7 +113,7 @@ describe('GroupsService', () => {
       groupsRepository.findById.mockResolvedValue(null);
 
       await expect(service.assignUser('group-1', 'user-1')).rejects.toThrow(
-        NotFoundException,
+        errorWith(ErrorCode.GROUP_NOT_FOUND),
       );
       expect(usersService.setGroup).not.toHaveBeenCalled();
     });
@@ -136,7 +137,7 @@ describe('GroupsService', () => {
       });
 
       await expect(service.unassignUser('group-1', 'user-1')).rejects.toThrow(
-        NotFoundException,
+        errorWith(ErrorCode.USER_NOT_IN_GROUP),
       );
       expect(usersService.setGroup).not.toHaveBeenCalled();
     });

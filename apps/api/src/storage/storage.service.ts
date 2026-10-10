@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { AppException, ErrorCode } from '@repo/backend/errors';
 import { randomUUID } from 'node:crypto';
 import { extname } from 'node:path';
 import { S3Adapter } from './s3.adapter';
@@ -60,14 +61,14 @@ export class StorageService {
 
   async getById(id: string): Promise<FileMetadata> {
     const file = await this.repository.findById(id);
-    if (!file) throw new NotFoundException(`File ${id} not found`);
+    if (!file) throw new AppException(ErrorCode.FILE_NOT_FOUND);
     return file;
   }
 
   /** Marks the file deleted. The object stays in S3 until the cleanup worker runs. */
   async softDelete(id: string): Promise<void> {
     const changed = await this.repository.softDelete(id);
-    if (changed === 0) throw new NotFoundException(`File ${id} not found`);
+    if (changed === 0) throw new AppException(ErrorCode.FILE_NOT_FOUND);
   }
 
   /**
@@ -88,7 +89,7 @@ export class StorageService {
    */
   async hardDelete(id: string): Promise<void> {
     const file = await this.repository.findByIdIncludingDeleted(id);
-    if (!file) throw new NotFoundException(`File ${id} not found`);
+    if (!file) throw new AppException(ErrorCode.FILE_NOT_FOUND);
 
     await this.s3.delete(file.key);
     await this.repository.hardDelete(id);

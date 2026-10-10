@@ -1,3 +1,4 @@
+import { ErrorResponse } from '../common/dto/response/error.dto';
 import {
   Body,
   Controller,
@@ -66,7 +67,10 @@ export class GroupsController {
   @Auth({ roles: Role.super_admin })
   @ApiOperation({ summary: 'Create a permission group' })
   @ApiCreatedResponse({ type: GroupResponse })
-  @ApiConflictResponse({ description: 'Group name already in use.' })
+  @ApiConflictResponse({
+    type: ErrorResponse,
+    description: 'Group name already in use.',
+  })
   create(@Body() dto: CreateGroupDto): Promise<GroupResponse> {
     return this.groupsService.create(dto);
   }
@@ -85,6 +89,7 @@ export class GroupsController {
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: GroupResponse })
   @ApiNotFoundResponse({
+    type: ErrorResponse,
     description: 'Unknown id, or the group was soft-deleted.',
   })
   getById(@Param('id', ParseUUIDPipe) id: string): Promise<GroupResponse> {
@@ -97,9 +102,13 @@ export class GroupsController {
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: GroupResponse })
   @ApiNotFoundResponse({
+    type: ErrorResponse,
     description: 'Unknown id, or the group was soft-deleted.',
   })
-  @ApiConflictResponse({ description: 'Group name already in use.' })
+  @ApiConflictResponse({
+    type: ErrorResponse,
+    description: 'Group name already in use.',
+  })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateGroupDto,
@@ -112,7 +121,10 @@ export class GroupsController {
   @Auth({ roles: Role.super_admin })
   @ApiOperation({ summary: 'Soft-delete a permission group' })
   @ApiParam({ name: 'id', format: 'uuid' })
-  @ApiNotFoundResponse({ description: 'Unknown id, or already deleted.' })
+  @ApiNotFoundResponse({
+    type: ErrorResponse,
+    description: 'Unknown id, or already deleted.',
+  })
   softDelete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.groupsService.softDelete(id);
   }
@@ -123,7 +135,10 @@ export class GroupsController {
   @ApiParam({ name: 'group_id', format: 'uuid' })
   @ApiParam({ name: 'user_id', format: 'uuid' })
   @ApiOkResponse({ type: UserResponse })
-  @ApiNotFoundResponse({ description: 'Unknown group or user.' })
+  @ApiNotFoundResponse({
+    type: ErrorResponse,
+    description: 'Unknown group or user.',
+  })
   assignUser(
     @Param('group_id', ParseUUIDPipe) groupId: string,
     @Param('user_id', ParseUUIDPipe) userId: string,
@@ -138,6 +153,7 @@ export class GroupsController {
   @ApiParam({ name: 'group_id', format: 'uuid' })
   @ApiParam({ name: 'user_id', format: 'uuid' })
   @ApiNotFoundResponse({
+    type: ErrorResponse,
     description:
       'Unknown group or user, or the user is not a member of that group.',
   })

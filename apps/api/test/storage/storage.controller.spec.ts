@@ -104,7 +104,7 @@ describe('StorageController', () => {
       expect(storageService.getById).toHaveBeenCalledWith('file-id');
     });
 
-    it('lets a NotFoundException from the service propagate', async () => {
+    it('lets a missing resource from the service propagate', async () => {
       storageService.getById.mockRejectedValue(new Error('File x not found'));
 
       await expect(controller.getById('file-id')).rejects.toThrow(

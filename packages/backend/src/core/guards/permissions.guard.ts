@@ -1,12 +1,7 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
+import { AppException, ErrorCode } from '../../errors';
 import { Role } from '@repo/db';
 import { isModerator } from '../auth.constants';
 import type { RequestUser } from '../auth.types';
@@ -37,17 +32,17 @@ export class PermissionsGuard implements CanActivate {
       .switchToHttp()
       .getRequest<Request & { user?: RequestUser }>();
     const user = request.user;
-    if (!user) throw new UnauthorizedException();
+    if (!user) throw new AppException(ErrorCode.UNAUTHORIZED);
 
     // A permission-gated route is staff-only by definition, so a student or
     // teacher is refused here even if @Roles was forgotten.
-    if (!isModerator(user.role)) throw new ForbiddenException();
+    if (!isModerator(user.role)) throw new AppException(ErrorCode.FORBIDDEN);
 
     if (user.role === Role.super_admin) return true;
 
     const granted = await this.permissionsRepository.findByUserId(user.id);
     if (!hasAllPermissions(granted, permissions)) {
-      throw new ForbiddenException();
+      throw new AppException(ErrorCode.FORBIDDEN);
     }
     return true;
   }

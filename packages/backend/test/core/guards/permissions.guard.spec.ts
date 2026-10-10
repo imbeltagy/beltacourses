@@ -1,8 +1,6 @@
-import {
-  ExecutionContext,
-  ForbiddenException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { errorWith } from '../../helpers/error-with';
+import { ErrorCode } from '../../../src/errors';
+import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@repo/db';
 import { PermissionsGuard } from '../../../src/core/guards/permissions.guard';
@@ -50,11 +48,11 @@ describe('PermissionsGuard', () => {
     expect(permissionsRepository.findByUserId).not.toHaveBeenCalled();
   });
 
-  it('throws UnauthorizedException when request.user is absent', async () => {
+  it('responds 401 when request.user is absent', async () => {
     reflector.getAllAndOverride.mockReturnValue([PERMISSIONS.USERS_READ]);
 
     await expect(guard.canActivate(contextWithUser(undefined))).rejects.toThrow(
-      UnauthorizedException,
+      errorWith(ErrorCode.UNAUTHORIZED),
     );
   });
 
@@ -63,7 +61,7 @@ describe('PermissionsGuard', () => {
 
     await expect(
       guard.canActivate(contextWithUser({ role: Role.student })),
-    ).rejects.toThrow(ForbiddenException);
+    ).rejects.toThrow(errorWith(ErrorCode.FORBIDDEN));
     expect(permissionsRepository.findByUserId).not.toHaveBeenCalled();
   });
 
@@ -96,7 +94,7 @@ describe('PermissionsGuard', () => {
 
     await expect(
       guard.canActivate(contextWithUser({ id: 'admin-1', role: Role.admin })),
-    ).rejects.toThrow(ForbiddenException);
+    ).rejects.toThrow(errorWith(ErrorCode.FORBIDDEN));
   });
 
   it('fails an admin with no group ([])', async () => {
@@ -105,6 +103,6 @@ describe('PermissionsGuard', () => {
 
     await expect(
       guard.canActivate(contextWithUser({ id: 'admin-1', role: Role.admin })),
-    ).rejects.toThrow(ForbiddenException);
+    ).rejects.toThrow(errorWith(ErrorCode.FORBIDDEN));
   });
 });

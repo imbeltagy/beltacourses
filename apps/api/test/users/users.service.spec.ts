@@ -1,8 +1,5 @@
-import {
-  BadRequestException,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { errorWith } from '../helpers/error-with';
+import { ErrorCode } from '@repo/backend/errors';
 import { Role } from '@repo/db';
 import { PasswordService, SessionService } from '@repo/backend/core';
 import { UsersRepository } from '../../src/users/users.repository';
@@ -100,7 +97,9 @@ describe('UsersService', () => {
     it('throws 409 when the email is already taken', async () => {
       repository.findIdByEmail.mockResolvedValue({ id: 'other-user' });
 
-      await expect(service.create(input)).rejects.toThrow(ConflictException);
+      await expect(service.create(input)).rejects.toThrow(
+        errorWith(ErrorCode.EMAIL_ALREADY_EXISTS),
+      );
       expect(repository.create).not.toHaveBeenCalled();
     });
 
@@ -151,7 +150,7 @@ describe('UsersService', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.findById('unknown')).rejects.toThrow(
-        NotFoundException,
+        errorWith(ErrorCode.USER_NOT_FOUND),
       );
     });
 
@@ -169,7 +168,7 @@ describe('UsersService', () => {
 
       await expect(
         service.update('unknown', { name: 'New Name' }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(errorWith(ErrorCode.USER_NOT_FOUND));
     });
 
     it('never writes hashed_password', async () => {
@@ -245,7 +244,7 @@ describe('UsersService', () => {
       repository.softDelete.mockResolvedValue(0);
 
       await expect(service.softDelete('unknown')).rejects.toThrow(
-        NotFoundException,
+        errorWith(ErrorCode.USER_NOT_FOUND),
       );
     });
 
@@ -283,16 +282,16 @@ describe('UsersService', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(service.setGroup('unknown', 'group-1')).rejects.toThrow(
-        NotFoundException,
+        errorWith(ErrorCode.USER_NOT_FOUND),
       );
       expect(sessionService.removeAllUserSessions).not.toHaveBeenCalled();
     });
 
-    it('rejects a non-admin target with BadRequestException', async () => {
+    it('rejects a non-admin target with bad request', async () => {
       repository.findById.mockResolvedValue(publicUser({ role: Role.teacher }));
 
       await expect(service.setGroup('user-1', 'group-1')).rejects.toThrow(
-        BadRequestException,
+        errorWith(ErrorCode.ONLY_ADMIN_CAN_HAVE_GROUP),
       );
       expect(repository.update).not.toHaveBeenCalled();
     });

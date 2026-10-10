@@ -1,10 +1,6 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import type { Request } from 'express';
+import { AppException, ErrorCode } from '../../errors';
 import { isModerator } from '../auth.constants';
 import type { RequestUser } from '../auth.types';
 import { SessionService } from '../session.service';
@@ -30,17 +26,17 @@ export class AccessTokenGuard implements CanActivate {
       .getRequest<Request & { user: RequestUser }>();
 
     const token = this.extractToken(request);
-    if (!token) throw new UnauthorizedException('Missing access token');
+    if (!token) throw new AppException(ErrorCode.MISSING_ACCESS_TOKEN);
 
     const claims = this.tokenService.verifyAccessToken(token);
 
     if (isModerator(claims.role)) {
-      if (!claims.sid) throw new UnauthorizedException('Invalid access token');
+      if (!claims.sid) throw new AppException(ErrorCode.INVALID_ACCESS_TOKEN);
       const alive = await this.sessionService.hasSession(
         claims.sub,
         claims.sid,
       );
-      if (!alive) throw new UnauthorizedException('Session expired');
+      if (!alive) throw new AppException(ErrorCode.SESSION_EXPIRED);
     }
 
     request.user = {

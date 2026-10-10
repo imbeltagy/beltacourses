@@ -1,3 +1,4 @@
+import { ErrorResponse } from '../common/dto/response/error.dto';
 import {
   Body,
   Controller,
@@ -45,7 +46,10 @@ export class UsersController {
   @Auth({ roles: MODERATOR_ROLES, permissions: PERMISSIONS.USERS_CREATE })
   @ApiOperation({ summary: 'Create a user' })
   @ApiCreatedResponse({ type: UserResponse })
-  @ApiConflictResponse({ description: 'Email already in use.' })
+  @ApiConflictResponse({
+    type: ErrorResponse,
+    description: 'Email already in use.',
+  })
   create(
     @Body() dto: CreateUserDto,
     @UploadedFile() avatar?: Express.Multer.File,
@@ -94,6 +98,7 @@ export class UsersController {
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: UserResponse })
   @ApiNotFoundResponse({
+    type: ErrorResponse,
     description: 'Unknown id, or the user was soft-deleted.',
   })
   getById(@Param('id', ParseUUIDPipe) id: string): Promise<UserResponse> {
@@ -108,9 +113,13 @@ export class UsersController {
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: UserResponse })
   @ApiNotFoundResponse({
+    type: ErrorResponse,
     description: 'Unknown id, or the user was soft-deleted.',
   })
-  @ApiConflictResponse({ description: 'Email already in use.' })
+  @ApiConflictResponse({
+    type: ErrorResponse,
+    description: 'Email already in use.',
+  })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateUserDto,
@@ -124,7 +133,10 @@ export class UsersController {
   @Auth({ roles: MODERATOR_ROLES, permissions: PERMISSIONS.USERS_DELETE })
   @ApiOperation({ summary: 'Soft-delete a user' })
   @ApiParam({ name: 'id', format: 'uuid' })
-  @ApiNotFoundResponse({ description: 'Unknown id, or already deleted.' })
+  @ApiNotFoundResponse({
+    type: ErrorResponse,
+    description: 'Unknown id, or already deleted.',
+  })
   delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.usersService.softDelete(id);
   }

@@ -1,4 +1,6 @@
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { errorWith } from '../../helpers/error-with';
+import { AppException, ErrorCode } from '../../../src/errors';
+import { ExecutionContext } from '@nestjs/common';
 import { Role } from '@repo/db';
 import { AccessTokenGuard } from '../../../src/core/guards/access-token.guard';
 import { SessionService } from '../../../src/core/session.service';
@@ -35,7 +37,7 @@ describe('AccessTokenGuard', () => {
     const { context } = contextWithAuthHeader(undefined);
 
     await expect(guard.canActivate(context)).rejects.toThrow(
-      UnauthorizedException,
+      errorWith(ErrorCode.MISSING_ACCESS_TOKEN),
     );
   });
 
@@ -43,18 +45,18 @@ describe('AccessTokenGuard', () => {
     const { context } = contextWithAuthHeader('Basic abc123');
 
     await expect(guard.canActivate(context)).rejects.toThrow(
-      UnauthorizedException,
+      errorWith(ErrorCode.MISSING_ACCESS_TOKEN),
     );
   });
 
   it('rejects an invalid token', async () => {
     const { context } = contextWithAuthHeader('Bearer a-token');
     tokenService.verifyAccessToken.mockImplementation(() => {
-      throw new UnauthorizedException('Invalid access token');
+      throw new AppException(ErrorCode.INVALID_ACCESS_TOKEN);
     });
 
     await expect(guard.canActivate(context)).rejects.toThrow(
-      UnauthorizedException,
+      errorWith(ErrorCode.INVALID_ACCESS_TOKEN),
     );
   });
 
@@ -114,7 +116,7 @@ describe('AccessTokenGuard', () => {
     sessionService.hasSession.mockResolvedValue(false);
 
     await expect(guard.canActivate(context)).rejects.toThrow(
-      UnauthorizedException,
+      errorWith(ErrorCode.SESSION_EXPIRED),
     );
   });
 
@@ -129,7 +131,7 @@ describe('AccessTokenGuard', () => {
     });
 
     await expect(guard.canActivate(context)).rejects.toThrow(
-      UnauthorizedException,
+      errorWith(ErrorCode.INVALID_ACCESS_TOKEN),
     );
     expect(sessionService.hasSession).not.toHaveBeenCalled();
   });

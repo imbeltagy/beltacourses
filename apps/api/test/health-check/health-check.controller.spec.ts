@@ -1,4 +1,5 @@
-import { ServiceUnavailableException } from '@nestjs/common';
+import { errorWith } from '../helpers/error-with';
+import { ErrorCode } from '@repo/backend/errors';
 import { HealthCheckController } from '../../src/health-check/health-check.controller';
 import { HealthCheckService } from '../../src/health-check/health-check.service';
 
@@ -25,19 +26,19 @@ describe('HealthCheckController', () => {
     });
   });
 
-  it('throws ServiceUnavailableException when postgres is down', async () => {
+  it('responds 503 when postgres is down', async () => {
     service.getStatus.mockResolvedValue({ postgres: 'down', redis: 'running' });
 
     await expect(controller.getStatus()).rejects.toThrow(
-      ServiceUnavailableException,
+      errorWith(ErrorCode.SERVICE_UNAVAILABLE),
     );
   });
 
-  it('throws ServiceUnavailableException when redis is down', async () => {
+  it('responds 503 when redis is down', async () => {
     service.getStatus.mockResolvedValue({ postgres: 'running', redis: 'down' });
 
     await expect(controller.getStatus()).rejects.toThrow(
-      ServiceUnavailableException,
+      errorWith(ErrorCode.SERVICE_UNAVAILABLE),
     );
   });
 });

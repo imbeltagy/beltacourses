@@ -1,9 +1,5 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { AppException, ErrorCode } from '@repo/backend/errors';
 import { PasswordService, SessionService } from '@repo/backend/core';
 import { Role, type User } from '@repo/db';
 import { StorageService } from '../storage/storage.service';
@@ -28,7 +24,7 @@ export class UsersService {
     avatar?: FileToUpload,
   ): Promise<PublicUser> {
     const existing = await this.usersRepository.findIdByEmail(input.email);
-    if (existing) throw new ConflictException('Email already in use');
+    if (existing) throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
 
     const hashed_password = await this.passwordService.hash(input.password);
     const uploadedAvatar = avatar
@@ -59,7 +55,7 @@ export class UsersService {
 
   async findById(id: string): Promise<PublicUser> {
     const user = await this.usersRepository.findById(id);
-    if (!user) throw new NotFoundException(`User ${id} not found`);
+    if (!user) throw new AppException(ErrorCode.USER_NOT_FOUND);
     return user;
   }
 
@@ -78,7 +74,7 @@ export class UsersService {
     avatar?: FileToUpload,
   ): Promise<PublicUser> {
     const existing = await this.usersRepository.findById(id);
-    if (!existing) throw new NotFoundException(`User ${id} not found`);
+    if (!existing) throw new AppException(ErrorCode.USER_NOT_FOUND);
 
     const uploadedAvatar = avatar
       ? await this.storageService.upload(avatar)
@@ -118,7 +114,7 @@ export class UsersService {
 
   async softDelete(id: string): Promise<void> {
     const changed = await this.usersRepository.softDelete(id);
-    if (changed === 0) throw new NotFoundException(`User ${id} not found`);
+    if (changed === 0) throw new AppException(ErrorCode.USER_NOT_FOUND);
   }
 
   /**
@@ -136,12 +132,10 @@ export class UsersService {
    */
   async setGroup(userId: string, groupId: string | null): Promise<PublicUser> {
     const user = await this.usersRepository.findById(userId);
-    if (!user) throw new NotFoundException(`User ${userId} not found`);
+    if (!user) throw new AppException(ErrorCode.USER_NOT_FOUND);
 
     if (user.role !== Role.admin) {
-      throw new BadRequestException(
-        'Only an admin can be assigned a permission group',
-      );
+      throw new AppException(ErrorCode.ONLY_ADMIN_CAN_HAVE_GROUP);
     }
 
     const updated = await this.usersRepository.update(userId, {

@@ -1,13 +1,26 @@
 import 'dotenv/config'; // MUST be first — storage.constants.ts reads process.env on import
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, type ValidationError } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AppException, ErrorCode } from '@repo/backend/errors';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      // Default would be a bare 400 with an array of messages; this keeps the
+      // `{ code, error, message }` contract for validation failures too.
+      exceptionFactory: (errors: ValidationError[]) =>
+        new AppException(
+          ErrorCode.VALIDATION_FAILED,
+          errors.flatMap((e) => Object.values(e.constraints ?? {})).join('; '),
+        ),
+    }),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('Courses API')

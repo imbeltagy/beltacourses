@@ -1,8 +1,5 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { AppException, ErrorCode } from '@repo/backend/errors';
 import { randomUUID } from 'node:crypto';
 import {
   isModerator,
@@ -62,7 +59,7 @@ export class AuthService {
     expectModerator: boolean,
   ): Promise<LoginResponse> {
     if (isModerator(user.role) !== expectModerator) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new AppException(ErrorCode.INVALID_CREDENTIALS);
     }
 
     const tokenUser: TokenUser = {
@@ -100,8 +97,11 @@ export class AuthService {
     try {
       user = await this.usersService.findById(claims.sub);
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new UnauthorizedException('Invalid refresh token');
+      if (
+        error instanceof AppException &&
+        error.error === ErrorCode.USER_NOT_FOUND
+      ) {
+        throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
       }
       throw error;
     }
@@ -115,14 +115,14 @@ export class AuthService {
 
     // Branch on the current DB role, not the role inside the token.
     if (isModerator(user.role)) {
-      if (!claims.sid) throw new UnauthorizedException('Invalid refresh token');
+      if (!claims.sid) throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
 
       const ok = await this.sessionService.verifySession(
         user.id,
         claims.sid,
         refreshToken,
       );
-      if (!ok) throw new UnauthorizedException('Invalid refresh token');
+      if (!ok) throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
 
       return {
         access_token: this.tokenService.signAccessToken(tokenUser, claims.sid),
@@ -154,13 +154,13 @@ export class AuthService {
     password: string,
   ): Promise<PublicUser> {
     const user = await this.usersService.findByEmailWithPassword(email);
-    if (!user) throw new UnauthorizedException('Invalid email or password');
+    if (!user) throw new AppException(ErrorCode.INVALID_CREDENTIALS);
 
     const valid = await this.passwordService.compare(
       password,
       user.hashed_password,
     );
-    if (!valid) throw new UnauthorizedException('Invalid email or password');
+    if (!valid) throw new AppException(ErrorCode.INVALID_CREDENTIALS);
 
     return this.usersService.findById(user.id);
   }

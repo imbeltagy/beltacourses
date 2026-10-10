@@ -1,8 +1,5 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { AppException, ErrorCode } from '@repo/backend/errors';
 import { PERMISSION_GROUPS } from '@repo/backend/core';
 import type { PublicUser } from '../users/users.types';
 import { UsersService } from '../users/users.service';
@@ -21,7 +18,7 @@ export class GroupsService {
 
   async create(dto: CreateGroupDto): Promise<PublicGroup> {
     const existing = await this.groupsRepository.findIdByName(dto.name);
-    if (existing) throw new ConflictException('Group name already in use');
+    if (existing) throw new AppException(ErrorCode.GROUP_NAME_ALREADY_EXISTS);
 
     return this.groupsRepository.create({
       name: dto.name,
@@ -32,7 +29,7 @@ export class GroupsService {
 
   async findById(id: string): Promise<PublicGroup> {
     const group = await this.groupsRepository.findById(id);
-    if (!group) throw new NotFoundException(`Group ${id} not found`);
+    if (!group) throw new AppException(ErrorCode.GROUP_NOT_FOUND);
     return group;
   }
 
@@ -47,11 +44,11 @@ export class GroupsService {
 
   async update(id: string, dto: UpdateGroupDto): Promise<PublicGroup> {
     const existing = await this.groupsRepository.findById(id);
-    if (!existing) throw new NotFoundException(`Group ${id} not found`);
+    if (!existing) throw new AppException(ErrorCode.GROUP_NOT_FOUND);
 
     if (dto.name && dto.name !== existing.name) {
       const clash = await this.groupsRepository.findIdByName(dto.name);
-      if (clash) throw new ConflictException('Group name already in use');
+      if (clash) throw new AppException(ErrorCode.GROUP_NAME_ALREADY_EXISTS);
     }
 
     return this.groupsRepository.update(id, {
@@ -74,7 +71,7 @@ export class GroupsService {
    */
   async softDelete(id: string): Promise<void> {
     const changed = await this.groupsRepository.softDelete(id);
-    if (changed === 0) throw new NotFoundException(`Group ${id} not found`);
+    if (changed === 0) throw new AppException(ErrorCode.GROUP_NOT_FOUND);
   }
 
   permissionCatalog(): typeof PERMISSION_GROUPS {
@@ -97,9 +94,7 @@ export class GroupsService {
 
     const user = await this.usersService.findById(userId);
     if (user.group?.id !== groupId) {
-      throw new NotFoundException(
-        `User ${userId} is not a member of group ${groupId}`,
-      );
+      throw new AppException(ErrorCode.USER_NOT_IN_GROUP);
     }
 
     await this.usersService.setGroup(userId, null);

@@ -142,6 +142,24 @@ a cron pattern registers a second schedule next to the old one instead of replac
   object.
 - The UI is served at `/docs`, wired in `apps/<app>/src/main.ts`.
 
+## Errors
+
+Every non-2xx API response is `{ code, error, message? }`: `code` is the HTTP status, `error` a member
+of the `ErrorCode` enum (`@repo/backend/errors`), `message` optional English for logs.
+
+- **Throw `AppException(ErrorCode.X)`**, never a Nest `*Exception`. The status for each code lives
+  once, in `ERROR_STATUS`. `AppExceptionFilter` (registered as `APP_FILTER`) maps anything else —
+  unknown routes, validation, bugs — to a generic code, so the contract holds for every error.
+- **The backend never localizes.** Adding a code means: the enum + `ERROR_STATUS`, the mirror list in
+  `packages/frontend/features/src/types/api/errors.ts`, and a message under `errors.api` in both
+  `en.json` and `ar.json` (`localizeError` is type-checked against them).
+- **Actions return `{ success: false, error }`** and never text. The caller (a hook, or a server
+  page) turns it into a string with `localizeError(t, result.error, "<fallback>")`. An unknown code
+  falls back to a per-request message under `errors.fallback` — add one for each new action.
+- **The api-client validates the contract** and reports every failure to `ErrorNotifier`
+  (`@repo/frontend/utils/error-notifier`, secrets redacted). A non-2xx body that breaks the shape
+  becomes `INVALID_ERROR_RESPONSE`.
+
 ## Environment variables
 
 - Read them in a `<feature>.constants.ts`, exported as `string | undefined`. That file must **never

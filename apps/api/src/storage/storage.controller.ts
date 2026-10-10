@@ -1,3 +1,4 @@
+import { ErrorResponse } from '../common/dto/response/error.dto';
 import {
   Body,
   Controller,
@@ -88,6 +89,7 @@ export class StorageController {
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiOkResponse({ type: FileMetadataResponse })
   @ApiNotFoundResponse({
+    type: ErrorResponse,
     description: 'Unknown id, or the file was soft-deleted.',
   })
   getById(@Param('id', ParseUUIDPipe) id: string): Promise<FileMetadata> {

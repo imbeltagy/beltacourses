@@ -1,6 +1,7 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { Role } from '@repo/db';
+import { AppException, ErrorCode } from '../errors';
 import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from './core.constants';
 import {
   CLIENT_ACCESS_TOKEN_TTL_SECONDS,
@@ -58,7 +59,12 @@ export class TokenService {
   }
 
   verifyAccessToken(token: string): TokenClaims {
-    return this.verify(this.accessJwt, token, 'access', 'Invalid access token');
+    return this.verify(
+      this.accessJwt,
+      token,
+      'access',
+      ErrorCode.INVALID_ACCESS_TOKEN,
+    );
   }
 
   verifyRefreshToken(token: string): TokenClaims {
@@ -66,7 +72,7 @@ export class TokenService {
       this.refreshJwt,
       token,
       'refresh',
-      'Invalid refresh token',
+      ErrorCode.INVALID_REFRESH_TOKEN,
     );
   }
 
@@ -106,16 +112,16 @@ export class TokenService {
     jwt: JwtService,
     token: string,
     expectedTyp: TokenClaims['typ'],
-    message: string,
+    error: ErrorCode,
   ): TokenClaims {
     try {
       const claims = jwt.verify<TokenClaims>(token);
       if (claims.typ !== expectedTyp) {
-        throw new UnauthorizedException(message);
+        throw new AppException(error);
       }
       return claims;
     } catch {
-      throw new UnauthorizedException(message);
+      throw new AppException(error);
     }
   }
 }
