@@ -62,6 +62,8 @@ a second tsconfig and a second entry in every consumer's `transpilePackages`.
   than wrapping calls in `try`/`catch`. On a 401/403 it refreshes the access
   token once and replays the original request; a second failure is returned as
   the final error. Concurrent refreshes share one in-flight promise.
+- `src/utils/img-url` → `@repo/frontend/utils/img-url`. `imgUrl(path)` builds an image URL from
+  `NEXT_PUBLIC_STATIC_IMAGES_URL` (the files app; default `/`) and a path, with one `/` between.
 - `src/utils/cookies` → `@repo/frontend/utils/cookies`. `"use server"` accessors
   over `next/headers`, keyed by the `Cookies` enum. Auth tokens are stored
   httpOnly, so they are readable from server actions only — never from the

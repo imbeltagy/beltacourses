@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 
 import { LocaleSwitcher } from "@repo/frontend/components/locale-switcher";
 import { Logo } from "@repo/frontend/components/logo";
+import { imgUrl } from "@repo/frontend/utils/img-url";
 
 export function AuthLayout({
   children,
@@ -29,7 +30,7 @@ export function AuthLayout({
         <Image
           width={500}
           height={500}
-          src={image ?? "/assets/images/auth/login.svg"}
+          src={image ?? imgUrl("/assets/images/auth/login.svg")}
           alt={t("authImageAlt")}
           className="mt-[150px] max-h-full max-w-full object-cover"
         />

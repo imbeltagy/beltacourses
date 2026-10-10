@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Logo } from "@repo/frontend/components/logo";
 import { usePathname } from "@repo/frontend/i18n/navigation";
 import { cn } from "@repo/frontend/utils";
+import { imgUrl } from "@repo/frontend/utils/img-url";
 import { isActive } from "../is-active";
 import { navigation } from "../nav-config";
 import type { NavbarType } from "../constants";
@@ -42,7 +43,7 @@ export function Navbar({
       <div className={cn("shrink-0", mini ? "p-2" : "ps-3 pe-4 pt-2")}>
         {mini ? (
           <Logo
-            src="/assets/logo/logo-sm.png"
+            src={imgUrl("/assets/logo/logo-sm.png")}
             width={37}
             height={37}
             className="mx-auto w-9"

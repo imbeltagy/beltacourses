@@ -1,9 +1,10 @@
 import { cn } from "../../utils";
 import Image from "next/image";
+import { imgUrl } from "../../utils/img-url";
 
 export function Logo({
   className,
-  src = "/assets/logo/logo-lg-300.png",
+  src = imgUrl("/assets/logo/logo-lg-300.png"),
   alt = "BeltaCourses",
   width = 570,
   height = 100,
