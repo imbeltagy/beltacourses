@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   Select,
   SelectContent,
@@ -8,11 +9,13 @@ import {
   SelectValue,
 } from "@repo/frontend/ui";
 import { useQueryState } from "../../../../hooks/use-query-state";
-import { ROLES, ROLE_LABELS } from "../../../../types/api/users";
+import { ROLES } from "../../../../types/api/users";
 
 const ALL = "all";
 
 export function RoleFilter() {
+  const t = useTranslations("admin.users");
+  const tRoles = useTranslations("roles");
   const { searchParams, setQuery } = useQueryState();
   const value = searchParams.get("role") ?? ALL;
 
@@ -25,15 +28,15 @@ export function RoleFilter() {
     >
       <SelectTrigger
         className="w-full sm:w-[190px]"
-        aria-label="Filter by role"
+        aria-label={t("filterByRole")}
       >
-        <SelectValue placeholder="All roles" />
+        <SelectValue placeholder={t("allRoles")} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value={ALL}>All roles</SelectItem>
+        <SelectItem value={ALL}>{t("allRoles")}</SelectItem>
         {ROLES.map((role) => (
           <SelectItem key={role} value={role}>
-            {ROLE_LABELS[role]}
+            {tRoles(role)}
           </SelectItem>
         ))}
       </SelectContent>

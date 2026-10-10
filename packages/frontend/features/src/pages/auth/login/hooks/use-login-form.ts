@@ -2,16 +2,20 @@
 
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useTranslations } from "next-intl";
 import * as yup from "yup";
 import { toast } from "sonner";
 import { loginAction } from "../../../../actions/auth-actions";
 
-const schema = yup.object().shape({
-  email: yup.string().email("Invalid email").required("Email is required"),
-  password: yup.string().required("Password is required"),
-});
+type T = ReturnType<typeof useTranslations<"validation">>;
 
-export type LoginFormInputs = yup.InferType<typeof schema>;
+const buildSchema = (t: T) =>
+  yup.object().shape({
+    email: yup.string().email(t("invalidEmail")).required(t("emailRequired")),
+    password: yup.string().required(t("passwordRequired")),
+  });
+
+export type LoginFormInputs = yup.InferType<ReturnType<typeof buildSchema>>;
 
 /**
  * Owns the schema, the form instance and the submit handler, so
@@ -19,7 +23,10 @@ export type LoginFormInputs = yup.InferType<typeof schema>;
  * API call behind the submit does.
  */
 export function useLoginForm() {
-  const form = useForm<LoginFormInputs>({ resolver: yupResolver(schema) });
+  const t = useTranslations("validation");
+  const form = useForm<LoginFormInputs>({
+    resolver: yupResolver(buildSchema(t)),
+  });
 
   const submit: SubmitHandler<LoginFormInputs> = async (data) => {
     const result = await loginAction(data);

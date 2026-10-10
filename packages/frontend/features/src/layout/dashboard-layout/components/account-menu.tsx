@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { LogOut, UserCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -16,10 +16,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@repo/frontend/ui";
+import { useRouter } from "@repo/frontend/i18n/navigation";
 import { logoutAction } from "../../../actions/auth-actions";
 import type { User } from "../../../types/api/users";
 
 export function AccountMenu({ user }: { user: User | null }) {
+  const t = useTranslations("nav");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -45,7 +47,7 @@ export function AccountMenu({ user }: { user: User | null }) {
           variant="ghost"
           size="icon"
           className="rounded-full"
-          aria-label="Account menu"
+          aria-label={t("accountMenu")}
         >
           {user?.avatar ? (
             <Avatar className="size-8">
@@ -61,7 +63,7 @@ export function AccountMenu({ user }: { user: User | null }) {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="font-normal">
           <div className="truncate font-medium">
-            {user?.name ?? "Signed in"}
+            {user?.name ?? t("signedIn")}
           </div>
           <div className="text-muted-foreground truncate text-xs">
             {user?.email ?? ""}
@@ -80,7 +82,7 @@ export function AccountMenu({ user }: { user: User | null }) {
           }}
         >
           <LogOut aria-hidden="true" />
-          {pending ? "Signing out…" : "Log out"}
+          {pending ? t("signingOut") : t("logOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

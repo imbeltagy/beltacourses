@@ -1,5 +1,6 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
 import { ApiClient } from "@repo/frontend/utils/api-client";
 import { Cookies, deleteCookie, setCookie } from "@repo/frontend/utils/cookies";
 import { endpoints } from "../configs/endpoints";
@@ -37,7 +38,8 @@ export async function loginAction(data: LoginRequest): Promise<ActionResult> {
   // Not `result.message`: these endpoints return no `message` field, so the
   // api-client falls back to the literal string "success" — which is what the
   // user would otherwise read in the toast. Success copy belongs to the action.
-  return { success: true, message: "Welcome back!" };
+  const t = await getTranslations("actions");
+  return { success: true, message: t("welcomeBack") };
 }
 
 export async function registerAction(
@@ -66,16 +68,18 @@ export async function registerAction(
     password: data.password,
   });
 
+  const t = await getTranslations("actions");
+
   if (!session.success) {
     // The account exists; only the follow-up login failed. Say so, rather than
     // letting "Invalid email or password" imply the registration was rejected.
     return {
       success: false,
-      message: "Account created, but signing you in failed. Please log in.",
+      message: t("accountCreatedLoginFailed"),
     };
   }
 
-  return { success: true, message: "Your account is ready." };
+  return { success: true, message: t("accountReady") };
 }
 
 /**
@@ -100,7 +104,8 @@ export async function loginModeratorAction(
 
   await storeSession(result.data);
 
-  return { success: true, message: "Welcome back!" };
+  const t = await getTranslations("actions");
+  return { success: true, message: t("welcomeBack") };
 }
 
 /**
@@ -117,5 +122,6 @@ export async function logoutAction(): Promise<ActionResult> {
   await deleteCookie(Cookies.ACCESS_TOKEN);
   await deleteCookie(Cookies.REFRESH_TOKEN);
 
-  return { success: true, message: "Signed out." };
+  const t = await getTranslations("actions");
+  return { success: true, message: t("signedOut") };
 }

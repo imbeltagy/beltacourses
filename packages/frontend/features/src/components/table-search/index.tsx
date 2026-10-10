@@ -2,18 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Input } from "@repo/frontend/ui";
 import { useQueryState } from "../../hooks/use-query-state";
 
 const DEBOUNCE_MS = 350;
 
 export function TableSearch({
-  placeholder = "Search…",
-  label = "Search",
+  placeholder,
+  label,
 }: {
   placeholder?: string;
   label?: string;
 }) {
+  const t = useTranslations("table");
   const { searchParams, setQuery } = useQueryState();
   const urlValue = searchParams.get("search") ?? "";
   const [value, setValue] = useState(urlValue);
@@ -44,8 +46,8 @@ export function TableSearch({
       />
       <Input
         type="search"
-        aria-label={label}
-        placeholder={placeholder}
+        aria-label={label ?? t("search")}
+        placeholder={placeholder ?? t("search")}
         className="ps-9"
         value={value}
         onChange={(event) => {

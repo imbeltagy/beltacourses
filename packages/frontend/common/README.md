@@ -72,3 +72,24 @@ Both are `index.ts`, not `index.tsx`, so each needs an exact key in the
 The same applies to `./ui` (matching shadcn's own file naming) and
 `./styles/theme.css` (not a JS/TS module at all), imported with
 `@import "@repo/frontend/styles/theme.css";`.
+
+## `src/i18n` — localization
+
+Everything locale-related lives here; apps and `@repo/frontend-features` only
+consume it. Built on `next-intl`, with the locale always in the URL
+(`/en/...`, `/ar/...`).
+
+- `routing.ts` — locales (`en`, `ar`), default locale, `isLocale`, `getDirection`.
+- `navigation.ts` — locale-aware `Link`, `redirect`, `usePathname`, `useRouter`.
+  Use these instead of `next/link` / `next/navigation` in any page that is
+  served under `[locale]`; paths never include the prefix.
+- `request.ts` — the request config the apps' `next.config.ts` hands to
+  `createNextIntlPlugin` (messages, UTC time zone).
+- `proxy.ts` — re-exported by each app as `src/proxy.ts` (with its own `config`).
+- `messages/en.json`, `messages/ar.json` — one file per locale. `ar` is checked
+  against `en` at compile time, and keys passed to `t()` are typed.
+
+`components/i18n-provider` (messages + Radix direction) and
+`components/locale-switcher` complete the set. Style RTL-safely: logical
+utilities only (`ps-*`, `ms-*`, `start-*`, `text-start`, `border-s`), and
+`rtl:rotate-180` on directional icons.

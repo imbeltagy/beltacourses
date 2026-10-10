@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Alert, AlertTitle } from "@repo/frontend/ui";
 import { listUsersAction } from "../../../actions/users-actions";
 import { PageWrapper } from "../../../components/page-wrapper";
@@ -18,7 +19,10 @@ export default async function UsersPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params = await searchParams;
+  const [params, t] = await Promise.all([
+    searchParams,
+    getTranslations("admin.users"),
+  ]);
 
   const page = toPositiveInt(params.page) ?? 1;
   const search = typeof params.search === "string" ? params.search : undefined;
@@ -32,9 +36,12 @@ export default async function UsersPage({
   });
 
   return (
-    <PageWrapper title="Users" description="Everyone with an account.">
+    <PageWrapper title={t("title")} description={t("description")}>
       <div className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center">
-        <TableSearch placeholder="Search name or email…" label="Search users" />
+        <TableSearch
+          placeholder={t("searchPlaceholder")}
+          label={t("searchLabel")}
+        />
         <RoleFilter />
       </div>
 

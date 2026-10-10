@@ -60,11 +60,3 @@ export type ListUsersQuery = PaginationQuery & {
 };
 
 export type ListUsersResponse = Paginated<User>;
-
-export const ROLE_LABELS: Record<Role, string> = {
-  student: "Student",
-  teacher: "Teacher",
-  academy_moderator: "Academy Moderator",
-  admin: "Admin",
-  super_admin: "Super Admin",
-};

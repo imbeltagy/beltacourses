@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Alert, AlertTitle } from "@repo/frontend/ui";
 import { listGroupsAction } from "../../../actions/groups-actions";
 import { PageWrapper } from "../../../components/page-wrapper";
@@ -11,7 +12,10 @@ export default async function GroupsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params = await searchParams;
+  const [params, t] = await Promise.all([
+    searchParams,
+    getTranslations("admin.groups"),
+  ]);
 
   const page = toPositiveInt(params.page) ?? 1;
   const search = typeof params.search === "string" ? params.search : undefined;
@@ -23,12 +27,12 @@ export default async function GroupsPage({
   });
 
   return (
-    <PageWrapper
-      title="Groups"
-      description="Permission groups. Only an admin is ever assigned one."
-    >
+    <PageWrapper title={t("title")} description={t("description")}>
       <div className="pb-4">
-        <TableSearch placeholder="Search group name…" label="Search groups" />
+        <TableSearch
+          placeholder={t("searchPlaceholder")}
+          label={t("searchLabel")}
+        />
       </div>
 
       {!result.success ? (

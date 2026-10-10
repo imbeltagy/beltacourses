@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { ChevronRight, Menu } from "lucide-react";
 import {
   Button,
@@ -10,6 +10,9 @@ import {
   SheetTitle,
   TooltipProvider,
 } from "@repo/frontend/ui";
+import { LocaleSwitcher } from "@repo/frontend/components/locale-switcher";
+import { usePathname } from "@repo/frontend/i18n/navigation";
+import { getDirection } from "@repo/frontend/i18n/routing";
 import { cn } from "@repo/frontend/utils";
 import {
   HEADER_HEIGHT,
@@ -30,6 +33,8 @@ export function DashboardShell({
   user: User | null;
   initialNavbarType: NavbarType;
 }) {
+  const t = useTranslations("nav");
+  const dir = getDirection(useLocale());
   const [navbarType, setNavbarType] = useState<NavbarType>(initialNavbarType);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
@@ -75,7 +80,7 @@ export function DashboardShell({
             variant="outline"
             size="icon"
             className="rounded-full min-[900px]:hidden"
-            aria-label="Open navigation"
+            aria-label={t("open")}
             aria-expanded={drawerOpen}
             onClick={() => setDrawerOpen(true)}
           >
@@ -84,6 +89,7 @@ export function DashboardShell({
 
           <div className="grow" />
 
+          <LocaleSwitcher />
           <AccountMenu user={user} />
         </header>
 
@@ -100,24 +106,23 @@ export function DashboardShell({
           variant="outline"
           size="icon"
           onClick={toggleNavbar}
-          aria-label={
-            navbarType === "full" ? "Collapse sidebar" : "Expand sidebar"
-          }
+          aria-label={navbarType === "full" ? t("collapse") : t("expand")}
           aria-expanded={navbarType === "full"}
           className="bg-background fixed top-[60px] start-(--rail-w) z-40 hidden size-7 -translate-x-1/2 -translate-y-1/2 rounded-full rtl:translate-x-1/2 min-[900px]:flex"
         >
           <ChevronRight
             className={cn(
               "size-3 transition-transform",
-              navbarType === "full" && "rotate-180",
+              // Points toward the rail's outer edge to expand, back to collapse.
+              (navbarType === "full") !== (dir === "rtl") && "rotate-180",
             )}
             aria-hidden="true"
           />
         </Button>
 
         <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <SheetContent side="left" className="w-[250px] max-w-[95vw] p-0">
-            <SheetTitle className="sr-only">Navigation</SheetTitle>
+          <SheetContent side="start" className="w-[250px] max-w-[95vw] p-0">
+            <SheetTitle className="sr-only">{t("navigation")}</SheetTitle>
             {/* pt-10 clears the sheet's own close button, which is absolutely
                 positioned over the top-right corner and would sit on the logo. */}
             <Navbar

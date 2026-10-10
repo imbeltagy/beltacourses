@@ -1,15 +1,17 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Button, CardContent, CardFooter } from "@repo/frontend/ui";
 import { Form } from "@repo/frontend/components/form/form-provider";
 import { RHFInput } from "@repo/frontend/components/form/rhf-input";
 import { RHFRadioGroup } from "@repo/frontend/components/form/rhf-radio-group";
-import { ROLE_OPTIONS, useRegisterForm } from "../hooks/use-register-form";
+import { useRegisterForm } from "../hooks/use-register-form";
 
 const FORM_ID = "register-form";
 
 export function RegisterForm() {
-  const { form, onSubmit, isTeacher } = useRegisterForm();
+  const t = useTranslations();
+  const { form, onSubmit, isTeacher, roleOptions } = useRegisterForm();
   const { isSubmitting } = form.formState;
 
   return (
@@ -21,12 +23,22 @@ export function RegisterForm() {
           id={FORM_ID}
           className="flex flex-col gap-4"
         >
-          <RHFInput name="name" label="Full Name" type="text" />
-          <RHFInput name="email" label="Email" type="email" />
-          <RHFInput name="password" label="Password" type="password" />
-          <RHFRadioGroup name="role" label="I'm a..." options={ROLE_OPTIONS} />
+          <RHFInput name="name" label={t("common.fullName")} type="text" />
+          <RHFInput name="email" label={t("common.email")} type="email" />
+          <RHFInput
+            name="password"
+            label={t("common.password")}
+            type="password"
+          />
+          <RHFRadioGroup
+            name="role"
+            label={t("auth.register.roleLabel")}
+            options={roleOptions}
+          />
 
-          {isTeacher && <RHFInput name="bio" label="Bio" multiline />}
+          {isTeacher && (
+            <RHFInput name="bio" label={t("common.bio")} multiline />
+          )}
         </Form>
       </CardContent>
 
@@ -38,7 +50,7 @@ export function RegisterForm() {
           loading={isSubmitting}
           size="lg"
         >
-          Register
+          {t("auth.register.submit")}
         </Button>
       </CardFooter>
     </>

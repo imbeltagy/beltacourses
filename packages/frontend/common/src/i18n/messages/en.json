@@ -1,0 +1,139 @@
+{
+  "metadata": {
+    "client": {
+      "title": "BeltaCourses",
+      "description": "BeltaCourses — learn online."
+    },
+    "admin": {
+      "title": "BeltaCourses Admin",
+      "description": "Staff control panel for BeltaCourses."
+    }
+  },
+  "locale": {
+    "switchTo": "Switch language to {language}",
+    "names": {
+      "en": "English",
+      "ar": "العربية"
+    }
+  },
+  "common": {
+    "close": "Close",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "fullName": "Full Name",
+    "bio": "Bio",
+    "authImageAlt": "Auth Background"
+  },
+  "validation": {
+    "invalidEmail": "Invalid email",
+    "emailRequired": "Email is required",
+    "passwordRequired": "Password is required",
+    "nameRequired": "Name is required",
+    "nameMin": "Name must be at least {min} characters",
+    "nameMax": "Name must be at most {max} characters",
+    "passwordMin": "Password must be at least {min} characters",
+    "passwordMax": "Password must be at most {max} characters",
+    "roleRequired": "Role is required"
+  },
+  "actions": {
+    "welcomeBack": "Welcome back!",
+    "accountReady": "Your account is ready.",
+    "accountCreatedLoginFailed": "Account created, but signing you in failed. Please log in.",
+    "signedOut": "Signed out."
+  },
+  "roles": {
+    "student": "Student",
+    "teacher": "Teacher",
+    "academy_moderator": "Academy Moderator",
+    "admin": "Admin",
+    "super_admin": "Super Admin"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Please enter your details",
+      "submit": "Login",
+      "google": "Login with Google",
+      "googleStub": "Login with Google (stub)"
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Please complete your registration",
+      "roleLabel": "I'm a...",
+      "submit": "Register"
+    },
+    "moderatorLogin": {
+      "title": "Admin panel",
+      "subtitle": "Staff sign-in. Client accounts cannot log in here.",
+      "submit": "Sign in"
+    }
+  },
+  "nav": {
+    "main": "Main",
+    "navigation": "Navigation",
+    "open": "Open navigation",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "accountMenu": "Account menu",
+    "signedIn": "Signed in",
+    "logOut": "Log out",
+    "signingOut": "Signing out…",
+    "headings": {
+      "administration": "Administration"
+    },
+    "items": {
+      "home": "Home",
+      "users": "Users",
+      "groups": "Groups"
+    }
+  },
+  "table": {
+    "search": "Search…",
+    "noResults": "No results",
+    "showing": "Showing {first}–{last} of {total}",
+    "pageOf": "Page {page} of {pageCount}",
+    "previous": "Previous page",
+    "next": "Next page"
+  },
+  "admin": {
+    "home": {
+      "welcomeNamed": "Welcome back, {name}",
+      "welcome": "Welcome back",
+      "description": "Pick a section to get started.",
+      "usersBody": "Browse and filter every account on the platform.",
+      "groupsBody": "Permission groups and the admins assigned to them."
+    },
+    "users": {
+      "title": "Users",
+      "description": "Everyone with an account.",
+      "searchPlaceholder": "Search name or email…",
+      "searchLabel": "Search users",
+      "filterByRole": "Filter by role",
+      "allRoles": "All roles",
+      "empty": "No users match these filters.",
+      "columns": {
+        "name": "Name",
+        "role": "Role",
+        "group": "Group",
+        "status": "Status",
+        "joined": "Joined"
+      },
+      "confirmed": "Confirmed",
+      "pending": "Pending"
+    },
+    "groups": {
+      "title": "Groups",
+      "description": "Permission groups. Only an admin is ever assigned one.",
+      "searchPlaceholder": "Search group name…",
+      "searchLabel": "Search groups",
+      "empty": "No groups match these filters.",
+      "columns": {
+        "name": "Name",
+        "permissions": "Permissions",
+        "members": "Members",
+        "created": "Created"
+      }
+    }
+  }
+}

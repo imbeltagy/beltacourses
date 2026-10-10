@@ -1,7 +1,9 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Logo } from "@repo/frontend/components/logo";
+import { usePathname } from "@repo/frontend/i18n/navigation";
 import { cn } from "@repo/frontend/utils";
 import { isActive } from "../is-active";
 import { navigation } from "../nav-config";
@@ -23,6 +25,7 @@ export function Navbar({
   /** Used by the mobile drawer to close itself on navigation. */
   onNavigate?: () => void;
 }) {
+  const t = useTranslations("nav");
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const search = searchParams.toString();
@@ -30,7 +33,7 @@ export function Navbar({
 
   return (
     <nav
-      aria-label="Main"
+      aria-label={t("main")}
       className={cn(
         "bg-background grid h-full grid-rows-[auto_1fr] overflow-hidden shadow-sm",
         className,
@@ -62,7 +65,7 @@ export function Navbar({
                 </div>
               ) : (
                 <div className="text-muted-foreground px-4 pt-4 pb-1 text-xs font-medium tracking-wide uppercase">
-                  {section.heading}
+                  {t(`headings.${section.heading}`)}
                 </div>
               ))}
 

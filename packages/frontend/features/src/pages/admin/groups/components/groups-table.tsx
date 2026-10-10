@@ -1,3 +1,4 @@
+import { useFormatter, useTranslations } from "next-intl";
 import {
   Badge,
   Table,
@@ -7,16 +8,20 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/frontend/ui";
+import { DATE_FORMAT } from "../../../../configs/formats";
 import type { Group } from "../../../../types/api/groups";
 
 /** Beyond this, the row shows a "+N" chip instead of growing unboundedly. */
 const PERMISSION_CHIP_LIMIT = 4;
 
 export function GroupsTable({ groups }: { groups: Group[] }) {
+  const t = useTranslations("admin.groups");
+  const format = useFormatter();
+
   if (groups.length === 0) {
     return (
       <div className="text-muted-foreground rounded-md border p-10 text-center text-sm">
-        No groups match these filters.
+        {t("empty")}
       </div>
     );
   }
@@ -26,10 +31,12 @@ export function GroupsTable({ groups }: { groups: Group[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Permissions</TableHead>
-            <TableHead className="whitespace-nowrap">Members</TableHead>
-            <TableHead>Created</TableHead>
+            <TableHead>{t("columns.name")}</TableHead>
+            <TableHead>{t("columns.permissions")}</TableHead>
+            <TableHead className="whitespace-nowrap">
+              {t("columns.members")}
+            </TableHead>
+            <TableHead>{t("columns.created")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -76,7 +83,7 @@ export function GroupsTable({ groups }: { groups: Group[] }) {
                   {group.users_count}
                 </TableCell>
                 <TableCell className="text-muted-foreground whitespace-nowrap">
-                  {formatDate(group.created_at)}
+                  {format.dateTime(new Date(group.created_at), DATE_FORMAT)}
                 </TableCell>
               </TableRow>
             );
@@ -85,14 +92,4 @@ export function GroupsTable({ groups }: { groups: Group[] }) {
       </Table>
     </div>
   );
-}
-
-/** Fixed locale + UTC so server and client render the same string. */
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
 }

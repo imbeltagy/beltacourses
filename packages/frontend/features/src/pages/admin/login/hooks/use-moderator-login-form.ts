@@ -1,22 +1,31 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useTranslations } from "next-intl";
 import * as yup from "yup";
 import { toast } from "sonner";
+import { useRouter } from "@repo/frontend/i18n/navigation";
 import { loginModeratorAction } from "../../../../actions/auth-actions";
 
-const schema = yup.object().shape({
-  email: yup.string().email("Invalid email").required("Email is required"),
-  password: yup.string().required("Password is required"),
-});
+type T = ReturnType<typeof useTranslations<"validation">>;
 
-export type ModeratorLoginInputs = yup.InferType<typeof schema>;
+const buildSchema = (t: T) =>
+  yup.object().shape({
+    email: yup.string().email(t("invalidEmail")).required(t("emailRequired")),
+    password: yup.string().required(t("passwordRequired")),
+  });
+
+export type ModeratorLoginInputs = yup.InferType<
+  ReturnType<typeof buildSchema>
+>;
 
 export function useModeratorLoginForm() {
   const router = useRouter();
-  const form = useForm<ModeratorLoginInputs>({ resolver: yupResolver(schema) });
+  const t = useTranslations("validation");
+  const form = useForm<ModeratorLoginInputs>({
+    resolver: yupResolver(buildSchema(t)),
+  });
 
   const submit: SubmitHandler<ModeratorLoginInputs> = async (data) => {
     const result = await loginModeratorAction(data);

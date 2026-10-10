@@ -1,7 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@repo/frontend/utils";
+import { Link } from "@repo/frontend/i18n/navigation";
+import { getDirection } from "@repo/frontend/i18n/routing";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@repo/frontend/ui";
 import type { NavItem as NavItemType } from "../nav-config";
 
@@ -19,6 +21,7 @@ export function FullNavItem({
   active: boolean;
   onNavigate?: () => void;
 }) {
+  const t = useTranslations("nav.items");
   const Icon = item.icon;
 
   return (
@@ -32,12 +35,12 @@ export function FullNavItem({
           "flex items-center gap-3 py-2 ps-4 pe-4 text-sm transition-colors",
           "rounded-e-full",
           active
-            ? "from-primary/95 to-primary bg-gradient-to-r text-white"
+            ? "from-primary/95 to-primary bg-linear-to-r text-white rtl:bg-linear-to-l"
             : "text-foreground hover:bg-primary/10",
         )}
       >
         <Icon className="size-6 shrink-0" aria-hidden="true" />
-        <span className="truncate">{item.label}</span>
+        <span className="truncate">{t(item.id)}</span>
       </Link>
     </li>
   );
@@ -54,6 +57,8 @@ export function MiniNavItem({
   item: NavItemType;
   active: boolean;
 }) {
+  const t = useTranslations("nav.items");
+  const dir = getDirection(useLocale());
   const Icon = item.icon;
 
   return (
@@ -62,7 +67,7 @@ export function MiniNavItem({
         <TooltipTrigger asChild>
           <Link
             href={item.path}
-            aria-label={item.label}
+            aria-label={t(item.id)}
             aria-current={active ? "page" : undefined}
             className={cn(
               "flex aspect-5/4 items-center justify-center transition-colors",
@@ -74,7 +79,10 @@ export function MiniNavItem({
             <Icon className="size-6 shrink-0" aria-hidden="true" />
           </Link>
         </TooltipTrigger>
-        <TooltipContent side="right">{item.label}</TooltipContent>
+        {/* `side` is physical in Radix, so the rail's outer edge flips with the page. */}
+        <TooltipContent side={dir === "rtl" ? "left" : "right"}>
+          {t(item.id)}
+        </TooltipContent>
       </Tooltip>
     </li>
   );

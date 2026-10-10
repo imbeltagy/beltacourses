@@ -2,6 +2,7 @@
 
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useTranslations } from "next-intl";
 import * as yup from "yup";
 import { toast } from "sonner";
 import { registerAction } from "../../../../actions/auth-actions";
@@ -9,32 +10,40 @@ import type { RegisterableRole } from "../../../../types/api/auth";
 
 // Mirrors the API's RegisterDto constraints so a bad field is caught before
 // the round trip; the API still validates on its own side.
-const schema = yup.object().shape({
-  name: yup
-    .string()
-    .min(2, "Name must be at least 2 characters")
-    .max(100, "Name must be at most 100 characters")
-    .required("Name is required"),
-  email: yup.string().email("Invalid email").required("Email is required"),
-  password: yup
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(72, "Password must be at most 72 characters")
-    .required("Password is required"),
-  role: yup.string<RegisterableRole>().required("Role is required"),
-  bio: yup.string().default(""),
-});
+const NAME = { min: 2, max: 100 };
+const PASSWORD = { min: 8, max: 72 };
 
-export type RegisterFormInputs = yup.InferType<typeof schema>;
+type T = ReturnType<typeof useTranslations<"validation">>;
 
-export const ROLE_OPTIONS: { value: RegisterableRole; label: string }[] = [
-  { value: "student", label: "Student" },
-  { value: "teacher", label: "Teacher" },
-];
+const buildSchema = (t: T) =>
+  yup.object().shape({
+    name: yup
+      .string()
+      .min(NAME.min, t("nameMin", NAME))
+      .max(NAME.max, t("nameMax", NAME))
+      .required(t("nameRequired")),
+    email: yup.string().email(t("invalidEmail")).required(t("emailRequired")),
+    password: yup
+      .string()
+      .min(PASSWORD.min, t("passwordMin", PASSWORD))
+      .max(PASSWORD.max, t("passwordMax", PASSWORD))
+      .required(t("passwordRequired")),
+    role: yup.string<RegisterableRole>().required(t("roleRequired")),
+    bio: yup.string().default(""),
+  });
+
+export type RegisterFormInputs = yup.InferType<ReturnType<typeof buildSchema>>;
+
+const REGISTERABLE_ROLES = [
+  "student",
+  "teacher",
+] as const satisfies readonly RegisterableRole[];
 
 export function useRegisterForm() {
+  const tValidation = useTranslations("validation");
+  const tRoles = useTranslations("roles");
   const form = useForm<RegisterFormInputs>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(buildSchema(tValidation)),
     defaultValues: { role: "student" },
   });
 
@@ -62,5 +71,9 @@ export function useRegisterForm() {
     // Watched rather than mirrored into `useState`: the radio group is the
     // single source of truth, so the bio field cannot drift out of sync.
     isTeacher: form.watch("role") === "teacher",
+    roleOptions: REGISTERABLE_ROLES.map((value) => ({
+      value,
+      label: tRoles(value),
+    })),
   };
 }

@@ -1,0 +1,139 @@
+{
+  "metadata": {
+    "client": {
+      "title": "بيلتا كورسز",
+      "description": "بيلتا كورسز — تعلّم عبر الإنترنت."
+    },
+    "admin": {
+      "title": "لوحة إدارة بيلتا كورسز",
+      "description": "لوحة تحكم الموظفين لمنصة بيلتا كورسز."
+    }
+  },
+  "locale": {
+    "switchTo": "تغيير اللغة إلى {language}",
+    "names": {
+      "en": "English",
+      "ar": "العربية"
+    }
+  },
+  "common": {
+    "close": "إغلاق",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "name": "الاسم",
+    "fullName": "الاسم الكامل",
+    "bio": "نبذة تعريفية",
+    "authImageAlt": "خلفية تسجيل الدخول"
+  },
+  "validation": {
+    "invalidEmail": "البريد الإلكتروني غير صالح",
+    "emailRequired": "البريد الإلكتروني مطلوب",
+    "passwordRequired": "كلمة المرور مطلوبة",
+    "nameRequired": "الاسم مطلوب",
+    "nameMin": "يجب ألا يقل الاسم عن {min} حرفًا",
+    "nameMax": "يجب ألا يزيد الاسم عن {max} حرف",
+    "passwordMin": "يجب ألا تقل كلمة المرور عن {min} أحرف",
+    "passwordMax": "يجب ألا تزيد كلمة المرور عن {max} حرفًا",
+    "roleRequired": "الدور مطلوب"
+  },
+  "actions": {
+    "welcomeBack": "مرحبًا بعودتك!",
+    "accountReady": "حسابك جاهز.",
+    "accountCreatedLoginFailed": "تم إنشاء الحساب، لكن تعذّر تسجيل دخولك. يرجى تسجيل الدخول.",
+    "signedOut": "تم تسجيل الخروج."
+  },
+  "roles": {
+    "student": "طالب",
+    "teacher": "معلّم",
+    "academy_moderator": "مشرف الأكاديمية",
+    "admin": "مسؤول",
+    "super_admin": "مسؤول أعلى"
+  },
+  "auth": {
+    "login": {
+      "title": "مرحبًا بعودتك",
+      "subtitle": "يرجى إدخال بياناتك",
+      "submit": "تسجيل الدخول",
+      "google": "تسجيل الدخول عبر جوجل",
+      "googleStub": "تسجيل الدخول عبر جوجل (تجريبي)"
+    },
+    "register": {
+      "title": "إنشاء حساب",
+      "subtitle": "يرجى إكمال التسجيل",
+      "roleLabel": "أنا...",
+      "submit": "إنشاء الحساب"
+    },
+    "moderatorLogin": {
+      "title": "لوحة الإدارة",
+      "subtitle": "تسجيل دخول الموظفين. لا يمكن لحسابات العملاء تسجيل الدخول هنا.",
+      "submit": "تسجيل الدخول"
+    }
+  },
+  "nav": {
+    "main": "القائمة الرئيسية",
+    "navigation": "التنقل",
+    "open": "فتح القائمة",
+    "collapse": "طيّ الشريط الجانبي",
+    "expand": "توسيع الشريط الجانبي",
+    "accountMenu": "قائمة الحساب",
+    "signedIn": "تم تسجيل الدخول",
+    "logOut": "تسجيل الخروج",
+    "signingOut": "جارٍ تسجيل الخروج…",
+    "headings": {
+      "administration": "الإدارة"
+    },
+    "items": {
+      "home": "الرئيسية",
+      "users": "المستخدمون",
+      "groups": "المجموعات"
+    }
+  },
+  "table": {
+    "search": "بحث…",
+    "noResults": "لا توجد نتائج",
+    "showing": "عرض {first}–{last} من {total}",
+    "pageOf": "صفحة {page} من {pageCount}",
+    "previous": "الصفحة السابقة",
+    "next": "الصفحة التالية"
+  },
+  "admin": {
+    "home": {
+      "welcomeNamed": "مرحبًا بعودتك، {name}",
+      "welcome": "مرحبًا بعودتك",
+      "description": "اختر قسمًا للبدء.",
+      "usersBody": "تصفّح كل الحسابات على المنصة وصفّها.",
+      "groupsBody": "مجموعات الصلاحيات والمسؤولون المعيّنون لها."
+    },
+    "users": {
+      "title": "المستخدمون",
+      "description": "كل من لديه حساب.",
+      "searchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني…",
+      "searchLabel": "بحث في المستخدمين",
+      "filterByRole": "تصفية حسب الدور",
+      "allRoles": "كل الأدوار",
+      "empty": "لا يوجد مستخدمون يطابقون هذه المرشحات.",
+      "columns": {
+        "name": "الاسم",
+        "role": "الدور",
+        "group": "المجموعة",
+        "status": "الحالة",
+        "joined": "تاريخ الانضمام"
+      },
+      "confirmed": "مؤكَّد",
+      "pending": "قيد الانتظار"
+    },
+    "groups": {
+      "title": "المجموعات",
+      "description": "مجموعات الصلاحيات. لا تُعيَّن إلا لمسؤول.",
+      "searchPlaceholder": "ابحث باسم المجموعة…",
+      "searchLabel": "بحث في المجموعات",
+      "empty": "لا توجد مجموعات تطابق هذه المرشحات.",
+      "columns": {
+        "name": "الاسم",
+        "permissions": "الصلاحيات",
+        "members": "الأعضاء",
+        "created": "تاريخ الإنشاء"
+      }
+    }
+  }
+}

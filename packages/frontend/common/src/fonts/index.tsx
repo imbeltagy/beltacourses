@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Noto_Sans_Arabic } from "next/font/google";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -10,4 +10,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const fontVariables = `${geistSans.variable} ${geistMono.variable}`;
+// Geist has no Arabic glyphs. This one is loaded as its own `unicode-range`
+// subset, so a page with no Arabic text never downloads it.
+const arabic = Noto_Sans_Arabic({
+  variable: "--font-arabic",
+  subsets: ["arabic"],
+});
+
+export const fontVariables = `${geistSans.variable} ${geistMono.variable} ${arabic.variable}`;

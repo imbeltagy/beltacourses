@@ -1,9 +1,14 @@
 "use client";
 
 import { useCallback, useTransition } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "@repo/frontend/i18n/navigation";
 
 /**
+ * `usePathname` / `useRouter` are the locale-aware ones: the pathname has no
+ * `/ar` prefix and `replace` adds the current locale back, so a filter change
+ * never drops the user into the other language.
+ *
  * List state (page, search, filters) lives in the URL rather than component
  * state, so the pages stay server components that read `searchParams` and
  * fetch. It also makes a filtered list shareable and survivable across a

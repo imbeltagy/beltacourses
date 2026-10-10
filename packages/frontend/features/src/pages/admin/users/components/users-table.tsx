@@ -1,3 +1,4 @@
+import { useFormatter, useTranslations } from "next-intl";
 import {
   Avatar,
   AvatarFallback,
@@ -10,13 +11,18 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/frontend/ui";
-import { ROLE_LABELS, type User } from "../../../../types/api/users";
+import { DATE_FORMAT } from "../../../../configs/formats";
+import type { User } from "../../../../types/api/users";
 
 export function UsersTable({ users }: { users: User[] }) {
+  const t = useTranslations("admin.users");
+  const tRoles = useTranslations("roles");
+  const format = useFormatter();
+
   if (users.length === 0) {
     return (
       <div className="text-muted-foreground rounded-md border p-10 text-center text-sm">
-        No users match these filters.
+        {t("empty")}
       </div>
     );
   }
@@ -28,11 +34,11 @@ export function UsersTable({ users }: { users: User[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Group</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Joined</TableHead>
+            <TableHead>{t("columns.name")}</TableHead>
+            <TableHead>{t("columns.role")}</TableHead>
+            <TableHead>{t("columns.group")}</TableHead>
+            <TableHead>{t("columns.status")}</TableHead>
+            <TableHead>{t("columns.joined")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -57,18 +63,18 @@ export function UsersTable({ users }: { users: User[] }) {
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant="secondary">{ROLE_LABELS[user.role]}</Badge>
+                <Badge variant="secondary">{tRoles(user.role)}</Badge>
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {user.group?.name ?? "—"}
               </TableCell>
               <TableCell>
                 <Badge variant={user.confirmed ? "default" : "outline"}>
-                  {user.confirmed ? "Confirmed" : "Pending"}
+                  {user.confirmed ? t("confirmed") : t("pending")}
                 </Badge>
               </TableCell>
               <TableCell className="text-muted-foreground whitespace-nowrap">
-                {formatDate(user.created_at)}
+                {format.dateTime(new Date(user.created_at), DATE_FORMAT)}
               </TableCell>
             </TableRow>
           ))}
@@ -84,18 +90,4 @@ function initials(name: string): string {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
-}
-
-/**
- * Fixed locale and UTC, not the server's defaults: otherwise the string the
- * server renders and the one the browser would render differ, and React
- * reports a hydration mismatch.
- */
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
 }

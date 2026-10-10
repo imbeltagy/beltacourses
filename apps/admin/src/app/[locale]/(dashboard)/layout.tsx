@@ -1,4 +1,6 @@
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
+import { redirect } from "@repo/frontend/i18n/navigation";
+import { isLocale } from "@repo/frontend/i18n/routing";
 import { Cookies, getCookie } from "@repo/frontend/utils/cookies";
 import { DashboardLayout } from "@repo/frontend-features/layout/dashboard-layout";
 
@@ -10,10 +12,14 @@ import { DashboardLayout } from "@repo/frontend-features/layout/dashboard-layout
  */
 export default async function Layout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
-  if (!(await getCookie(Cookies.ACCESS_TOKEN))) redirect("/login");
+  params,
+}: LayoutProps<"/[locale]">) {
+  const { locale } = await params;
+  if (!isLocale(locale)) notFound();
+
+  if (!(await getCookie(Cookies.ACCESS_TOKEN))) {
+    redirect({ href: "/login", locale });
+  }
 
   return <DashboardLayout>{children}</DashboardLayout>;
 }
