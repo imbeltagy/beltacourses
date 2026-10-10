@@ -15,7 +15,8 @@ exists so the frontend packages can sit together one level down.
 apps/
 ├── api/                  NestJS 11 HTTP app          :3000
 ├── client/               Next.js 16 public frontend  :3001
-└── admin/                Next.js 16 staff panel      :3002
+├── admin/                Next.js 16 staff panel      :3002
+└── files/                Express static file server  :3004  (standalone, no @repo/* deps)
 packages/
 ├── backend/              @repo/backend               shared NestJS providers
 ├── database/             @repo/db                    Prisma schema + client
