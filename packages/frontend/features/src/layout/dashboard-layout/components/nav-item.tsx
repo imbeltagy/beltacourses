@@ -2,11 +2,7 @@
 
 import Link from "next/link";
 import { cn } from "@repo/frontend/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/frontend/ui";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@repo/frontend/ui";
 import type { NavItem as NavItemType } from "../nav-config";
 
 /**

@@ -264,7 +264,10 @@ export class ApiClient {
     body: object | FormData,
     options?: Omit<RequestOptions, "body">,
   ) {
-    return ApiClient.apiRequest<ResponseType>(path, "POST", { ...options, body });
+    return ApiClient.apiRequest<ResponseType>(path, "POST", {
+      ...options,
+      body,
+    });
   }
 
   static put<ResponseType = void>(
@@ -272,7 +275,10 @@ export class ApiClient {
     body: object | FormData,
     options?: Omit<RequestOptions, "body">,
   ) {
-    return ApiClient.apiRequest<ResponseType>(path, "PUT", { ...options, body });
+    return ApiClient.apiRequest<ResponseType>(path, "PUT", {
+      ...options,
+      body,
+    });
   }
 
   static patch<ResponseType = void>(
@@ -280,7 +286,10 @@ export class ApiClient {
     body: object | FormData,
     options?: Omit<RequestOptions, "body">,
   ) {
-    return ApiClient.apiRequest<ResponseType>(path, "PATCH", { ...options, body });
+    return ApiClient.apiRequest<ResponseType>(path, "PATCH", {
+      ...options,
+      body,
+    });
   }
 
   static delete<ResponseType = void>(

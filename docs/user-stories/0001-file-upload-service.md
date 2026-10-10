@@ -90,8 +90,8 @@ is T-006.
 
 How the criteria above were checked: all but one were exercised against the real bucket
 (`beltacourses`, `eu-north-1`) and the local Postgres/Redis — upload, read, soft delete, the repeat
-delete, and a triggered cleanup run that removed the objects and the rows. The exception is *"one
-cleanup run clears a backlog larger than a single page"*, which is covered by a unit test that drains
+delete, and a triggered cleanup run that removed the objects and the rows. The exception is _"one
+cleanup run clears a backlog larger than a single page"_, which is covered by a unit test that drains
 pages of 100 + 100 + 0 in one run; no live backlog of more than 100 files was staged. Unit tests
 (64 in total, across `@repo/backend` and `api`) cover the failure paths that are impractical to
 provoke against real S3: the compensating delete after a failed metadata write, a single file failing

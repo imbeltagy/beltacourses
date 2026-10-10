@@ -11,16 +11,16 @@ silently. Keep the two in step; do not redraw the tree here.
 
 pnpm + Turborepo. Workspaces are `apps/*`, `packages/*` and `packages/frontend/*`.
 
-| Path                                                | Package                   | Role                                                   |
-| --------------------------------------------------- | ------------------------- | ------------------------------------------------------ |
-| `apps/api`                                          | `api`                     | NestJS 11 HTTP app.                                    |
-| `apps/client`                                       | `client`                  | Next.js 16 public frontend. **Routing only** — see below. |
-| `apps/admin`                                        | `admin`                   | Next.js 16 staff control panel. **Routing only.**      |
-| `packages/backend`                                  | `@repo/backend`           | NestJS **providers** shared across apps.               |
-| `packages/database`                                 | `@repo/db`                | Prisma 7 schema, generated client, `prisma` singleton. |
-| `packages/frontend/common`                          | `@repo/frontend`          | Design system + non-React utils (api-client, cookies). |
-| `packages/frontend/features`                        | `@repo/frontend-features` | Pages, actions, API types, page layouts.               |
-| `packages/eslint-config`, `packages/typescript-config` | —                      | Shared tooling.                                        |
+| Path                                                   | Package                   | Role                                                      |
+| ------------------------------------------------------ | ------------------------- | --------------------------------------------------------- |
+| `apps/api`                                             | `api`                     | NestJS 11 HTTP app.                                       |
+| `apps/client`                                          | `client`                  | Next.js 16 public frontend. **Routing only** — see below. |
+| `apps/admin`                                           | `admin`                   | Next.js 16 staff control panel. **Routing only.**         |
+| `packages/backend`                                     | `@repo/backend`           | NestJS **providers** shared across apps.                  |
+| `packages/database`                                    | `@repo/db`                | Prisma 7 schema, generated client, `prisma` singleton.    |
+| `packages/frontend/common`                             | `@repo/frontend`          | Design system + non-React utils (api-client, cookies).    |
+| `packages/frontend/features`                           | `@repo/frontend-features` | Pages, actions, API types, page layouts.                  |
+| `packages/eslint-config`, `packages/typescript-config` | —                         | Shared tooling.                                           |
 
 Packages are consumed as **raw TypeScript source**, not compiled output. There is no build step
 inside `packages/backend` — apps bundle it. Frontend packages are listed in the consuming app's

@@ -37,12 +37,12 @@ Each package exposes itself through a wildcard, so adding a directory is enough 
 importable. **Never edit an `exports` field to add a feature** — if the import does not resolve, the
 barrel file is missing, not the map.
 
-| Package | `exports` | So `X` resolves to |
-| --- | --- | --- |
-| `@repo/backend` | `"./*": "./src/*/index.ts"` | `@repo/backend/core` → `src/core/index.ts` |
-| `@repo/frontend` | `"./*": "./src/*/index.tsx"` | `@repo/frontend/components/logo` → `src/components/logo/index.tsx` |
+| Package                   | `exports`                    | So `X` resolves to                                                            |
+| ------------------------- | ---------------------------- | ----------------------------------------------------------------------------- |
+| `@repo/backend`           | `"./*": "./src/*/index.ts"`  | `@repo/backend/core` → `src/core/index.ts`                                    |
+| `@repo/frontend`          | `"./*": "./src/*/index.tsx"` | `@repo/frontend/components/logo` → `src/components/logo/index.tsx`            |
 | `@repo/frontend-features` | `"./*": "./src/*/index.tsx"` | `@repo/frontend-features/pages/auth/login` → `src/pages/auth/login/index.tsx` |
-| `@repo/db` | `".": "./src/index.ts"` | one entry point, no subpaths |
+| `@repo/db`                | `".": "./src/index.ts"`      | one entry point, no subpaths                                                  |
 
 Exact keys beat the wildcard, and exist only where a barrel is `.ts` rather than `.tsx`, or is not a
 module at all:
@@ -325,7 +325,7 @@ of an unfiltered list is rarely a valid page of the filtered one.
 # Tailwind: the one failure with no diagnostic
 
 **Tailwind does not scan `node_modules`, and both frontend packages reach an app through a workspace
-symlink.** Without an `@source` directive naming them, every class used *only* inside a package
+symlink.** Without an `@source` directive naming them, every class used _only_ inside a package
 produces no CSS.
 
 There is no error. No warning. The build succeeds, `check-types` and `lint` pass, and the page renders
@@ -392,26 +392,26 @@ adding a primitive.
 
 # Where does X go?
 
-| You are adding | It goes in |
-| --- | --- |
-| An HTTP endpoint | `apps/api/src/<feature>/<feature>.controller.ts` |
-| Business logic used by one app | `apps/api/src/<feature>/<feature>.service.ts` |
-| Business logic used by two apps | `packages/backend/src/<name>/` (+ `index.ts`) |
-| A Prisma query | `<feature>.repository.ts` — never in a service or controller |
-| A third-party SDK call | `<feature>.adapter.ts` — never alongside Prisma |
-| A validated request body | `apps/api/src/<feature>/dto/request/<endpoint>.dto.ts` |
-| A documented response | `apps/api/src/<feature>/dto/response/<endpoint>.dto.ts` |
-| A compile-time-only shape | `<feature>.types.ts` |
-| A database model | `packages/database/prisma/schema/<domain>.prisma` |
-| A scheduled job | `<feature>.processor.ts`, scheduled in `onModuleInit` |
-| A page | `packages/frontend/features/src/pages/<area>/<page>/` |
-| A route for that page | `apps/<app>/src/app/.../page.tsx`, one re-export line |
-| A server action | `packages/frontend/features/src/actions/<area>-actions.ts` |
-| An API wire type | `packages/frontend/features/src/types/api/<area>.ts` |
-| An API URL | `packages/frontend/features/src/configs/endpoints.ts` |
-| A shadcn primitive | `packages/frontend/common/src/ui/` + a line in `ui/index.ts` |
-| A reusable component | `packages/frontend/common/src/components/<name>/index.tsx` |
-| A component used by pages only | `packages/frontend/features/src/components/<name>/index.tsx` |
-| A page shell | `packages/frontend/features/src/layout/<name>/index.tsx` |
-| An env var | the app's `.env.example` **and** `globalEnv` in `turbo.json` |
-| A unit test | `<package-or-app>/test/`, mirroring the path under `src/` |
+| You are adding                  | It goes in                                                   |
+| ------------------------------- | ------------------------------------------------------------ |
+| An HTTP endpoint                | `apps/api/src/<feature>/<feature>.controller.ts`             |
+| Business logic used by one app  | `apps/api/src/<feature>/<feature>.service.ts`                |
+| Business logic used by two apps | `packages/backend/src/<name>/` (+ `index.ts`)                |
+| A Prisma query                  | `<feature>.repository.ts` — never in a service or controller |
+| A third-party SDK call          | `<feature>.adapter.ts` — never alongside Prisma              |
+| A validated request body        | `apps/api/src/<feature>/dto/request/<endpoint>.dto.ts`       |
+| A documented response           | `apps/api/src/<feature>/dto/response/<endpoint>.dto.ts`      |
+| A compile-time-only shape       | `<feature>.types.ts`                                         |
+| A database model                | `packages/database/prisma/schema/<domain>.prisma`            |
+| A scheduled job                 | `<feature>.processor.ts`, scheduled in `onModuleInit`        |
+| A page                          | `packages/frontend/features/src/pages/<area>/<page>/`        |
+| A route for that page           | `apps/<app>/src/app/.../page.tsx`, one re-export line        |
+| A server action                 | `packages/frontend/features/src/actions/<area>-actions.ts`   |
+| An API wire type                | `packages/frontend/features/src/types/api/<area>.ts`         |
+| An API URL                      | `packages/frontend/features/src/configs/endpoints.ts`        |
+| A shadcn primitive              | `packages/frontend/common/src/ui/` + a line in `ui/index.ts` |
+| A reusable component            | `packages/frontend/common/src/components/<name>/index.tsx`   |
+| A component used by pages only  | `packages/frontend/features/src/components/<name>/index.tsx` |
+| A page shell                    | `packages/frontend/features/src/layout/<name>/index.tsx`     |
+| An env var                      | the app's `.env.example` **and** `globalEnv` in `turbo.json` |
+| A unit test                     | `<package-or-app>/test/`, mirroring the path under `src/`    |

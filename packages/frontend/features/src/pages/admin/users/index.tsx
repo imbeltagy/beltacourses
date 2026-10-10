@@ -63,7 +63,8 @@ function toPositiveInt(value: unknown): number | undefined {
 
 /** Anything the API would 400 on is dropped rather than forwarded. */
 function toRole(value: unknown): Role | undefined {
-  return typeof value === "string" && (ROLES as readonly string[]).includes(value)
+  return typeof value === "string" &&
+    (ROLES as readonly string[]).includes(value)
     ? (value as Role)
     : undefined;
 }

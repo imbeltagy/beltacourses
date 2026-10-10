@@ -13,10 +13,13 @@ import type {
 export async function listGroupsAction(
   query: ListGroupsQuery = {},
 ): Promise<DataResult<ListGroupsResponse>> {
-  const result = await ApiClient.get<ListGroupsResponse>(endpoints.groups.list(), {
-    queries: { ...query },
-    cache: "no-store",
-  });
+  const result = await ApiClient.get<ListGroupsResponse>(
+    endpoints.groups.list(),
+    {
+      queries: { ...query },
+      cache: "no-store",
+    },
+  );
 
   if (!result.success) {
     return { success: false, message: "Couldn't load the groups list." };

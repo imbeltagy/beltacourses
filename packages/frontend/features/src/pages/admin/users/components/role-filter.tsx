@@ -23,7 +23,10 @@ export function RoleFilter() {
         setQuery({ role: next === ALL ? undefined : next })
       }
     >
-      <SelectTrigger className="w-full sm:w-[190px]" aria-label="Filter by role">
+      <SelectTrigger
+        className="w-full sm:w-[190px]"
+        aria-label="Filter by role"
+      >
         <SelectValue placeholder="All roles" />
       </SelectTrigger>
       <SelectContent>

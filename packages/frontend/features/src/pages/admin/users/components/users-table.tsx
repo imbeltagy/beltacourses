@@ -41,7 +41,9 @@ export function UsersTable({ users }: { users: User[] }) {
               <TableCell>
                 <div className="flex items-center gap-3">
                   <Avatar className="size-8">
-                    {user.avatar && <AvatarImage src={user.avatar.url} alt="" />}
+                    {user.avatar && (
+                      <AvatarImage src={user.avatar.url} alt="" />
+                    )}
                     <AvatarFallback className="text-xs">
                       {initials(user.name)}
                     </AvatarFallback>

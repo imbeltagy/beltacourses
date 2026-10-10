@@ -1,14 +1,22 @@
-import * as bcrypt from 'bcrypt';
-import { Role, type PrismaClient } from '../../generated/prisma/client';
+import * as bcrypt from "bcrypt";
+import { Role, type PrismaClient } from "../../generated/prisma/client";
 
 const DEFAULT_SALT_ROUNDS = 12;
 
 const DEMO_USERS = [
-  { email: 'student@beltacourses.com', name: 'Demo Student', role: Role.student },
-  { email: 'teacher@beltacourses.com', name: 'Demo Teacher', role: Role.teacher },
+  {
+    email: "student@beltacourses.com",
+    name: "Demo Student",
+    role: Role.student,
+  },
+  {
+    email: "teacher@beltacourses.com",
+    name: "Demo Teacher",
+    role: Role.teacher,
+  },
 ] as const;
 
-const DEMO_PASSWORD = 'a1234567';
+const DEMO_PASSWORD = "a1234567";
 
 /**
  * Matches `LoginDto`'s own Swagger examples (`student@beltacourses.com` /
@@ -22,7 +30,7 @@ export async function seedDemoUsers(prisma: PrismaClient): Promise<void> {
     : DEFAULT_SALT_ROUNDS;
   const salt = process.env.PASSWORD_SALT;
   if (!salt) {
-    console.log('Skipping demo-users seed: PASSWORD_SALT not set.');
+    console.log("Skipping demo-users seed: PASSWORD_SALT not set.");
     return;
   }
 

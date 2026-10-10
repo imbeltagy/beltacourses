@@ -22,9 +22,7 @@ export function TablePagination({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 pt-4">
       <p className="text-muted-foreground text-sm" aria-live="polite">
-        {total === 0
-          ? "No results"
-          : `Showing ${first}–${last} of ${total}`}
+        {total === 0 ? "No results" : `Showing ${first}–${last} of ${total}`}
       </p>
 
       <div className="flex items-center gap-2">

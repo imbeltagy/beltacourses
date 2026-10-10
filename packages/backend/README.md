@@ -10,11 +10,11 @@ halves of the repo read symmetrically. It was `@repo/service` until the rename.
 
 ## What's in it
 
-| Subpath                 | What                                                                         |
-| ----------------------- | ---------------------------------------------------------------------------- |
-| `@repo/backend/core`    | Auth primitives: password hashing, JWT issue/verify, moderator sessions, the permission catalog, and the guards + decorators that enforce them. |
-| `@repo/backend/prisma`  | `PrismaService` — the one Prisma handle, exposed as `this.prisma.client`.     |
-| `@repo/backend/redis`   | `RedisService` — the one Redis connection, exposed as `this.redis.client`.    |
+| Subpath                | What                                                                                                                                            |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@repo/backend/core`   | Auth primitives: password hashing, JWT issue/verify, moderator sessions, the permission catalog, and the guards + decorators that enforce them. |
+| `@repo/backend/prisma` | `PrismaService` — the one Prisma handle, exposed as `this.prisma.client`.                                                                       |
+| `@repo/backend/redis`  | `RedisService` — the one Redis connection, exposed as `this.redis.client`.                                                                      |
 
 ## The export pattern
 

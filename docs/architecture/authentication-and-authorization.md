@@ -6,16 +6,16 @@ implementation.
 
 ## Two account tiers
 
-| | Clients | Moderators |
-| --- | --- | --- |
-| Roles | student, teacher, academy moderator | admin, super admin |
-| Who | the public | staff |
-| Sign in at | the public app | a separate staff sign-in |
-| Remote sign-out | no | yes |
+|                 | Clients                             | Moderators               |
+| --------------- | ----------------------------------- | ------------------------ |
+| Roles           | student, teacher, academy moderator | admin, super admin       |
+| Who             | the public                          | staff                    |
+| Sign in at      | the public app                      | a separate staff sign-in |
+| Remote sign-out | no                                  | yes                      |
 
 Different risk profiles: a compromised student account is a nuisance, a compromised admin account
 can touch everyone's data. Staff get a shorter leash and a kill switch. Both sign-in flows return
-the identical "invalid email or password" for a wrong password *and* for using the wrong flow — the
+the identical "invalid email or password" for a wrong password _and_ for using the wrong flow — the
 public app never reveals that an address belongs to staff.
 
 ## Staying signed in
@@ -23,11 +23,11 @@ public app never reveals that an address belongs to staff.
 A short-lived credential proves identity on every request; a longer-lived one silently gets a new
 short-lived one without a password. Invisible in normal use — refreshed automatically.
 
-| | Clients | Moderators |
-| --- | --- | --- |
-| Short-lived, refreshed automatically | 30 min | 5 min |
-| Total lifetime before a real sign-in is required | 7 days | 10 hours |
-| Remote "sign out everywhere" | not possible | instant, everywhere |
+|                                                  | Clients      | Moderators          |
+| ------------------------------------------------ | ------------ | ------------------- |
+| Short-lived, refreshed automatically             | 30 min       | 5 min               |
+| Total lifetime before a real sign-in is required | 7 days       | 10 hours            |
+| Remote "sign out everywhere"                     | not possible | instant, everywhere |
 
 **Trade-off:** a compromised client credential is valid for up to 7 days with no way to kill it
 remotely — accepted, in exchange for clients needing no server-side session at all. Moderators get

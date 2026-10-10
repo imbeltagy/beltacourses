@@ -100,7 +100,9 @@ export function DashboardShell({
           variant="outline"
           size="icon"
           onClick={toggleNavbar}
-          aria-label={navbarType === "full" ? "Collapse sidebar" : "Expand sidebar"}
+          aria-label={
+            navbarType === "full" ? "Collapse sidebar" : "Expand sidebar"
+          }
           aria-expanded={navbarType === "full"}
           className="bg-background fixed top-[60px] start-(--rail-w) z-40 hidden size-7 -translate-x-1/2 -translate-y-1/2 rounded-full rtl:translate-x-1/2 min-[900px]:flex"
         >

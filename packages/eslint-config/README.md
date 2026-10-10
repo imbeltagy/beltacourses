@@ -3,13 +3,13 @@
 Shared ESLint flat configs. A project imports the one that matches what it is
 and nothing else.
 
-| Export                         | For                                   | Builds on |
-| ------------------------------ | ------------------------------------- | --------- |
-| `@repo/eslint-config/base`     | Framework-agnostic rules              | —         |
-| `@repo/eslint-config/react`    | Browser React packages (`@repo/frontend`) | `base` |
-| `@repo/eslint-config/next`     | Next.js apps and `@repo/frontend-features` | `react` |
-| `@repo/eslint-config/nestjs`   | Nest apps and `@repo/backend` (type-aware) | `base` |
-| `@repo/eslint-config/node`     | Plain Node code (`@repo/db`)          | `base`    |
+| Export                       | For                                        | Builds on |
+| ---------------------------- | ------------------------------------------ | --------- |
+| `@repo/eslint-config/base`   | Framework-agnostic rules                   | —         |
+| `@repo/eslint-config/react`  | Browser React packages (`@repo/frontend`)  | `base`    |
+| `@repo/eslint-config/next`   | Next.js apps and `@repo/frontend-features` | `react`   |
+| `@repo/eslint-config/nestjs` | Nest apps and `@repo/backend` (type-aware) | `base`    |
+| `@repo/eslint-config/node`   | Plain Node code (`@repo/db`)               | `base`    |
 
 ```js
 // eslint.config.mjs — most projects

@@ -20,7 +20,12 @@ export function PageWrapper({
   className?: string;
 }) {
   return (
-    <div className={cn("mx-auto w-full max-w-[1536px] px-4 py-6 sm:px-6", className)}>
+    <div
+      className={cn(
+        "mx-auto w-full max-w-[1536px] px-4 py-6 sm:px-6",
+        className,
+      )}
+    >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold md:text-3xl">{title}</h1>

@@ -60,7 +60,9 @@ export function AccountMenu({ user }: { user: User | null }) {
 
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="font-normal">
-          <div className="truncate font-medium">{user?.name ?? "Signed in"}</div>
+          <div className="truncate font-medium">
+            {user?.name ?? "Signed in"}
+          </div>
           <div className="text-muted-foreground truncate text-xs">
             {user?.email ?? ""}
           </div>

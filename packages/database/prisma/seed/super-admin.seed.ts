@@ -1,5 +1,5 @@
-import * as bcrypt from 'bcrypt';
-import { Role, type PrismaClient } from '../../generated/prisma/client';
+import * as bcrypt from "bcrypt";
+import { Role, type PrismaClient } from "../../generated/prisma/client";
 
 const DEFAULT_SALT_ROUNDS = 12;
 
@@ -14,11 +14,11 @@ const DEFAULT_SALT_ROUNDS = 12;
 export async function seedSuperAdmin(prisma: PrismaClient): Promise<void> {
   const email = process.env.SUPER_ADMIN_EMAIL;
   const password = process.env.SUPER_ADMIN_PASSWORD;
-  const name = process.env.SUPER_ADMIN_NAME ?? 'Super Admin';
+  const name = process.env.SUPER_ADMIN_NAME ?? "Super Admin";
 
   if (!email || !password) {
     console.log(
-      'Skipping super_admin seed: SUPER_ADMIN_EMAIL/SUPER_ADMIN_PASSWORD not set.',
+      "Skipping super_admin seed: SUPER_ADMIN_EMAIL/SUPER_ADMIN_PASSWORD not set.",
     );
     return;
   }
@@ -28,7 +28,7 @@ export async function seedSuperAdmin(prisma: PrismaClient): Promise<void> {
     : DEFAULT_SALT_ROUNDS;
   const salt = process.env.PASSWORD_SALT;
   if (!salt) {
-    console.log('Skipping super_admin seed: PASSWORD_SALT not set.');
+    console.log("Skipping super_admin seed: PASSWORD_SALT not set.");
     return;
   }
 

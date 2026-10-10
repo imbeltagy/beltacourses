@@ -19,12 +19,15 @@ export async function getCurrentUserAction(): Promise<User | null> {
 export async function listUsersAction(
   query: ListUsersQuery = {},
 ): Promise<DataResult<ListUsersResponse>> {
-  const result = await ApiClient.get<ListUsersResponse>(endpoints.users.list(), {
-    queries: { ...query },
-    // Always fresh: this list is the reason the page was opened, and a stale
-    // page after a delete is worse than a round trip.
-    cache: "no-store",
-  });
+  const result = await ApiClient.get<ListUsersResponse>(
+    endpoints.users.list(),
+    {
+      queries: { ...query },
+      // Always fresh: this list is the reason the page was opened, and a stale
+      // page after a delete is worse than a round trip.
+      cache: "no-store",
+    },
+  );
 
   if (!result.success) {
     return { success: false, message: "Couldn't load the users list." };

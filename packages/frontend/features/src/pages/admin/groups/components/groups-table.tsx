@@ -63,7 +63,9 @@ export function GroupsTable({ groups }: { groups: Group[] }) {
                     {hidden > 0 && (
                       <Badge
                         variant="outline"
-                        title={group.permissions.slice(PERMISSION_CHIP_LIMIT).join(", ")}
+                        title={group.permissions
+                          .slice(PERMISSION_CHIP_LIMIT)
+                          .join(", ")}
                       >
                         +{hidden}
                       </Badge>

@@ -50,12 +50,12 @@ pnpm dlx turbo run dev
 
 `turbo run dev` starts everything at once, so each process has its own port.
 
-| Port     | What                                             |
-| -------- | ------------------------------------------------ |
-| **3000** | `apps/api` — NestJS. `PORT` overrides it.        |
-| **3001** | `apps/client` — the public Next.js frontend.     |
-| **3002** | `apps/admin` — the staff control panel.          |
-| **3003** | Prisma Studio (`@repo/db`'s `dev` script).       |
+| Port     | What                                         |
+| -------- | -------------------------------------------- |
+| **3000** | `apps/api` — NestJS. `PORT` overrides it.    |
+| **3001** | `apps/client` — the public Next.js frontend. |
+| **3002** | `apps/admin` — the staff control panel.      |
+| **3003** | Prisma Studio (`@repo/db`'s `dev` script).   |
 
 Both frontends read the API's location from `NEXT_PUBLIC_API_BASE_URL`; each has
 a `.env.example` to copy.
