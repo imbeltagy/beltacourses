@@ -1,0 +1,38 @@
+{
+  "common": {
+    "greeting": "Hello {{name}},",
+    "regards": "Best regards,",
+    "team": "The BeltaCourses team",
+    "ignore": "If you didn't expect this email, you can safely ignore it.",
+    "footer": "© BeltaCourses. This is an automated message, please don't reply."
+  },
+  "account-created": {
+    "subject": "Your BeltaCourses account is ready",
+    "title": "Your account is ready",
+    "intro": "An account has been created for you on BeltaCourses. You can sign in with the email address below.",
+    "emailLabel": "Email:",
+    "action": "Sign in"
+  },
+  "verify-email": {
+    "subject": "Confirm your email address",
+    "title": "Confirm your email",
+    "intro": "Thanks for joining BeltaCourses! Please confirm your email address to finish setting up your account.",
+    "action": "Confirm my email",
+    "expiry": "This link expires in {{expiresInMinutes}} minutes."
+  },
+  "reset-password": {
+    "subject": "Reset your BeltaCourses password",
+    "title": "Reset your password",
+    "intro": "We received a request to reset the password for your account. Use the button below to choose a new one.",
+    "action": "Reset password",
+    "expiry": "For your security, this link expires in {{expiresInMinutes}} minutes.",
+    "ignore": "If you didn't ask for this, ignore this email — your password stays the same."
+  },
+  "login-notification": {
+    "subject": "New sign-in to your BeltaCourses account",
+    "title": "New sign-in",
+    "intro": "We noticed a new sign-in to your account.",
+    "timeLabel": "Time:",
+    "notYou": "If this wasn't you, reset your password right away."
+  }
+}

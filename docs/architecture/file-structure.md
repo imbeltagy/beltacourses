@@ -22,12 +22,14 @@ packages/
 ├── database/             @repo/db                    Prisma schema + client
 ├── frontend/
 │   ├── common/           @repo/frontend              design system + non-React utils
-│   └── features/         @repo/frontend-features     pages, actions, API types
+│   ├── features/         @repo/frontend-features     pages, actions, API types
+│   └── emails/           @repo/frontend-emails       localized HTML emails (built to dist/)
 ├── eslint-config/
 └── typescript-config/
 ```
 
-Every `@repo/*` package is consumed as **raw TypeScript source**. None of them has a build step. The
+Every `@repo/*` package is consumed as **raw TypeScript source**. None of them has a build step,
+except `@repo/frontend-emails`, which generates HTML into a git-ignored `dist/`. The
 API bundles its packages with webpack; the Next apps bundle theirs via `transpilePackages`. The one
 thing that must run before anything compiles is `db:generate` (Prisma codegen), which `pnpm install`
 triggers for you.
@@ -393,26 +395,27 @@ adding a primitive.
 
 # Where does X go?
 
-| You are adding                  | It goes in                                                   |
-| ------------------------------- | ------------------------------------------------------------ |
-| An HTTP endpoint                | `apps/api/src/<feature>/<feature>.controller.ts`             |
-| Business logic used by one app  | `apps/api/src/<feature>/<feature>.service.ts`                |
-| Business logic used by two apps | `packages/backend/src/<name>/` (+ `index.ts`)                |
-| A Prisma query                  | `<feature>.repository.ts` — never in a service or controller |
-| A third-party SDK call          | `<feature>.adapter.ts` — never alongside Prisma              |
-| A validated request body        | `apps/api/src/<feature>/dto/request/<endpoint>.dto.ts`       |
-| A documented response           | `apps/api/src/<feature>/dto/response/<endpoint>.dto.ts`      |
-| A compile-time-only shape       | `<feature>.types.ts`                                         |
-| A database model                | `packages/database/prisma/schema/<domain>.prisma`            |
-| A scheduled job                 | `<feature>.processor.ts`, scheduled in `onModuleInit`        |
-| A page                          | `packages/frontend/features/src/pages/<area>/<page>/`        |
-| A route for that page           | `apps/<app>/src/app/.../page.tsx`, one re-export line        |
-| A server action                 | `packages/frontend/features/src/actions/<area>-actions.ts`   |
-| An API wire type                | `packages/frontend/features/src/types/api/<area>.ts`         |
-| An API URL                      | `packages/frontend/features/src/configs/endpoints.ts`        |
-| A shadcn primitive              | `packages/frontend/common/src/ui/` + a line in `ui/index.ts` |
-| A reusable component            | `packages/frontend/common/src/components/<name>/index.tsx`   |
-| A component used by pages only  | `packages/frontend/features/src/components/<name>/index.tsx` |
-| A page shell                    | `packages/frontend/features/src/layout/<name>/index.tsx`     |
-| An env var                      | the app's `.env.example` **and** `globalEnv` in `turbo.json` |
-| A unit test                     | `<package-or-app>/test/`, mirroring the path under `src/`    |
+| You are adding                  | It goes in                                                                  |
+| ------------------------------- | --------------------------------------------------------------------------- |
+| An HTTP endpoint                | `apps/api/src/<feature>/<feature>.controller.ts`                            |
+| Business logic used by one app  | `apps/api/src/<feature>/<feature>.service.ts`                               |
+| Business logic used by two apps | `packages/backend/src/<name>/` (+ `index.ts`)                               |
+| A Prisma query                  | `<feature>.repository.ts` — never in a service or controller                |
+| A third-party SDK call          | `<feature>.adapter.ts` — never alongside Prisma                             |
+| A validated request body        | `apps/api/src/<feature>/dto/request/<endpoint>.dto.ts`                      |
+| A documented response           | `apps/api/src/<feature>/dto/response/<endpoint>.dto.ts`                     |
+| A compile-time-only shape       | `<feature>.types.ts`                                                        |
+| A database model                | `packages/database/prisma/schema/<domain>.prisma`                           |
+| A scheduled job                 | `<feature>.processor.ts`, scheduled in `onModuleInit`                       |
+| A page                          | `packages/frontend/features/src/pages/<area>/<page>/`                       |
+| A route for that page           | `apps/<app>/src/app/.../page.tsx`, one re-export line                       |
+| A server action                 | `packages/frontend/features/src/actions/<area>-actions.ts`                  |
+| An API wire type                | `packages/frontend/features/src/types/api/<area>.ts`                        |
+| An API URL                      | `packages/frontend/features/src/configs/endpoints.ts`                       |
+| A shadcn primitive              | `packages/frontend/common/src/ui/` + a line in `ui/index.ts`                |
+| A reusable component            | `packages/frontend/common/src/components/<name>/index.tsx`                  |
+| A component used by pages only  | `packages/frontend/features/src/components/<name>/index.tsx`                |
+| A page shell                    | `packages/frontend/features/src/layout/<name>/index.tsx`                    |
+| An email template               | `packages/frontend/emails/src/templates/<name>.tsx` + both `locales/*.json` |
+| An env var                      | the app's `.env.example` **and** `globalEnv` in `turbo.json`                |
+| A unit test                     | `<package-or-app>/test/`, mirroring the path under `src/`                   |

@@ -21,6 +21,7 @@ pnpm + Turborepo. Workspaces are `apps/*`, `packages/*` and `packages/frontend/*
 | `packages/database`                                    | `@repo/db`                | Prisma 7 schema, generated client, `prisma` singleton.    |
 | `packages/frontend/common`                             | `@repo/frontend`          | Design system + non-React utils (api-client, cookies).    |
 | `packages/frontend/features`                           | `@repo/frontend-features` | Pages, actions, API types, page layouts.                  |
+| `packages/frontend/emails`                             | `@repo/frontend-emails`   | Localized HTML emails, generated at build time.           |
 | `packages/eslint-config`, `packages/typescript-config` | —                         | Shared tooling.                                           |
 
 Packages are consumed as **raw TypeScript source**, not compiled output. There is no build step
