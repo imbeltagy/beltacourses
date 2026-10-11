@@ -210,7 +210,7 @@ of the `ErrorCode` enum (`@repo/backend/errors`), `message` optional English for
 ## Commands
 
 ```sh
-docker compose -f ./compose/dev.yml up -d   # Postgres :5432, Redis :6379
+docker compose -f ./compose/dev.yml up -d   # Postgres :5432, Redis :6379, Mailpit :1025/:8025
 pnpm install
 pnpm dlx turbo run dev
 pnpm dlx turbo run lint check-types

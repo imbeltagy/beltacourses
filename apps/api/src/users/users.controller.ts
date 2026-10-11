@@ -17,6 +17,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiConflictResponse,
   ApiConsumes,
+  ApiHeader,
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -26,6 +27,8 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser, MODERATOR_ROLES, PERMISSIONS } from '@repo/backend/core';
 import type { RequestUser } from '@repo/backend/core';
+import { EmailLocaleParam } from '../common/decorators/email-locale.decorator';
+import type { EmailLocale } from '@repo/backend/email';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { CreateUserDto } from './dto/request/create-user.dto';
 import { ListUsersQueryDto } from './dto/request/list-users.dto';
@@ -44,7 +47,17 @@ export class UsersController {
   @UseInterceptors(FileInterceptor('avatar'))
   @ApiConsumes('multipart/form-data')
   @Auth({ roles: MODERATOR_ROLES, permissions: PERMISSIONS.USERS_CREATE })
-  @ApiOperation({ summary: 'Create a user' })
+  @ApiOperation({
+    summary: 'Create a user',
+    description:
+      'Emails the new user that their account exists, in the language of `Accept-Language`.',
+  })
+  @ApiHeader({
+    name: 'Accept-Language',
+    required: false,
+    description:
+      'Language of the email, `en` or `ar`. Anything else gets `en`.',
+  })
   @ApiCreatedResponse({ type: UserResponse })
   @ApiConflictResponse({
     type: ErrorResponse,
@@ -52,9 +65,10 @@ export class UsersController {
   })
   create(
     @Body() dto: CreateUserDto,
-    @UploadedFile() avatar?: Express.Multer.File,
+    @UploadedFile() avatar: Express.Multer.File | undefined,
+    @EmailLocaleParam() locale: EmailLocale,
   ): Promise<UserResponse> {
-    return this.usersService.create(dto, avatar);
+    return this.usersService.create(dto, avatar, locale);
   }
 
   @Get()

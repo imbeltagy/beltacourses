@@ -54,8 +54,10 @@ describe('UsersController', () => {
     const dto = { email: 'a@example.com', password: 'password', name: 'A' };
     usersService.create.mockResolvedValue({ id: '1' });
 
-    await expect(controller.create(dto as never)).resolves.toEqual({ id: '1' });
-    expect(usersService.create).toHaveBeenCalledWith(dto, undefined);
+    await expect(
+      controller.create(dto as never, undefined, 'en'),
+    ).resolves.toEqual({ id: '1' });
+    expect(usersService.create).toHaveBeenCalledWith(dto, undefined, 'en');
   });
 
   it('create forwards the uploaded avatar file to the service', async () => {
@@ -63,9 +65,9 @@ describe('UsersController', () => {
     const avatar = { originalname: 'avatar.png' } as Express.Multer.File;
     usersService.create.mockResolvedValue({ id: '1' });
 
-    await controller.create(dto as never, avatar);
+    await controller.create(dto as never, avatar, 'ar');
 
-    expect(usersService.create).toHaveBeenCalledWith(dto, avatar);
+    expect(usersService.create).toHaveBeenCalledWith(dto, avatar, 'ar');
   });
 
   it('list delegates to the service', async () => {

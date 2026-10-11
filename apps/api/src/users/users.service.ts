@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { AppException, ErrorCode } from '@repo/backend/errors';
 import { PasswordService, SessionService } from '@repo/backend/core';
 import { Role, type User } from '@repo/db';
+import type { EmailLocale } from '@repo/backend/email';
 import { StorageService } from '../storage/storage.service';
 import type { FileToUpload } from '../storage/storage.types';
+import { AccountEmailsService } from './account-emails.service';
 import { UsersRepository } from './users.repository';
 import type { CreateUserDto } from './dto/request/create-user.dto';
 import type { ListUsersQueryDto } from './dto/request/list-users.dto';
@@ -17,11 +19,14 @@ export class UsersService {
     private readonly passwordService: PasswordService,
     private readonly storageService: StorageService,
     private readonly sessionService: SessionService,
+    private readonly accountEmails: AccountEmailsService,
   ) {}
 
   async create(
     input: CreateUserDto,
     avatar?: FileToUpload,
+    /** Set by callers where staff create the account: the new user is emailed in this language. */
+    welcomeLocale?: EmailLocale,
   ): Promise<PublicUser> {
     const existing = await this.usersRepository.findIdByEmail(input.email);
     if (existing) throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
@@ -31,8 +36,9 @@ export class UsersService {
       ? await this.storageService.upload(avatar)
       : undefined;
 
+    let created: PublicUser;
     try {
-      return await this.usersRepository.create({
+      created = await this.usersRepository.create({
         email: input.email,
         hashed_password,
         name: input.name,
@@ -51,6 +57,11 @@ export class UsersService {
       }
       throw error;
     }
+
+    if (welcomeLocale) {
+      await this.accountEmails.sendAccountCreated(created, welcomeLocale);
+    }
+    return created;
   }
 
   async findById(id: string): Promise<PublicUser> {

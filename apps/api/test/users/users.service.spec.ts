@@ -4,6 +4,7 @@ import { Role } from '@repo/db';
 import { PasswordService, SessionService } from '@repo/backend/core';
 import { UsersRepository } from '../../src/users/users.repository';
 import { UsersService } from '../../src/users/users.service';
+import { AccountEmailsService } from '../../src/users/account-emails.service';
 import { StorageService } from '../../src/storage/storage.service';
 
 const publicUser = (overrides: Partial<Record<string, unknown>> = {}) => ({
@@ -43,6 +44,7 @@ describe('UsersService', () => {
   let passwordService: { hash: jest.Mock };
   let storageService: { upload: jest.Mock; softDelete: jest.Mock };
   let sessionService: { removeAllUserSessions: jest.Mock };
+  let accountEmails: { sendAccountCreated: jest.Mock };
 
   beforeEach(() => {
     repository = {
@@ -63,11 +65,16 @@ describe('UsersService', () => {
       removeAllUserSessions: jest.fn().mockResolvedValue(0),
     };
 
+    accountEmails = {
+      sendAccountCreated: jest.fn().mockResolvedValue(undefined),
+    };
+
     service = new UsersService(
       repository as unknown as UsersRepository,
       passwordService as unknown as PasswordService,
       storageService as unknown as StorageService,
       sessionService as unknown as SessionService,
+      accountEmails as unknown as AccountEmailsService,
     );
   });
 
@@ -92,6 +99,36 @@ describe('UsersService', () => {
         expect.objectContaining({ hashed_password: 'hashed-value' }),
       );
       expect(result).not.toHaveProperty('hashed_password');
+    });
+
+    it('emails the new user in the given locale', async () => {
+      repository.findIdByEmail.mockResolvedValue(null);
+      passwordService.hash.mockResolvedValue('hashed-value');
+      repository.create.mockResolvedValue(publicUser());
+
+      await service.create(input, undefined, 'ar');
+
+      expect(accountEmails.sendAccountCreated).toHaveBeenCalledWith(
+        publicUser(),
+        'ar',
+      );
+    });
+
+    it('sends no email when no locale is given (self-registration)', async () => {
+      repository.findIdByEmail.mockResolvedValue(null);
+      passwordService.hash.mockResolvedValue('hashed-value');
+      repository.create.mockResolvedValue(publicUser());
+
+      await service.create(input);
+
+      expect(accountEmails.sendAccountCreated).not.toHaveBeenCalled();
+    });
+
+    it('sends no email when the email is already taken', async () => {
+      repository.findIdByEmail.mockResolvedValue({ id: 'other-user' });
+
+      await expect(service.create(input, undefined, 'en')).rejects.toThrow();
+      expect(accountEmails.sendAccountCreated).not.toHaveBeenCalled();
     });
 
     it('throws 409 when the email is already taken', async () => {
