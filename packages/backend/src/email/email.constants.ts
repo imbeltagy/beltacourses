@@ -1,10 +1,9 @@
 import path from 'node:path';
 
-export const SMTP_HOST = process.env.SMTP_HOST;
-export const SMTP_PORT = process.env.SMTP_PORT;
-export const SMTP_USER = process.env.SMTP_USER;
-export const SMTP_PASSWORD = process.env.SMTP_PASSWORD;
-export const EMAIL_FROM = process.env.EMAIL_FROM;
+// Same variables, and the same Gmail account, as the previous backend.
+export const NODEMAILER_USER = process.env.NODEMAILER_USER;
+export const NODEMAILER_PASS = process.env.NODEMAILER_PASS;
+export const NODEMAILER_SENDER_EMAIL = process.env.NODEMAILER_SENDER_EMAIL;
 
 /**
  * Where `@repo/frontend-emails` writes its output. The default assumes the

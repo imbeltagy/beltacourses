@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import {
   EmailService,
   EmailTemplatesAdapter,
-  SmtpAdapter,
+  MailAdapter,
 } from '@repo/backend/email';
 
 @Module({
-  providers: [EmailService, EmailTemplatesAdapter, SmtpAdapter],
+  providers: [EmailService, EmailTemplatesAdapter, MailAdapter],
   exports: [EmailService],
 })
 export class EmailModule {}

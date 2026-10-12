@@ -12,10 +12,3 @@ services:
     image: redis:alpine
     ports:
       - "6379:6379"
-
-  # Catches every outgoing email: SMTP on :1025, inbox UI on http://localhost:8025
-  mailpit:
-    image: axllent/mailpit
-    ports:
-      - "1025:1025"
-      - "8025:8025"

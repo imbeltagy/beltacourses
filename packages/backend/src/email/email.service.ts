@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EmailTemplatesAdapter } from './email-templates.adapter';
-import { SmtpAdapter } from './smtp.adapter';
+import { MailAdapter } from './mail.adapter';
 import type { EmailTemplateName, SendEmailInput } from './email.types';
 
 const VARIABLE = /\{\{\s*(\w+)\s*\}\}/g;
@@ -35,11 +35,11 @@ export function fillVariables(
 export class EmailService {
   constructor(
     private readonly templates: EmailTemplatesAdapter,
-    private readonly smtp: SmtpAdapter,
+    private readonly mail: MailAdapter,
   ) {}
 
   /**
-   * Throws when the template cannot be rendered or the mail server refuses.
+   * Throws when the template cannot be rendered or the mail provider refuses.
    * Whether that should fail the caller's request is the caller's call.
    */
   async send<T extends EmailTemplateName>(
@@ -49,7 +49,7 @@ export class EmailService {
     const { html, subject } = await this.templates.load(template, input.locale);
     const variables: Record<string, string | number> = { ...input.variables };
 
-    await this.smtp.send({
+    await this.mail.send({
       to: input.to,
       subject: fillVariables(subject, variables, false),
       // Values are user data (a name can contain `<`), so they are escaped into HTML.

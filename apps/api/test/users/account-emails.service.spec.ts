@@ -50,7 +50,7 @@ describe('AccountEmailsService', () => {
 
   it('swallows a send failure so the request still succeeds', async () => {
     jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
-    emailService.send.mockRejectedValue(new Error('smtp down'));
+    emailService.send.mockRejectedValue(new Error('mail down'));
 
     await expect(
       service.sendAccountCreated(

@@ -22,7 +22,7 @@ describe('fillVariables', () => {
 
 describe('EmailService', () => {
   let templates: { load: jest.Mock };
-  let smtp: { send: jest.Mock };
+  let mail: { send: jest.Mock };
   let service: EmailService;
 
   beforeEach(() => {
@@ -32,8 +32,8 @@ describe('EmailService', () => {
         html: '<a href="{{loginUrl}}">{{name}}</a>',
       }),
     };
-    smtp = { send: jest.fn().mockResolvedValue(undefined) };
-    service = new EmailService(templates as never, smtp as never);
+    mail = { send: jest.fn().mockResolvedValue(undefined) };
+    service = new EmailService(templates as never, mail as never);
   });
 
   it('loads the template for the locale and sends it filled in', async () => {
@@ -48,7 +48,7 @@ describe('EmailService', () => {
     });
 
     expect(templates.load).toHaveBeenCalledWith('account-created', 'ar');
-    expect(smtp.send).toHaveBeenCalledWith({
+    expect(mail.send).toHaveBeenCalledWith({
       to: 'a@b.com',
       subject: 'Welcome Jane <script>',
       html: '<a href="https://x.test/ar/login?a=1&amp;b=2">Jane &lt;script&gt;</a>',
@@ -64,11 +64,11 @@ describe('EmailService', () => {
         variables: { name: 'J', email: 'a@b.com', loginUrl: 'u' },
       }),
     ).rejects.toThrow('no file');
-    expect(smtp.send).not.toHaveBeenCalled();
+    expect(mail.send).not.toHaveBeenCalled();
   });
 
   it('propagates a mail server failure', async () => {
-    smtp.send.mockRejectedValue(new Error('refused'));
+    mail.send.mockRejectedValue(new Error('refused'));
     await expect(
       service.send('account-created', {
         to: 'a@b.com',
