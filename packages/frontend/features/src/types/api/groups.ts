@@ -31,3 +31,13 @@ export type ListGroupsResponse = Paginated<Group>;
  * section per resource.
  */
 export type PermissionCatalog = Record<string, Record<string, string>>;
+
+export type CreateGroupInput = {
+  name: string;
+  description?: string | null;
+  /** Must be non-empty, and every value must come from the catalog. */
+  permissions: string[];
+};
+
+/** Sending `permissions` replaces the whole set — never a merge. */
+export type UpdateGroupInput = Partial<CreateGroupInput>;

@@ -60,3 +60,32 @@ export type ListUsersQuery = PaginationQuery & {
 };
 
 export type ListUsersResponse = Paginated<User>;
+
+/**
+ * Fields of `POST /users`. `avatar` makes the request multipart, so the action
+ * turns this into `FormData`; a blank optional field is simply omitted.
+ */
+export type CreateUserInput = {
+  email: string;
+  password: string;
+  name: string;
+  role?: Exclude<Role, "super_admin">;
+  confirmed?: boolean;
+  bio?: string;
+  gender?: Gender;
+  date_of_birth?: string;
+  avatar?: File;
+};
+
+/**
+ * Fields of `PATCH /users/:id`. A nullable field is cleared by sending `null`,
+ * which the action sends as a blank form field — multipart has no `null`.
+ */
+export type UpdateUserInput = {
+  name?: string;
+  confirmed?: boolean;
+  bio?: string | null;
+  gender?: Gender | null;
+  date_of_birth?: string | null;
+  avatar?: File;
+};

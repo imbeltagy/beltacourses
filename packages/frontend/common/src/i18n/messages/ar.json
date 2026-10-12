@@ -23,7 +23,9 @@
     "name": "الاسم",
     "fullName": "الاسم الكامل",
     "bio": "نبذة تعريفية",
-    "authImageAlt": "خلفية تسجيل الدخول"
+    "authImageAlt": "خلفية تسجيل الدخول",
+    "cancel": "إلغاء",
+    "confirmDelete": "نعم، احذف"
   },
   "validation": {
     "invalidEmail": "البريد الإلكتروني غير صالح",
@@ -34,12 +36,22 @@
     "nameMax": "يجب ألا يزيد الاسم عن {max} حرف",
     "passwordMin": "يجب ألا تقل كلمة المرور عن {min} أحرف",
     "passwordMax": "يجب ألا تزيد كلمة المرور عن {max} حرفًا",
-    "roleRequired": "الدور مطلوب"
+    "roleRequired": "الدور مطلوب",
+    "bioMax": "يجب ألا تتجاوز النبذة {max} حرفًا",
+    "descriptionMax": "يجب ألا يتجاوز الوصف {max} حرفًا",
+    "permissionsRequired": "اختر صلاحية واحدة على الأقل"
   },
   "actions": {
     "welcomeBack": "مرحبًا بعودتك!",
     "accountReady": "حسابك جاهز.",
-    "signedOut": "تم تسجيل الخروج."
+    "signedOut": "تم تسجيل الخروج.",
+    "userCreated": "تم إنشاء المستخدم.",
+    "userUpdated": "تم حفظ المستخدم.",
+    "userDeleted": "تم حذف المستخدم.",
+    "groupCreated": "تم إنشاء المجموعة.",
+    "groupUpdated": "تم حفظ المجموعة.",
+    "groupDeleted": "تم حذف المجموعة.",
+    "groupAssignmentUpdated": "تم تحديث المجموعة. سيتم تسجيل خروج المسؤول من جلساته."
   },
   "roles": {
     "student": "طالب",
@@ -119,7 +131,32 @@
         "joined": "تاريخ الانضمام"
       },
       "confirmed": "مؤكَّد",
-      "pending": "قيد الانتظار"
+      "pending": "قيد الانتظار",
+      "new": "مستخدم جديد",
+      "delete": "حذف المستخدم",
+      "create": {
+        "title": "مستخدم جديد",
+        "description": "أنشئ حسابًا. سيصل المستخدم بريد يخبره بذلك."
+      },
+      "details": {
+        "description": "انضم في {created}"
+      },
+      "form": {
+        "role": "الدور",
+        "gender": "الجنس",
+        "dateOfBirth": "تاريخ الميلاد",
+        "avatar": "الصورة الشخصية",
+        "avatarReplaceHint": "اختيار ملف يستبدل الصورة الحالية.",
+        "confirmed": "تم تأكيد البريد الإلكتروني",
+        "emailLocked": "لا يمكن تغيير البريد الإلكتروني.",
+        "save": "حفظ التغييرات",
+        "create": "إنشاء المستخدم"
+      },
+      "group": {
+        "title": "مجموعة الصلاحيات",
+        "hint": "تغيير المجموعة يسجّل خروج المسؤول لتحديث صلاحياته.",
+        "none": "بدون مجموعة"
+      }
     },
     "groups": {
       "title": "المجموعات",
@@ -132,6 +169,22 @@
         "permissions": "الصلاحيات",
         "members": "الأعضاء",
         "created": "تاريخ الإنشاء"
+      },
+      "new": "مجموعة جديدة",
+      "delete": "حذف المجموعة",
+      "create": {
+        "title": "مجموعة جديدة",
+        "description": "اختر الصلاحيات التي سيحصل عليها مسؤولوها."
+      },
+      "details": {
+        "description": "أُنشئت في {created}",
+        "members": "{count, plural, one {# عضو} two {# عضوان} few {# أعضاء} other {# عضوًا}}"
+      },
+      "form": {
+        "description": "الوصف",
+        "permissions": "الصلاحيات",
+        "save": "حفظ التغييرات",
+        "create": "إنشاء المجموعة"
       }
     }
   },
@@ -172,7 +225,20 @@
       "listGroups": "تعذّر تحميل قائمة المجموعات.",
       "getUser": "تعذّر تحميل هذا المستخدم.",
       "getGroup": "تعذّر تحميل هذه المجموعة.",
-      "permissionCatalog": "تعذّر تحميل قائمة الصلاحيات."
+      "permissionCatalog": "تعذّر تحميل قائمة الصلاحيات.",
+      "createUser": "تعذّر إنشاء المستخدم.",
+      "updateUser": "تعذّر حفظ المستخدم.",
+      "deleteUser": "تعذّر حذف المستخدم.",
+      "createGroup": "تعذّر إنشاء المجموعة.",
+      "updateGroup": "تعذّر حفظ المجموعة.",
+      "deleteGroup": "تعذّر حذف المجموعة.",
+      "assignGroup": "تعذّر تعيين المجموعة.",
+      "unassignGroup": "تعذّر إزالة المجموعة."
     }
+  },
+  "genders": {
+    "none": "غير محدد",
+    "male": "ذكر",
+    "female": "أنثى"
   }
 }

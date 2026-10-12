@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/frontend/ui";
+import { Link } from "@repo/frontend/i18n/navigation";
 import { DATE_FORMAT } from "../../../../configs/formats";
 import type { User } from "../../../../types/api/users";
 
@@ -55,7 +56,12 @@ export function UsersTable({ users }: { users: User[] }) {
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
-                    <div className="truncate font-medium">{user.name}</div>
+                    <Link
+                      href={`/users/${user.id}`}
+                      className="hover:text-primary block truncate font-medium hover:underline"
+                    >
+                      {user.name}
+                    </Link>
                     <div className="text-muted-foreground truncate text-xs">
                       {user.email}
                     </div>

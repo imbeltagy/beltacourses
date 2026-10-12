@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/frontend/ui";
+import { Link } from "@repo/frontend/i18n/navigation";
 import { DATE_FORMAT } from "../../../../configs/formats";
 import type { Group } from "../../../../types/api/groups";
 
@@ -48,7 +49,12 @@ export function GroupsTable({ groups }: { groups: Group[] }) {
               <TableRow key={group.id}>
                 <TableCell>
                   <div className="min-w-0">
-                    <div className="truncate font-medium">{group.name}</div>
+                    <Link
+                      href={`/groups/${group.id}`}
+                      className="hover:text-primary block truncate font-medium hover:underline"
+                    >
+                      {group.name}
+                    </Link>
                     {group.description && (
                       <div className="text-muted-foreground max-w-[32ch] truncate text-xs">
                         {group.description}

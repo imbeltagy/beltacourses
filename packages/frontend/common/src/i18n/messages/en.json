@@ -23,7 +23,9 @@
     "name": "Name",
     "fullName": "Full Name",
     "bio": "Bio",
-    "authImageAlt": "Auth Background"
+    "authImageAlt": "Auth Background",
+    "cancel": "Cancel",
+    "confirmDelete": "Yes, delete"
   },
   "validation": {
     "invalidEmail": "Invalid email",
@@ -34,12 +36,22 @@
     "nameMax": "Name must be at most {max} characters",
     "passwordMin": "Password must be at least {min} characters",
     "passwordMax": "Password must be at most {max} characters",
-    "roleRequired": "Role is required"
+    "roleRequired": "Role is required",
+    "bioMax": "Bio must be at most {max} characters",
+    "descriptionMax": "Description must be at most {max} characters",
+    "permissionsRequired": "Pick at least one permission"
   },
   "actions": {
     "welcomeBack": "Welcome back!",
     "accountReady": "Your account is ready.",
-    "signedOut": "Signed out."
+    "signedOut": "Signed out.",
+    "userCreated": "User created.",
+    "userUpdated": "User saved.",
+    "userDeleted": "User deleted.",
+    "groupCreated": "Group created.",
+    "groupUpdated": "Group saved.",
+    "groupDeleted": "Group deleted.",
+    "groupAssignmentUpdated": "Group updated. The admin will be signed out of their sessions."
   },
   "roles": {
     "student": "Student",
@@ -119,7 +131,32 @@
         "joined": "Joined"
       },
       "confirmed": "Confirmed",
-      "pending": "Pending"
+      "pending": "Pending",
+      "new": "New user",
+      "delete": "Delete user",
+      "create": {
+        "title": "New user",
+        "description": "Create an account. The user is emailed that it exists."
+      },
+      "details": {
+        "description": "Joined {created}"
+      },
+      "form": {
+        "role": "Role",
+        "gender": "Gender",
+        "dateOfBirth": "Date of birth",
+        "avatar": "Avatar",
+        "avatarReplaceHint": "Choosing a file replaces the current avatar.",
+        "confirmed": "Email confirmed",
+        "emailLocked": "The email cannot be changed.",
+        "save": "Save changes",
+        "create": "Create user"
+      },
+      "group": {
+        "title": "Permission group",
+        "hint": "Changing the group signs the admin out so their permissions refresh.",
+        "none": "No group"
+      }
     },
     "groups": {
       "title": "Groups",
@@ -132,6 +169,22 @@
         "permissions": "Permissions",
         "members": "Members",
         "created": "Created"
+      },
+      "new": "New group",
+      "delete": "Delete group",
+      "create": {
+        "title": "New group",
+        "description": "Choose the permissions its admins will hold."
+      },
+      "details": {
+        "description": "Created {created}",
+        "members": "{count, plural, one {# member} other {# members}}"
+      },
+      "form": {
+        "description": "Description",
+        "permissions": "Permissions",
+        "save": "Save changes",
+        "create": "Create group"
       }
     }
   },
@@ -172,7 +225,20 @@
       "listGroups": "Couldn't load the groups list.",
       "getUser": "Couldn't load that user.",
       "getGroup": "Couldn't load that group.",
-      "permissionCatalog": "Couldn't load the permission catalog."
+      "permissionCatalog": "Couldn't load the permission catalog.",
+      "createUser": "Couldn't create the user.",
+      "updateUser": "Couldn't save the user.",
+      "deleteUser": "Couldn't delete the user.",
+      "createGroup": "Couldn't create the group.",
+      "updateGroup": "Couldn't save the group.",
+      "deleteGroup": "Couldn't delete the group.",
+      "assignGroup": "Couldn't assign the group.",
+      "unassignGroup": "Couldn't remove the group."
     }
+  },
+  "genders": {
+    "none": "Not specified",
+    "male": "Male",
+    "female": "Female"
   }
 }

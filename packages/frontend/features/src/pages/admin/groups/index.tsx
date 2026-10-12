@@ -1,5 +1,7 @@
 import { getTranslations } from "next-intl/server";
-import { Alert, AlertTitle } from "@repo/frontend/ui";
+import { Plus } from "lucide-react";
+import { Alert, AlertTitle, Button } from "@repo/frontend/ui";
+import { Link } from "@repo/frontend/i18n/navigation";
 import { listGroupsAction } from "../../../actions/groups-actions";
 import { PageWrapper } from "../../../components/page-wrapper";
 import { TablePagination } from "../../../components/table-pagination";
@@ -29,7 +31,18 @@ export default async function GroupsPage({
   });
 
   return (
-    <PageWrapper title={t("title")} description={t("description")}>
+    <PageWrapper
+      title={t("title")}
+      description={t("description")}
+      action={
+        <Button asChild>
+          <Link href="/groups/new">
+            <Plus aria-hidden="true" />
+            {t("new")}
+          </Link>
+        </Button>
+      }
+    >
       <div className="pb-4">
         <TableSearch
           placeholder={t("searchPlaceholder")}
