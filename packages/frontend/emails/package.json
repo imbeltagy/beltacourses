@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "build": "tsx --env-file-if-exists=.env src/build.ts",
-    "dev": "tsx watch --env-file-if-exists=.env src/build.ts",
     "check-types": "tsc --noEmit",
     "test": "tsx --test test/*.test.ts"
   },
