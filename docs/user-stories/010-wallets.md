@@ -1,0 +1,4 @@
+- One **system wallet** holding the platform's share.
+- One **wallet per user** (teacher earnings, student refunds), created with the account.
+- Balance can be read by its owner and by authorized admins.
+- Every balance change is an immutable **ledger entry**, never a bare update. The balance is derived from the entries.

@@ -1,7 +1,8 @@
 # Roadmap
 
-Task board for the courses platform. Every task links to a user story in
-[`docs/user-stories/`](./user-stories/). Details live in the story file — this page stays a board.
+Task board for the courses platform. Every task links to the business user stories in
+[`docs/user-stories/`](./user-stories/). How a story is built lives in
+[`docs/technical-design/`](./technical-design/) — this page stays a board.
 
 ## Legend
 
@@ -16,7 +17,8 @@ Rules:
 
 - A task that is `Blocked` must have an entry in [Notes](#notes) explaining why and what unblocks it.
 - `Depends on` lists tasks that must be `Done` (or usable) before this one can finish.
-- One user story can cover more than one task.
+- A task may cover several user stories, and a story may be split across several tasks, but prefer a
+  story with at most one task.
 - Task and story ids are append-only: a new task takes the next free id and is placed in the phase it
   belongs to, so ids are not always in reading order.
 
@@ -24,62 +26,62 @@ Rules:
 
 ## Phase 1 — MVP
 
-| #     | Task                                                                                                               | Story                                                              | Status  | Depends on          |
-| ----- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ | ------- | ------------------- |
-| T-001 | File upload service                                                                                                | [US-0001](./user-stories/0001-file-upload-service.md)              | Done    | —                   |
-| T-002 | Email service                                                                                                      | [US-0002](./user-stories/0002-email-service.md)                    | Done    | —                   |
-| T-003 | Users CRUD + get profile (roles: student, teacher, academy moderator, admin, super admin)                          | [US-0003](./user-stories/0003-user-accounts-and-profiles.md)       | Done    | T-001               |
-| T-004 | Authentication — email/password login, refresh token, JWT + Redis session id, auth guard                           | [US-0004](./user-stories/0004-authentication-and-sessions.md)      | Done    | T-003               |
-| T-005 | Authorization — roles guard, permissions, admin permission groups (RBAC)                                           | [US-0005](./user-stories/0005-authorization-rbac.md)               | Done    | T-004               |
-| T-006 | Video upload service                                                                                               | [US-0006](./user-stories/0006-video-upload-service.md)             | Pending | T-001               |
-| T-007 | Course creation — courses, modules, lectures                                                                       | [US-0007](./user-stories/0007-course-authoring.md)                 | Pending | T-005, T-006        |
-| T-008 | Course publish (instant) + revert to draft while unpurchased                                                       | [US-0008](./user-stories/0008-course-publishing-and-visibility.md) | Pending | T-007               |
-| T-009 | System wallet + user wallets                                                                                       | [US-0009](./user-stories/0009-wallets.md)                          | Pending | T-003               |
-| T-010 | Student favourites list + owned list                                                                               | [US-0010](./user-stories/0010-student-course-lists.md)             | Pending | T-008               |
-| T-011 | Stripe payment (course purchase) + transactions                                                                    | [US-0011](./user-stories/0011-course-purchase-with-stripe.md)      | Pending | T-009, T-010        |
-| T-012 | Wallet withdrawal (teacher & student) via PayPal payout                                                            | [US-0012](./user-stories/0012-wallet-withdrawal-paypal.md)         | Pending | T-009               |
-| T-013 | Course progress tracker (lecture completion unlocks the next item + overall %)                                     | [US-0013](./user-stories/0013-course-progress-tracking.md)         | Pending | T-010               |
-| T-014 | Refund request + refund to student wallet, deduct from teacher & system wallet                                     | [US-0014](./user-stories/0014-refunds.md)                          | Pending | T-011               |
-| T-015 | Course close (hidden for everyone except students who already purchased)                                           | [US-0008](./user-stories/0008-course-publishing-and-visibility.md) | Pending | T-008, T-010        |
-| T-034 | Course analytics for teacher & admin (owners, purchases, refunds, anonymized transactions, per-lecture completion) | [US-0032](./user-stories/0032-course-analytics.md)                 | Pending | T-011, T-013, T-014 |
+| #     | Task                                                                                                               | Story                                                                    | Status  | Depends on          |
+| ----- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------- | ------------------- |
+| T-001 | File upload service                                                                                                | [005](./user-stories/005-file-upload.md)                                 | Done    | —                   |
+| T-002 | Email service                                                                                                      | [006](./user-stories/006-email-service.md)                               | Done    | —                   |
+| T-003 | Users CRUD + get profile (roles: student, teacher, academy moderator, admin, super admin)                          | [001](./user-stories/001-users.md)                                       | Done    | T-001               |
+| T-004 | Authentication — email/password login, refresh token, JWT + Redis session id, auth guard                           | [002](./user-stories/002-login.md)<br>[003](./user-stories/003-authN.md) | Done    | T-003               |
+| T-005 | Authorization — roles guard, permissions, admin permission groups (RBAC)                                           | [004](./user-stories/004-authZ.md)                                       | Done    | T-004               |
+| T-006 | Video upload service                                                                                               | [007](./user-stories/007-video-upload.md)                                | Pending | T-001               |
+| T-007 | Course creation — courses, modules, lectures                                                                       | [008](./user-stories/008-course-authoring.md)                            | Pending | T-005, T-006        |
+| T-008 | Course publish (instant) + revert to draft while unpurchased                                                       | [009](./user-stories/009-course-publishing.md)                           | Pending | T-007               |
+| T-009 | System wallet + user wallets                                                                                       | [010](./user-stories/010-wallets.md)                                     | Pending | T-003               |
+| T-010 | Student favourites list + owned list                                                                               | [011](./user-stories/011-student-course-lists.md)                        | Pending | T-008               |
+| T-011 | Stripe payment (course purchase) + transactions                                                                    | [012](./user-stories/012-course-purchase.md)                             | Pending | T-009, T-010        |
+| T-012 | Wallet withdrawal (teacher & student) via PayPal payout                                                            | [013](./user-stories/013-wallet-withdrawal.md)                           | Pending | T-009               |
+| T-013 | Course progress tracker (lecture completion unlocks the next item + overall %)                                     | [014](./user-stories/014-progress-tracking.md)                           | Pending | T-010               |
+| T-014 | Refund request + refund to student wallet, deduct from teacher & system wallet                                     | [015](./user-stories/015-refunds.md)                                     | Pending | T-011               |
+| T-015 | Course close (hidden for everyone except students who already purchased)                                           | [034](./user-stories/034-course-closing.md)                              | Pending | T-008, T-010        |
+| T-034 | Course analytics for teacher & admin (owners, purchases, refunds, anonymized transactions, per-lecture completion) | [031](./user-stories/031-course-analytics.md)                            | Pending | T-011, T-013, T-014 |
 
 ## Phase 2 — Teacher Platform & Monetization
 
-| #     | Task                                                                               | Story                                                       | Status  | Depends on   |
-| ----- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------- | ------------ |
-| T-016 | Banners (image + optional link to teacher profile or course, shown in home swiper) | [US-0015](./user-stories/0015-banners.md)                   | Pending | T-001, T-005 |
-| T-017 | OAuth login                                                                        | [US-0016](./user-stories/0016-oauth-login.md)               | Pending | T-004        |
-| T-018 | Password reset / forgot password                                                   | [US-0017](./user-stories/0017-password-reset.md)            | Pending | T-002, T-004 |
-| T-019 | Teacher website (per-teacher site with only his courses)                           | [US-0018](./user-stories/0018-teacher-website.md)           | Pending | T-008        |
-| T-020 | Exclusive content (tenant-scoped accounts on the teacher website)                  | [US-0019](./user-stories/0019-exclusive-content-tenancy.md) | Pending | T-019        |
-| T-021 | Teacher plans — free / website / exclusive                                         | [US-0020](./user-stories/0020-teacher-plans.md)             | Pending | T-019, T-020 |
-| T-022 | Multi-currency (course currency, viewing currency, wallet balance per currency)    | [US-0021](./user-stories/0021-multi-currency.md)            | Pending | T-011, T-009 |
-| T-023 | Offers & coupons (system-created vs teacher-created, first-purchase or all)        | [US-0022](./user-stories/0022-offers-and-coupons.md)        | Pending | T-011        |
+| #     | Task                                                                               | Story                                          | Status  | Depends on   |
+| ----- | ---------------------------------------------------------------------------------- | ---------------------------------------------- | ------- | ------------ |
+| T-016 | Banners (image + optional link to teacher profile or course, shown in home swiper) | [016](./user-stories/016-banners.md)           | Pending | T-001, T-005 |
+| T-017 | OAuth login                                                                        | [033](./user-stories/033-oauth-login.md)       | Pending | T-004        |
+| T-018 | Password reset / forgot password                                                   | [032](./user-stories/032-password-reset.md)    | Pending | T-002, T-004 |
+| T-019 | Teacher website (per-teacher site with only his courses)                           | [017](./user-stories/017-teacher-website.md)   | Pending | T-008        |
+| T-020 | Exclusive content (tenant-scoped accounts on the teacher website)                  | [018](./user-stories/018-exclusive-content.md) | Pending | T-019        |
+| T-021 | Teacher plans — free / website / exclusive                                         | [019](./user-stories/019-teacher-plans.md)     | Pending | T-019, T-020 |
+| T-022 | Multi-currency (course currency, viewing currency, wallet balance per currency)    | [020](./user-stories/020-multi-currency.md)    | Pending | T-011, T-009 |
+| T-023 | Offers & coupons (system-created vs teacher-created, first-purchase or all)        | [021](./user-stories/021-offers-coupons.md)    | Pending | T-011        |
 
 ## Phase 3 — Academies
 
-| #     | Task                                                                                                  | Story                                                     | Status  | Depends on          |
-| ----- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------- | ------------------- |
-| T-024 | Academy sign up                                                                                       | [US-0023](./user-stories/0023-academy-accounts.md)        | Pending | T-003               |
-| T-025 | Academy plans + academy size tiers (≤10, ≤50, >50 teachers) with website/exclusive add-ons            | [US-0024](./user-stories/0024-academy-plans.md)           | Pending | T-021, T-024        |
-| T-026 | Academy moderator account (wallet + teacher invitations)                                              | [US-0023](./user-stories/0023-academy-accounts.md)        | Pending | T-024, T-009        |
-| T-027 | Academy course workflow — teacher authors, academy reviews/publishes, per-course price & profit split | [US-0025](./user-stories/0025-academy-course-workflow.md) | Pending | T-026, T-007, T-011 |
+| #     | Task                                                                                                  | Story                                                | Status  | Depends on          |
+| ----- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------- | ------------------- |
+| T-024 | Academy sign up                                                                                       | [022](./user-stories/022-academy-accounts.md)        | Pending | T-003               |
+| T-025 | Academy plans + academy size tiers (≤10, ≤50, >50 teachers) with website/exclusive add-ons            | [023](./user-stories/023-academy-plans.md)           | Pending | T-021, T-024        |
+| T-026 | Academy moderator account (wallet + teacher invitations)                                              | [035](./user-stories/035-academy-moderator.md)       | Pending | T-024, T-009        |
+| T-027 | Academy course workflow — teacher authors, academy reviews/publishes, per-course price & profit split | [024](./user-stories/024-academy-course-workflow.md) | Pending | T-026, T-007, T-011 |
 
 ## Phase 4 — Live Courses & Assignments
 
-| #     | Task                                                                             | Story                                                     | Status  | Depends on   |
-| ----- | -------------------------------------------------------------------------------- | --------------------------------------------------------- | ------- | ------------ |
-| T-028 | Live courses — schedule, booking, delivery, recorded sessions                    | [US-0026](./user-stories/0026-live-courses.md)            | Pending | T-011, T-006 |
-| T-029 | Publish a finished live course as a regular course (previous buyers keep access) | [US-0027](./user-stories/0027-live-course-to-recorded.md) | Pending | T-028        |
-| T-030 | MCQ assignments per lecture with grades (non-blocking for progress)              | [US-0028](./user-stories/0028-mcq-assignments.md)         | Pending | T-013        |
+| #     | Task                                                                             | Story                                                | Status  | Depends on   |
+| ----- | -------------------------------------------------------------------------------- | ---------------------------------------------------- | ------- | ------------ |
+| T-028 | Live courses — schedule, booking, delivery, recorded sessions                    | [025](./user-stories/025-live-courses.md)            | Pending | T-011, T-006 |
+| T-029 | Publish a finished live course as a regular course (previous buyers keep access) | [026](./user-stories/026-live-course-to-recorded.md) | Pending | T-028        |
+| T-030 | MCQ assignments per lecture with grades (non-blocking for progress)              | [027](./user-stories/027-mcq-assignments.md)         | Pending | T-013        |
 
 ## Phase 5 — AI
 
-| #     | Task                                                  | Story                                                           | Status  | Depends on   |
-| ----- | ----------------------------------------------------- | --------------------------------------------------------------- | ------- | ------------ |
-| T-031 | AI lecture assistant (ask, summarize, hint, explain)  | [US-0029](./user-stories/0029-ai-lecture-assistant.md)          | Pending | T-007        |
-| T-032 | Written assignments graded by AI                      | [US-0030](./user-stories/0030-ai-graded-written-assignments.md) | Pending | T-030, T-031 |
-| T-033 | Support chat bot for guests & users + support tickets | [US-0031](./user-stories/0031-support-chatbot-and-tickets.md)   | Pending | T-031        |
+| #     | Task                                                  | Story                                               | Status  | Depends on   |
+| ----- | ----------------------------------------------------- | --------------------------------------------------- | ------- | ------------ |
+| T-031 | AI lecture assistant (ask, summarize, hint, explain)  | [028](./user-stories/028-ai-lecture-assistant.md)   | Pending | T-007        |
+| T-032 | Written assignments graded by AI                      | [029](./user-stories/029-ai-written-assignments.md) | Pending | T-030, T-031 |
+| T-033 | Support chat bot for guests & users + support tickets | [030](./user-stories/030-support-chatbot.md)        | Pending | T-031        |
 
 ---
 

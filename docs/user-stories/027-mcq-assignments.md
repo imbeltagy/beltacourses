@@ -1,0 +1,4 @@
+- Teachers attach MCQ questions and answers to a lecture.
+- Students submit answers and get a grade, stored per student per assignment.
+- The assignment is part of the course sequence: marking it complete unlocks the next item whatever the grade.
+- A failed or skipped assignment never blocks progress.

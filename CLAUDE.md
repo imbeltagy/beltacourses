@@ -3,7 +3,7 @@
 Conventions for this repo. Read this before adding a feature.
 
 This file is the rulebook — what to do, in imperative form. The map lives in
-[`docs/architecture/file-structure.md`](./docs/architecture/file-structure.md): the full tree for
+[`docs/file-structure.md`](./docs/file-structure.md): the full tree for
 both halves of the repo, a "where does X go?" table, and the Tailwind `@source` trap that fails
 silently. Keep the two in step; do not redraw the tree here.
 
@@ -219,10 +219,10 @@ pnpm --filter <package> test
 
 ## Docs
 
-- `docs/roadmap.md` is the task board; `docs/user-stories/NNNN-*.md` hold the detail. Task and story
+- `docs/roadmap.md` is the task board; `docs/user-stories/NNN-*.md` hold the business rules. Task and story
   ids are append-only.
-- Finishing a task means updating both: flip the roadmap status and tick the story's acceptance
-  criteria.
+- `docs/technical-design/` holds how a story is built. Finishing a task means flipping the roadmap
+  status and updating the matching design doc's status.
 
 ## Commits
 

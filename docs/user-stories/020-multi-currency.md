@@ -1,0 +1,6 @@
+- The **teacher** chooses the course currency when publishing.
+- The **student** chooses a viewing currency, defaulting from their region.
+- Exchange rates are for **display only**. Stripe charges in the course currency and handles the conversion for the payer.
+- Catalogue responses show the converted price plus the original currency and the rate used.
+- Transactions store their currency.
+- Wallets hold an **amount per currency**, only non-zero ones are kept, and an amount may go **negative**.

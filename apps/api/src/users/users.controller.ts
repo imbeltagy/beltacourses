@@ -103,7 +103,7 @@ export class UsersController {
 
   /**
    * Staff-only: this returns `email` and `confirmed`, so it is not a public
-   * profile endpoint. Public teacher profiles are US-0018's job and will
+   * profile endpoint. Public teacher profiles are the teacher website story's job (docs/user-stories/017) and will
    * need their own narrower response shape.
    */
   @Get(':id')

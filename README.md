@@ -3,11 +3,12 @@
 ## Documentation
 
 - [`docs/roadmap.md`](./docs/roadmap.md) — task board and status.
-- [`docs/user-stories/`](./docs/user-stories/) — the story and acceptance criteria behind each task, with technical details beyond regular user stories.
-- [`docs/architecture/`](./docs/architecture/) — system design references (how a feature actually
-  works end to end, independent of the code). Start with
-  [`file-structure.md`](./docs/architecture/file-structure.md) — where code goes, for both halves of
-  the repo, plus the Tailwind `@source` trap that fails with no error message.
+- [`docs/user-stories/`](./docs/user-stories/) — the business rules behind each task: what the platform
+  does and why, with no technical choices.
+- [`docs/technical-design/`](./docs/technical-design/) — how each story is built: data models, queues,
+  tokens, trade-offs.
+- [`docs/file-structure.md`](./docs/file-structure.md) — where code goes, for both halves of the repo,
+  plus the Tailwind `@source` trap that fails with no error message.
 
 ## Prerequisites
 
