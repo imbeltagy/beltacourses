@@ -18,3 +18,4 @@ Other docs: [`../file-structure.md`](../file-structure.md) is the repo map.
 | [email-service.md](./email-service.md)                         | 006 Email service              | Implemented |
 | [smtp-service.md](./smtp-service.md) | 006 Email service | Proposed |
 | [auth.md](./auth.md)                                           | 003 AuthN, 004 AuthZ           | Implemented |
+| [users.md](./users.md) | 001 Users | Implemented |
