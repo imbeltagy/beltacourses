@@ -19,3 +19,4 @@ Other docs: [`../file-structure.md`](../file-structure.md) is the repo map.
 | [04-smtp-service.md](./04-smtp-service.md) | 006 Email service | Proposed |
 | [05-file-upload.md](./05-file-upload.md) | 005 File upload | Implemented |
 | [06-video-upload-and-fetching.md](./06-video-upload-and-fetching.md) | 007 Video upload, 014 Progress | Proposed |
+| [07-tenancy-and-courses.md](./07-tenancy-and-courses.md) | 008, 017-019, 022-024, 035 | Proposed |
