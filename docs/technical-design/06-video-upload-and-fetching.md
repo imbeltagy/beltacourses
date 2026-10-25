@@ -57,10 +57,38 @@ A locked lecture serves neither video nor content (business story 014).
 - The presigned URL is the capability: it is not logged and not cached by the API.
 - Streaming goes direct from S3 (range requests) — the API never proxies video bytes.
 
+## Proposed: HLS streaming (to check later)
+
+Not decided. Replaces the presigned-MP4 delivery in section 3 if adopted.
+
+- **No full download.** HLS splits a video into 4-6 second segments, so playback starts after a few,
+  seeking fetches only the target, and quality switches per segment.
+- **Flow:** multipart upload → S3 original → conversion → S3 HLS output → CloudFront → player. The bucket
+  is private, readable only by CloudFront. After the section 3 access check, the API issues short-lived
+  **signed cookies** (not URLs: HLS is hundreds of requests). The video is `processing` until `ready`.
+- **Conversion:** H.264 + AAC, 360p to 1080p. Keep the original privately for re-encoding.
+- **Who converts and delivers:** AWS MediaConvert + CloudFront (leaning), an FFmpeg worker, or a managed
+  service (Cloudflare Stream, Mux, Bunny). Cloudflare in front of S3 is a poor fit. Decide on hours of
+  video in year one and who runs the pipeline.
+- **Protection:** private bucket and signed cookies from the start. Later: watermark, AES-128 HLS. DRM is
+  skipped at this size. Screen recording cannot be stopped.
+
+## Proposed: live sessions (to check later)
+
+Not decided. Serves stories 025 and 026. Live video is bought from a provider, not built.
+
+- **Two modes, chosen by the teacher and priced differently:** interactive (WebRTC, students can speak;
+  LiveKit) costs more, broadcast (RTMP in, HLS out; Amazon IVS) costs less. One internal interface hides
+  the mode; the price per mode is configuration (stories 019, 023).
+- **Flow:** "Start" creates a room or stream and gives the teacher a publish token. A booked student gets
+  a short-lived view token. The provider records to S3, an idempotent webhook marks the session finished,
+  and the recording goes through the same conversion into its lecture. Missed sessions play like any
+  recorded lecture.
+- **Failures:** teacher disconnect (allow rejoin), recording never arrives (mark `recording_missing`,
+  alert), viewer cap, expiring tokens.
+
 ## Open questions
 
-- Transcoding / HLS: not in scope now; a presigned MP4 is enough for the MVP. Revisit if bandwidth or
-  device support becomes a problem.
-- Maximum video size and allowed mime types (also open for the file service).
-- Whether `ready` should wait on a virus/format check.
-- Live-course recordings (stories 025/026) reuse the same private path; confirm when that is designed.
+- Maximum video size and allowed mime types.
+- Whether `ready` waits on a virus/format check.
+- Whether to launch with one live mode or both.
