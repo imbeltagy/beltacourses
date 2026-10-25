@@ -1,16 +1,16 @@
 # Tenancy and course ownership
 
-- **Implements:** `008-course-authoring`, `017-teacher-website`, `018-exclusive-content`, `019-teacher-plans`, `022-academy-accounts`, `023-academy-plans`, `024-academy-course-workflow`, `035-academy-moderator`
+- **Implements:** `008-course-authoring`, `017-teacher-website`, `018-exclusive-content`, `019-teacher-plans`, `023-academy-plans`
 - **Status:** Proposed — nothing is built
 
 ## Two scopes
 
 "Tenant" covers two separate things. Keep them apart.
 
-| Scope         | Decides                                              | Applies to                          |
-| ------------- | ---------------------------------------------------- | ----------------------------------- |
-| **Ownership** | Whose website lists a course, and who is paid        | Every teacher and academy, any plan |
-| **Identity**  | Which accounts exist, plus purchases and progress    | **Exclusive tenants only**          |
+| Scope         | Decides                                           | Applies to                          |
+| ------------- | ------------------------------------------------- | ----------------------------------- |
+| **Ownership** | Whose website lists a course, and who is paid     | Every teacher and academy, any plan |
+| **Identity**  | Which accounts exist, plus purchases and progress | **Exclusive tenants only**          |
 
 On the website plan students use their main account (017), so there is no separate identity there.
 
@@ -29,10 +29,10 @@ On the website plan students use their main account (017), so there is no separa
 
 ## Queries
 
-| Where    | Filter                                       |
-| -------- | -------------------------------------------- |
-| Platform | `exclusive = false AND status = published`   |
-| Website  | `tenant_id = X AND status = published`       |
+| Where    | Filter                                     |
+| -------- | ------------------------------------------ |
+| Platform | `exclusive = false AND status = published` |
+| Website  | `tenant_id = X AND status = published`     |
 
 Banners are tenant-scoped the same way: a website shows only its own (016, 017).
 
@@ -51,18 +51,14 @@ The request's domain or subdomain maps to a tenant. The platform domain means "n
 reads and writes go through a shared repository layer that applies the tenant filter, so a query cannot
 forget it.
 
-## Academy invitations
+## Academies
 
-`invitations`: academy, email, token, status (`pending`, `accepted`, `declined`, `expired`), expiry.
-
-- Teacher has an account: the invitation shows in their account.
-- No account yet: the email link goes to sign-up, then accepting links them to the academy.
-- Accepting links teacher and academy. Removing the link leaves the academy's courses with the academy.
+Staff, invitations and the profit split are in [08-academies.md](./08-academies.md).
 
 ## Rules
 
-- Teacher leaves an academy: the academy keeps the course; the teacher's own website does not list it;
-  the teacher keeps the agreed share of past sales.
+- Teacher removed from an academy: the academy keeps the course and the teacher's own website does not
+  list it (see 08).
 - An exclusive tenant cannot also sell on the main platform.
 - Changing plan **out of** exclusive is blocked in the first version, because its students have isolated
   accounts that cannot reach the main platform.

@@ -1,3 +1,3 @@
-An academy registers as its own entity and gets an **academy moderator** account.
+An academy registers as its own entity. A person signs up as an **academy moderator**, then creates the academy and becomes its **owner**.
 
-Wallet, invitations and acting on behalf of the academy are covered in 035.
+A person can own more than one academy. Owners, moderators, wallet and invitations are covered in 035.

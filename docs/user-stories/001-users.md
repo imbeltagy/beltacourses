@@ -17,4 +17,4 @@ Only created by super admin and receive an email to login and reset password
 
 Regular sign up and choose one of the three roles
 
-- Academy moderator invites already existing teachers to the acadmy or not signed users to create account and join the academy
+- The academy owner or a moderator invites already existing teachers, or people without an account, to join the academy. Only the owner invites moderators.

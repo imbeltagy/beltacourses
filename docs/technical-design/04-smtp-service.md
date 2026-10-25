@@ -19,11 +19,11 @@ caller → EmailService.send() → email queue (BullMQ) → EmailProcessor → S
 
 ## Environments
 
-|      | Dev                                           | Prod                                                |
-| ---- | --------------------------------------------- | --------------------------------------------------- |
-| SMTP | Mailpit (`axllent/mailpit`), `localhost:1025` | Amazon SES, `eu-north-1`, via its SMTP endpoint     |
-| Mail | Never delivered, read at `localhost:8025`     | Sent from `no-reply@<our domain>`                   |
-| Auth | any user and password                         | SES SMTP credentials from secrets, TLS on 587       |
+|      | Dev                                           | Prod                                            |
+| ---- | --------------------------------------------- | ----------------------------------------------- |
+| SMTP | Mailpit (`axllent/mailpit`), `localhost:1025` | Amazon SES, `eu-north-1`, via its SMTP endpoint |
+| Mail | Never delivered, read at `localhost:8025`     | Sent from `no-reply@<our domain>`               |
+| Auth | any user and password                         | SES SMTP credentials from secrets, TLS on 587   |
 
 Prod needs: verified domain, DKIM, SPF and DMARC records, SES production access (new accounts are
 sandboxed), and bounce/complaint handling over SNS to a webhook.

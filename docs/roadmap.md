@@ -60,12 +60,12 @@ Rules:
 
 ## Phase 3 — Academies
 
-| #     | Task                                                                                                  | Story                                                | Status  | Depends on          |
-| ----- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------- | ------------------- |
-| T-024 | Academy sign up                                                                                       | [022](./user-stories/022-academy-accounts.md)        | Pending | T-003               |
-| T-025 | Academy plans + academy size tiers (≤10, ≤50, >50 teachers) with website/exclusive add-ons            | [023](./user-stories/023-academy-plans.md)           | Pending | T-021, T-024        |
-| T-026 | Academy moderator account (wallet + teacher invitations)                                              | [035](./user-stories/035-academy-moderator.md)       | Pending | T-024, T-009        |
-| T-027 | Academy course workflow — teacher authors, academy reviews/publishes, per-course price & profit split | [024](./user-stories/024-academy-course-workflow.md) | Pending | T-026, T-007, T-011 |
+| #     | Task                                                                                                              | Story                                                | Status  | Depends on          |
+| ----- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------- | ------------------- |
+| T-024 | Academy sign up                                                                                                   | [022](./user-stories/022-academy-accounts.md)        | Pending | T-003               |
+| T-025 | Academy plans + academy size tiers (≤10, ≤50, >50 teachers) with website/exclusive add-ons                        | [023](./user-stories/023-academy-plans.md)           | Pending | T-021, T-024        |
+| T-026 | Academy staff — owner and moderators, academy wallet, teacher and moderator invitations                           | [035](./user-stories/035-academy-staff.md)           | Pending | T-024, T-009        |
+| T-027 | Academy course workflow — teacher authors, academy staff publish, academy sets price and per-teacher profit share | [024](./user-stories/024-academy-course-workflow.md) | Pending | T-026, T-007, T-011 |
 
 ## Phase 4 — Live Courses & Assignments
 

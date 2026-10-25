@@ -101,6 +101,20 @@ other request uses the platform's normal, higher limit.
 - `PermissionsGuard` refuses every client role outright, so `@Permissions` is safe without an
   accompanying `@Roles` — a forgotten `@Roles` cannot expose a route to a student or teacher.
 
+## Proposed: verify before saving (to do later)
+
+Not built. Sign-up does not create a user until the email is verified.
+
+- Registering stores a **pending registration** (email, tenant, hashed password, profile, expiry) or an
+  equivalent signed token, and sends the verification email. No `users` row exists yet.
+- Clicking the link creates the user, already confirmed.
+- Nobody can squat someone else's email, and unverified attempts leave no junk rows.
+- A registration for an email that already has an account gets the same response as a new one, so the
+  form never reveals who has an account.
+- Replaces the current flow, which creates the row first and sets `confirmed` later.
+- Accounts stay separate per tenant (see [07-tenancy-and-courses.md](./07-tenancy-and-courses.md)), so
+  the pending registration and its link carry the tenant.
+
 ## Glossary
 
 - **Client** — student, teacher, or academy moderator.
