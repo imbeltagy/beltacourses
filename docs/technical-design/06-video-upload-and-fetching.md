@@ -2,7 +2,7 @@
 
 - **Implements:** `007-video-upload`, `014-progress-tracking` (access gate)
 - **Status:** Proposed — nothing is built yet
-- **Builds on:** [file-upload.md](./file-upload.md)
+- **Builds on:** [05-file-upload.md](./05-file-upload.md)
 - **Blocks:** course authoring and purchase. No paid content may be uploaded before this lands.
 
 ## Problem

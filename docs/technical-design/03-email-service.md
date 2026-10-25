@@ -1,7 +1,7 @@
 # Email service
 
 - **Implements:** `006-email-service`
-- **Status:** Implemented — a queue-backed SMTP replacement is proposed in [smtp-service.md](./smtp-service.md)
+- **Status:** Implemented — a queue-backed SMTP replacement is proposed in [04-smtp-service.md](./04-smtp-service.md)
 
 ## Shape
 

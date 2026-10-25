@@ -1,7 +1,7 @@
 # SMTP service
 
 - **Implements:** `006-email-service`
-- **Status:** Proposed — replaces the Gmail transport in [email-service.md](./email-service.md)
+- **Status:** Proposed — replaces the Gmail transport in [03-email-service.md](./03-email-service.md)
 
 ## Design
 

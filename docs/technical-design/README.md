@@ -11,11 +11,11 @@ Each document starts with a header:
 
 Other docs: [`../file-structure.md`](../file-structure.md) is the repo map.
 
-| Document                                                       | Implements                     | Status      |
-| -------------------------------------------------------------- | ------------------------------ | ----------- |
-| [file-upload.md](./file-upload.md)                             | 005 File upload                | Implemented |
-| [video-upload-and-fetching.md](./video-upload-and-fetching.md) | 007 Video upload, 014 Progress | Proposed    |
-| [email-service.md](./email-service.md)                         | 006 Email service              | Implemented |
-| [smtp-service.md](./smtp-service.md) | 006 Email service | Proposed |
-| [auth.md](./auth.md)                                           | 003 AuthN, 004 AuthZ           | Implemented |
-| [users.md](./users.md) | 001 Users | Implemented |
+| Document | Implements | Status |
+| --- | --- | --- |
+| [01-users.md](./01-users.md) | 001 Users | Implemented |
+| [02-auth.md](./02-auth.md) | 003 AuthN, 004 AuthZ | Implemented |
+| [03-email-service.md](./03-email-service.md) | 006 Email service | Implemented |
+| [04-smtp-service.md](./04-smtp-service.md) | 006 Email service | Proposed |
+| [05-file-upload.md](./05-file-upload.md) | 005 File upload | Implemented |
+| [06-video-upload-and-fetching.md](./06-video-upload-and-fetching.md) | 007 Video upload, 014 Progress | Proposed |
