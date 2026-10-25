@@ -16,4 +16,5 @@ Other docs: [`../file-structure.md`](../file-structure.md) is the repo map.
 | [file-upload.md](./file-upload.md)                             | 005 File upload                | Implemented |
 | [video-upload-and-fetching.md](./video-upload-and-fetching.md) | 007 Video upload, 014 Progress | Proposed    |
 | [email-service.md](./email-service.md)                         | 006 Email service              | Implemented |
+| [smtp-service.md](./smtp-service.md) | 006 Email service | Proposed |
 | [auth.md](./auth.md)                                           | 003 AuthN, 004 AuthZ           | Implemented |
