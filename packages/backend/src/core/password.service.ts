@@ -6,11 +6,6 @@ const DEFAULT_SALT_ROUNDS = 12;
 const MIN_SALT_ROUNDS = 4;
 const MAX_SALT_ROUNDS = 15;
 
-/**
- * The only class responsible for turning a plaintext password into a stored
- * hash and back. Feature services own who gets to call it and who gets to
- * read the resulting hash — this class only knows bcrypt.
- */
 @Injectable()
 export class PasswordService {
   private readonly saltRounds: number;

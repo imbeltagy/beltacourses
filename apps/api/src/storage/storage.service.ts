@@ -16,7 +16,7 @@ export class StorageService {
     private readonly s3: S3Adapter,
   ) {}
 
-  /** `2026/08/<uuid>.png` — date prefix keeps bucket listings navigable. */
+  /** `2026/08/<uuid>.png` */
   private generateKey(originalName: string): string {
     const now = new Date();
     const year = now.getUTCFullYear();
@@ -53,7 +53,6 @@ export class StorageService {
     }
   }
 
-  /** Uploads many files, preserving input order in the response. */
   async uploadMany(files: FileToUpload[]): Promise<UploadedFile[]> {
     const uploaded = await Promise.all(files.map((file) => this.upload(file)));
     return uploaded.map(({ id, url }) => ({ id, url }));
@@ -65,28 +64,18 @@ export class StorageService {
     return file;
   }
 
-  /** Marks the file deleted. The object stays in S3 until the cleanup worker runs. */
+  /** Marks the metadata deleted. The object stays in S3 until the cleanup worker runs. */
   async softDelete(id: string): Promise<void> {
     const changed = await this.repository.softDelete(id);
     if (changed === 0) throw new AppException(ErrorCode.FILE_NOT_FOUND);
   }
 
-  /**
-   * Bulk soft delete. Returns the ids that actually transitioned. Unknown or
-   * already-deleted ids are silently skipped rather than failing the whole call —
-   * partial success is the normal case for a bulk operation, and the caller can
-   * diff the response against what it sent.
-   */
   async softDeleteMany(ids: string[]): Promise<string[]> {
     const deleted = await this.repository.softDeleteMany(ids);
     return deleted.map(({ id }) => id);
   }
 
-  /**
-   * Irreversible. NOT exposed over HTTP — only the cleanup worker calls this.
-   * S3 first: if S3 fails we keep the row so the file is still reachable for a
-   * retry on the next run.
-   */
+  // Delete metadata and delete S3 object
   async hardDelete(id: string): Promise<void> {
     const file = await this.repository.findByIdIncludingDeleted(id);
     if (!file) throw new AppException(ErrorCode.FILE_NOT_FOUND);

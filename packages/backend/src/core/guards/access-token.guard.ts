@@ -6,13 +6,6 @@ import type { RequestUser } from '../auth.types';
 import { SessionService } from '../session.service';
 import { TokenService } from '../token.service';
 
-/**
- * Verifies the bearer access token and, for moderators only, confirms the
- * Redis session it names is still alive. Trades a DB hit (the old
- * behaviour) for a 30 min / 5 min TTL (D8) — the worst case is a deleted
- * client keeping access for up to 30 min, and a moderator's session is
- * killed instantly by logout regardless of TTL.
- */
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
   constructor(

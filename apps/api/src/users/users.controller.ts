@@ -101,11 +101,6 @@ export class UsersController {
     return this.usersService.update(user.id, dto, avatar);
   }
 
-  /**
-   * Staff-only: this returns `email` and `confirmed`, so it is not a public
-   * profile endpoint. Public teacher profiles are the teacher website story's job (docs/user-stories/017) and will
-   * need their own narrower response shape.
-   */
   @Get(':id')
   @Auth({ roles: MODERATOR_ROLES, permissions: PERMISSIONS.USERS_READ })
   @ApiOperation({ summary: 'Get a user by id' })

@@ -1,6 +1,4 @@
-import type { EMAIL_LOCALES } from './email.constants';
-
-export type EmailLocale = (typeof EMAIL_LOCALES)[number];
+export type EmailLocale = 'ar' | 'en';
 
 /**
  * Every template and the `{{variables}}` its HTML and subject expect. A

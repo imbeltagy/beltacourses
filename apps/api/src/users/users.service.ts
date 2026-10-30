@@ -128,19 +128,10 @@ export class UsersService {
     if (changed === 0) throw new AppException(ErrorCode.USER_NOT_FOUND);
   }
 
-  /**
-   * The only way another feature reaches a row carrying `hashed_password`.
-   * Auth uses this for login; nothing else should.
-   */
   findByEmailWithPassword(email: string): Promise<User | null> {
     return this.usersRepository.findByEmailWithPassword(email);
   }
 
-  /**
-   * Not reachable over HTTP — `GroupsService` is its only caller (D18). It
-   * owns the two rules that are about the *user*, while the group's own
-   * existence check stays in `GroupsService`.
-   */
   async setGroup(userId: string, groupId: string | null): Promise<PublicUser> {
     const user = await this.usersRepository.findById(userId);
     if (!user) throw new AppException(ErrorCode.USER_NOT_FOUND);
@@ -153,9 +144,6 @@ export class UsersService {
       group_id: groupId,
     });
 
-    // Must run after the write, and a Redis failure must propagate as a
-    // 503 — the caller must not be told the change landed cleanly while the
-    // old sessions are still live with the old permissions.
     await this.sessionService.removeAllUserSessions(userId);
 
     return updated;

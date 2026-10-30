@@ -39,11 +39,6 @@ import { GroupsService } from './groups.service';
 export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
 
-  /**
-   * Route-order trap: `GET /groups/:id` uses `ParseUUIDPipe`, so if `:id`
-   * were declared first the literal path `/groups/permissions` would 400
-   * instead of resolving. Must stay declared before `GET /groups/:id`.
-   */
   @Get('permissions')
   @Auth({
     roles: MODERATOR_ROLES,
@@ -57,12 +52,6 @@ export class GroupsController {
     return this.groupsService.permissionCatalog();
   }
 
-  /**
-   * Writes are `super_admin`-only while reads accept `groups:read`: an
-   * admin who could edit groups could grant themselves `users:*` —
-   * self-escalation. Reads are safe and an admin UI needs the catalog to
-   * render, so reads are permission-gated and writes are role-gated.
-   */
   @Post()
   @Auth({ roles: Role.super_admin })
   @ApiOperation({ summary: 'Create a permission group' })

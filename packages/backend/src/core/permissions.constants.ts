@@ -14,7 +14,7 @@ export const PERMISSIONS = {
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
-/** The shape `GET /groups/permissions` returns — a UI renders one section per resource. */
+/** The shape `GET /groups/permissions` returns */
 export const PERMISSION_GROUPS = {
   USERS: {
     FULL_ACCESS: PERMISSIONS.USERS_FULL_ACCESS,

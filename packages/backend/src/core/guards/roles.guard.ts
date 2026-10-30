@@ -22,8 +22,7 @@ export class RolesGuard implements CanActivate {
     );
 
     if (!roles || roles.length === 0) {
-      // A wiring bug, not a client error — @Roles() itself also throws at
-      // import time, so this branch should be unreachable. Keep it anyway.
+      // A wiring bug, not a client error
       throw new InternalServerErrorException(
         'RolesGuard used without @Roles()',
       );

@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma';
 
-/**
- * Replaces the deleted `core/users.repository.ts`. Prisma only.
- */
 @Injectable()
 export class PermissionsRepository {
   constructor(private readonly prisma: PrismaService) {}

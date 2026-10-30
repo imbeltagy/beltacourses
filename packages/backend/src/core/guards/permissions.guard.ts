@@ -3,7 +3,6 @@ import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { AppException, ErrorCode } from '../../errors';
 import { Role } from '@repo/db';
-import { isModerator } from '../auth.constants';
 import type { RequestUser } from '../auth.types';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
 import { hasAllPermissions } from '../permissions';
@@ -22,23 +21,20 @@ export class PermissionsGuard implements CanActivate {
       Permission[] | undefined
     >(PERMISSIONS_KEY, [context.getHandler(), context.getClass()]);
 
-    // Nothing declared, so there is nothing to enforce — the guard is a
-    // no-op and safe to attach unconditionally. Deliberately asymmetric
-    // with RolesGuard (D9): a permissions guard with nothing to check is a
-    // legitimate "any authenticated moderator" route.
-    if (!permissions || permissions.length === 0) return true;
-
     const request = context
       .switchToHttp()
       .getRequest<Request & { user?: RequestUser }>();
     const user = request.user;
     if (!user) throw new AppException(ErrorCode.UNAUTHORIZED);
 
+    if (user.role === Role.super_admin) return true;
+
     // A permission-gated route is staff-only by definition, so a student or
     // teacher is refused here even if @Roles was forgotten.
-    if (!isModerator(user.role)) throw new AppException(ErrorCode.FORBIDDEN);
+    if (user.role !== Role.admin) throw new AppException(ErrorCode.FORBIDDEN);
 
-    if (user.role === Role.super_admin) return true;
+    // Nothing declared, so there is nothing to enforce . Any authenticated admin can access.
+    if (!permissions || permissions.length === 0) return true;
 
     const granted = await this.permissionsRepository.findByUserId(user.id);
     if (!hasAllPermissions(granted, permissions)) {

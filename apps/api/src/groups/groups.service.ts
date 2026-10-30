@@ -33,7 +33,7 @@ export class GroupsService {
     return group;
   }
 
-  list(query: ListGroupsQueryDto): Promise<ListGroupsResult> {
+  async list(query: ListGroupsQueryDto): Promise<ListGroupsResult> {
     return this.groupsRepository.findMany(query).then(({ items, total }) => ({
       items,
       total,
@@ -62,13 +62,7 @@ export class GroupsService {
     });
   }
 
-  /**
-   * Does not clear `User.group_id`: `onDelete: SetNull` only fires on a
-   * hard delete, and `PermissionsRepository.findByUserId` already returns
-   * `[]` for a soft-deleted group. So an admin whose group is soft-deleted
-   * silently loses all permissions, which is the correct fail-closed
-   * outcome.
-   */
+  // Admin whose group is soft-deleted silently loses all permissions
   async softDelete(id: string): Promise<void> {
     const changed = await this.groupsRepository.softDelete(id);
     if (changed === 0) throw new AppException(ErrorCode.GROUP_NOT_FOUND);
@@ -83,12 +77,6 @@ export class GroupsService {
     return this.usersService.setGroup(userId, groupId);
   }
 
-  /**
-   * Checking membership first (rather than unconditionally clearing
-   * `group_id`) is what makes this route honest — without it it would
-   * happily "remove" a user from a group they were never in, and would let
-   * a stale UI clear an assignment someone else had just changed.
-   */
   async unassignUser(groupId: string, userId: string): Promise<void> {
     await this.findById(groupId);
 

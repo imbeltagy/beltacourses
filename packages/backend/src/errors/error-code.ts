@@ -1,15 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 
-/**
- * Every error the API can return, as the `error` field of the response body.
- *
- * The frontend mirrors this list in `@repo/frontend-features`
- * (`types/api/errors.ts`) and keys its translations by these values under
- * `errors.api` — so adding a member here means adding it there and to both
- * message files. Values equal their names; never rename one, clients switch
- * on it.
- */
-export enum ErrorCode {
+export const enum ErrorCode {
   // Generic — what the exception filter falls back to.
   INTERNAL_ERROR = 'INTERNAL_ERROR',
   SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
@@ -41,10 +32,6 @@ export enum ErrorCode {
   FILE_NOT_FOUND = 'FILE_NOT_FOUND',
 }
 
-/**
- * The HTTP status each code is sent with. Kept here, once, so a call site is
- * `new AppException(ErrorCode.X)` and cannot pair a code with the wrong status.
- */
 export const ERROR_STATUS: Record<ErrorCode, HttpStatus> = {
   [ErrorCode.INTERNAL_ERROR]: HttpStatus.INTERNAL_SERVER_ERROR,
   [ErrorCode.SERVICE_UNAVAILABLE]: HttpStatus.SERVICE_UNAVAILABLE,

@@ -26,10 +26,7 @@ import type { RequestUser } from '@repo/backend/core';
 import { UserResponse } from '../users/dto/response/user.dto';
 import { REGISTERABLE_ROLES } from '../users/users.constants';
 import { AuthService } from './auth.service';
-import {
-  AUTH_THROTTLE_LIMIT,
-  AUTH_THROTTLE_TTL_SECONDS,
-} from './auth.constants';
+import { AUTH_THROTTLE_LIMIT, AUTH_THROTTLE_TTL } from './auth.constants';
 import { Auth } from './decorators/auth.decorator';
 import { LoginDto } from './dto/request/login.dto';
 import { RefreshDto } from './dto/request/refresh.dto';
@@ -58,7 +55,7 @@ const REGISTER_BODY = {
 const AUTH_THROTTLE = {
   default: {
     limit: AUTH_THROTTLE_LIMIT,
-    ttl: AUTH_THROTTLE_TTL_SECONDS * 1000,
+    ttl: AUTH_THROTTLE_TTL,
   },
 };
 

@@ -44,7 +44,6 @@ export class StorageRepository {
     });
   }
 
-  /** Removes the row. Does NOT touch S3. */
   async hardDelete(id: string): Promise<void> {
     await this.prisma.client.fileMetadata.delete({ where: { id } });
   }

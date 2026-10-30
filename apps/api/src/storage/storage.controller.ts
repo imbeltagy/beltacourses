@@ -65,7 +65,6 @@ export class StorageController {
     return this.storageService.uploadMany(files);
   }
 
-  /** Must stay declared before `GET /storage/:id` — it already is. */
   @Delete('soft')
   @Auth({ roles: MODERATOR_ROLES })
   @ApiOperation({

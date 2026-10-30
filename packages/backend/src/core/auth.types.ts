@@ -1,6 +1,6 @@
 import type { Role } from '@repo/db';
 
-/** The subset of a user that goes into a token. Structural — never a Prisma row type at the boundary. */
+/** Token payload (part of claims) */
 export type TokenUser = { id: string; email: string; name: string; role: Role };
 
 export type TokenType = 'access' | 'refresh';

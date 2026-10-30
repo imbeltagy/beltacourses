@@ -2,7 +2,6 @@ import { HttpException } from '@nestjs/common';
 import { ERROR_STATUS, ErrorCode } from './error-code';
 import type { ErrorBody } from './error-body.types';
 
-/** Throw this instead of Nest's `*Exception` classes. */
 export class AppException extends HttpException {
   constructor(
     readonly error: ErrorCode,
