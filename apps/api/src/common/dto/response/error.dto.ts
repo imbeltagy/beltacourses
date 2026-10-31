@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ErrorBody, ErrorCode } from '@repo/backend/errors';
 
 /** Body of every non-2xx response. Produced by `AppExceptionFilter`. */
-export class ErrorResponse implements ErrorBody {
+export class ErrorResponseDto implements ErrorBody {
   @ApiProperty({ example: 409, description: 'The HTTP status.' })
   code!: number;
 

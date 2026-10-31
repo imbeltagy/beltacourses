@@ -1,4 +1,4 @@
-import { ErrorResponse } from '../../common/dto/response/error.dto';
+import { ErrorResponseDto } from '../../common/dto/response/error.dto';
 import { applyDecorators, Type, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -49,7 +49,7 @@ export function Auth(options: AuthOptions = {}) {
   const decorators = [
     ApiBearerAuth('access-token'),
     ApiUnauthorizedResponse({
-      type: ErrorResponse,
+      type: ErrorResponseDto,
       description:
         'Missing, invalid or expired access token, or the session was revoked.',
     }),
@@ -68,7 +68,7 @@ export function Auth(options: AuthOptions = {}) {
   if (roles.length > 0 || permissions.length > 0) {
     decorators.push(
       ApiForbiddenResponse({
-        type: ErrorResponse,
+        type: ErrorResponseDto,
         description:
           'Authenticated, but the role or permissions do not allow this.',
       }),

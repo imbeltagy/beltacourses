@@ -101,7 +101,13 @@ controller (app)  →  service  →  repository  →  Prisma
 - **`*.types.ts` / `*.dto.ts`** — types when the shape is only compile-time; DTO classes only when
   runtime validation is actually needed (a JSON body). No DTO for a request with nothing to validate.
   A DTO carrying `class-validator` or `@ApiProperty` decorators is HTTP-shaped, so it lives in the
-  **app** alongside the controller; the package method takes plain values.
+  **app** alongside the controller; the package method takes plain values. The one exception is
+  `@repo/backend/pagination` (see the Swagger section).
+- **Service return types** — a Prisma model returned as is uses the Prisma type (`User`). A query
+  with `include`/`select` gets an alias in `<feature>.types.ts` built from Prisma
+  (`Prisma.UserGetPayload<{ include: typeof USER_INCLUDE }>`). Only a shape the service builds from
+  scratch gets a hand-written type. No `PublicUser`-style projections: hiding fields is the
+  response DTO's job.
 
 Inside an app feature, HTTP-shaped classes go under `dto/`, split by direction, **one file per
 endpoint** and always suffixed `.dto.ts`:
@@ -113,10 +119,10 @@ apps/<app>/src/<feature>/
 └── dto/
     ├── request/   # validated request bodies — class-validator + @ApiProperty
     │   └── soft-delete-files.dto.ts      -> SoftDeleteFilesDto
-    └── response/  # documented response schemas — @ApiProperty, `implements` the package type
-        ├── uploaded-file.dto.ts          -> UploadedFileResponse   (POST /storage)
-        ├── file-metadata.dto.ts          -> FileMetadataResponse   (GET /storage/:id)
-        └── soft-delete-files.dto.ts      -> SoftDeleteFilesResponse (DELETE /storage/soft)
+    └── response/  # documented response schemas — @ApiProperty + @Expose
+        ├── uploaded-file.dto.ts          -> UploadedFileResponseDto   (POST /storage)
+        ├── file-metadata.dto.ts          -> FileMetadataResponseDto   (GET /storage/:id)
+        └── soft-delete-files.dto.ts      -> SoftDeleteFilesResponseDto (DELETE /storage/soft)
 ```
 
 Response classes are DTOs too — they are decorated transport shapes, same as request bodies, so both
@@ -124,7 +130,20 @@ sit under `dto/` and both use the `.dto.ts` suffix; the directory carries the di
 filename. Name each file after the endpoint it serves rather than the feature, so one lumped
 `<feature>.response.ts` never accumulates. A response class that extends another simply imports it
 from its sibling file — Swagger resolves the inheritance across files unchanged. Nothing else in the
-app may `@ApiProperty` a type; see the Swagger section.
+app may `@ApiProperty` a type; see the Swagger section. Every DTO class name ends in `Dto`.
+
+Controllers never build a response themselves: each resource has a `<feature>.mapper.ts` holding a
+class of static methods (`UserMapper`, `GroupMapper`). `toDto(row)` maps one row, `toListDto(page)`
+maps a `Paginated<Row>`, and `toEntity(dto)` is added only when a caller needs the reverse — never
+speculatively. Mappers use `plainToInstance(XResponseDto, row, { excludeExtraneousValues: true })`,
+so only `@Expose()`d fields survive: every response field carries `@Expose()`, nested objects also
+need `@Type(() => NestedDto)`, and derived fields use `@Transform(({ obj }) => ...)`. Mapper specs
+live in `test/<feature>/<feature>.mapper.spec.ts`.
+
+A list response `implements ListResponseDto<ItemDto>` from `@repo/backend/pagination`: `data` is the
+item DTO array and `meta` is `PaginationMetadataDto`, both redeclared with `@ApiProperty`, `@Expose`
+and `@Type`. The service returns `Paginated<Row>` (`{ data, meta }`), and list query DTOs extend
+`PaginationQueryDto`.
 
 Repeatable jobs use `queue.upsertJobScheduler(id, { pattern }, { name })` in `onModuleInit`, not
 `queue.add(..., { repeat })`. The legacy form keys the schedule by a hash of its options, so changing
@@ -136,7 +155,9 @@ a cron pattern registers a second schedule next to the old one instead of replac
   on each route, `@ApiParam` for path params, and `@ApiNotFoundResponse` (etc.) for the error paths a
   caller must handle.
 - **Swagger stays in the app.** Never put `@ApiProperty` on a type in `packages/backend` — OpenAPI is
-  a transport concern, and doing so drags `@nestjs/swagger` into shared providers.
+  a transport concern, and doing so drags `@nestjs/swagger` into shared providers. The exception is
+  `@repo/backend/pagination`: the pagination query, metadata and list DTOs are identical in every
+  app, so they live there once.
 - When a package exposes a plain type and the app needs a documented schema, declare a response class
   in the app that `implements` the package type. The compiler then catches drift between the
   documented shape and the real one.

@@ -85,7 +85,7 @@ export default async function UserDetailsPage({
 
         {groups &&
           (groups.success ? (
-            <UserGroupCard user={user.data} groups={groups.data.items} />
+            <UserGroupCard user={user.data} groups={groups.data.data} />
           ) : (
             <Alert variant="destructive">
               <AlertTitle>

@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
  * No `refresh_token` here — there is no rotation (D5). The refresh token
  * presented to `POST /auth/refresh` stays valid for its full TTL.
  */
-export class RefreshResponse {
+export class RefreshResponseDto {
   @ApiProperty({
     description:
       'Bearer access token. 30 min for clients, 5 min for moderators.',

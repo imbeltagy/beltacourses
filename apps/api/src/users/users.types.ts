@@ -1,16 +1,11 @@
-import type { FileMetadata, User } from '@repo/db';
+import type { Prisma } from '@repo/db';
 
-export type PublicUser = Omit<
-  User,
-  'hashed_password' | 'deleted_at' | 'avatar_id' | 'group_id'
-> & {
-  avatar: Pick<FileMetadata, 'id' | 'url'> | null;
-  group: { id: string; name: string } | null;
-};
+export const USER_INCLUDE = {
+  avatar: true,
+  group: true,
+} as const satisfies Prisma.UserInclude;
 
-export type ListUsersResult = {
-  items: PublicUser[];
-  total: number;
-  page: number;
-  limit: number;
-};
+/** A user row as Prisma returns it with `USER_INCLUDE`. */
+export type UserWithRelations = Prisma.UserGetPayload<{
+  include: typeof USER_INCLUDE;
+}>;

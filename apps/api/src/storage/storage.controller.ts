@@ -1,4 +1,4 @@
-import { ErrorResponse } from '../common/dto/response/error.dto';
+import { ErrorResponseDto } from '../common/dto/response/error.dto';
 import {
   Body,
   Controller,
@@ -26,9 +26,9 @@ import { Auth } from '../auth/decorators/auth.decorator';
 import { StorageService } from './storage.service';
 import type { UploadedFile } from './storage.types';
 import { SoftDeleteFilesDto } from './dto/request/soft-delete-files.dto';
-import { FileMetadataResponse } from './dto/response/file-metadata.dto';
-import { SoftDeleteFilesResponse } from './dto/response/soft-delete-files.dto';
-import { UploadedFileResponse } from './dto/response/uploaded-file.dto';
+import { FileMetadataResponseDto } from './dto/response/file-metadata.dto';
+import { SoftDeleteFilesResponseDto } from './dto/response/soft-delete-files.dto';
+import { UploadedFileResponseDto } from './dto/response/uploaded-file.dto';
 import { FileMetadata } from '@repo/db';
 
 @ApiTags('storage')
@@ -58,7 +58,7 @@ export class StorageController {
       },
     },
   })
-  @ApiCreatedResponse({ type: [UploadedFileResponse] })
+  @ApiCreatedResponse({ type: [UploadedFileResponseDto] })
   upload(
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<UploadedFile[]> {
@@ -71,10 +71,10 @@ export class StorageController {
     summary: 'Soft-delete files',
     description: 'hard delete happens throw a background job withing a week',
   })
-  @ApiOkResponse({ type: SoftDeleteFilesResponse })
+  @ApiOkResponse({ type: SoftDeleteFilesResponseDto })
   async softDelete(
     @Body() dto: SoftDeleteFilesDto,
-  ): Promise<SoftDeleteFilesResponse> {
+  ): Promise<SoftDeleteFilesResponseDto> {
     const deleted = await this.storageService.softDeleteMany(dto.ids);
     return { deleted };
   }
@@ -86,9 +86,9 @@ export class StorageController {
     description: 'Soft-deleted files are treated as missing and return 404.',
   })
   @ApiParam({ name: 'id', format: 'uuid' })
-  @ApiOkResponse({ type: FileMetadataResponse })
+  @ApiOkResponse({ type: FileMetadataResponseDto })
   @ApiNotFoundResponse({
-    type: ErrorResponse,
+    type: ErrorResponseDto,
     description: 'Unknown id, or the file was soft-deleted.',
   })
   getById(@Param('id', ParseUUIDPipe) id: string): Promise<FileMetadata> {

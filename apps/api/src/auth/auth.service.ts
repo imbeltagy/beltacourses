@@ -9,12 +9,12 @@ import {
 } from '@repo/backend/core';
 import type { RequestUser, TokenUser } from '@repo/backend/core';
 import type { FileToUpload } from '../storage/storage.types';
-import type { PublicUser } from '../users/users.types';
+import type { UserWithRelations } from '../users/users.types';
 import { UsersService } from '../users/users.service';
 import type { LoginDto } from './dto/request/login.dto';
 import type { RegisterDto } from './dto/request/register.dto';
-import type { LoginResponse } from './dto/response/login.dto';
-import type { RefreshResponse } from './dto/response/refresh.dto';
+import type { LoginResponseDto } from './dto/response/login.dto';
+import type { RefreshResponseDto } from './dto/response/refresh.dto';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +25,10 @@ export class AuthService {
     private readonly sessionService: SessionService,
   ) {}
 
-  register(dto: RegisterDto, avatar?: FileToUpload): Promise<PublicUser> {
+  register(
+    dto: RegisterDto,
+    avatar?: FileToUpload,
+  ): Promise<UserWithRelations> {
     return this.usersService.create(
       {
         email: dto.email,
@@ -39,13 +42,13 @@ export class AuthService {
   }
 
   /** POST /auth/login — clients only. */
-  async login(dto: LoginDto): Promise<LoginResponse> {
+  async login(dto: LoginDto): Promise<LoginResponseDto> {
     const user = await this.verifyCredentials(dto.email, dto.password);
     return this.issueTokens(user, false);
   }
 
   /** POST /auth/moderators/login — staff only. Creates the Redis session. */
-  async loginModerator(dto: LoginDto): Promise<LoginResponse> {
+  async loginModerator(dto: LoginDto): Promise<LoginResponseDto> {
     const user = await this.verifyCredentials(dto.email, dto.password);
     return this.issueTokens(user, true);
   }
@@ -55,9 +58,9 @@ export class AuthService {
    * a role mismatch, so neither endpoint reveals whether an address is staff.
    */
   private async issueTokens(
-    user: PublicUser,
+    user: UserWithRelations,
     expectModerator: boolean,
-  ): Promise<LoginResponse> {
+  ): Promise<LoginResponseDto> {
     if (isModerator(user.role) !== expectModerator) {
       throw new AppException(ErrorCode.INVALID_CREDENTIALS);
     }
@@ -90,10 +93,10 @@ export class AuthService {
   }
 
   /** POST /auth/refresh — both role groups. */
-  async refresh(refreshToken: string): Promise<RefreshResponse> {
+  async refresh(refreshToken: string): Promise<RefreshResponseDto> {
     const claims = this.tokenService.verifyRefreshToken(refreshToken);
 
-    let user: PublicUser;
+    let user: UserWithRelations;
     try {
       user = await this.usersService.findById(claims.sub);
     } catch (error) {
@@ -152,7 +155,7 @@ export class AuthService {
   async verifyCredentials(
     email: string,
     password: string,
-  ): Promise<PublicUser> {
+  ): Promise<UserWithRelations> {
     const user = await this.usersService.findByEmailWithPassword(email);
     if (!user) throw new AppException(ErrorCode.INVALID_CREDENTIALS);
 

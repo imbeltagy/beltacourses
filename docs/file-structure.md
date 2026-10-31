@@ -77,10 +77,11 @@ apps/api/src/storage/
 ├── storage.constants.ts       env reads, queue and cron names
 ├── s3.constants.ts
 ├── storage.types.ts           compile-time shapes
+├── <feature>.mapper.ts        row → response DTO (static toDto / toListDto)
 └── dto/
     ├── request/               validated bodies — class-validator + @ApiProperty
     │   └── soft-delete-files.dto.ts
-    └── response/              documented schemas — @ApiProperty, `implements` the package type
+    └── response/              documented schemas — @ApiProperty + @Expose
         ├── uploaded-file.dto.ts        POST   /storage
         ├── file-metadata.dto.ts        GET    /storage/:id
         └── soft-delete-files.dto.ts    DELETE /storage/soft
@@ -123,8 +124,10 @@ all.
 
 ### Where Swagger lives
 
-In the app, always. `@ApiProperty` never appears in `packages/backend` — OpenAPI is a transport
-concern, and putting it there would drag `@nestjs/swagger` into shared providers.
+In the app, except `@repo/backend/pagination`. `@ApiProperty` appears nowhere else in
+`packages/backend` — OpenAPI is a transport concern, and putting it there would drag
+`@nestjs/swagger` into shared providers. The pagination DTOs are the same in every app, so they live
+there once.
 
 When a package exposes a plain type and the app needs a documented schema, the app declares a
 response class that `implements` the package type. The compiler then catches drift between the
@@ -135,12 +138,14 @@ object. The UI is served at `/docs`, wired in `apps/<app>/src/main.ts`.
 
 ## `packages/backend` (`@repo/backend`)
 
-Providers shared across backend apps. Three subpaths today:
+Providers shared across backend apps, plus the shared pagination DTOs:
 
 ```
 packages/backend/src/
 ├── core/        auth primitives: password, token, session, permissions,
 │                guards and decorators.  @repo/backend/core
+├── pagination/  PaginationQueryDto, PaginationMetadataDto, ListResponseDto,
+│                Paginated<T>.  @repo/backend/pagination
 ├── prisma/      PrismaService — the one Prisma handle.  @repo/backend/prisma
 └── redis/       RedisService — the one Redis connection. @repo/backend/redis
 ```

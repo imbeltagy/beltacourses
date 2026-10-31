@@ -68,11 +68,11 @@ export default async function UsersPage({
         </Alert>
       ) : (
         <>
-          <UsersTable users={result.data.items} />
+          <UsersTable users={result.data.data} />
           <TablePagination
-            page={result.data.page}
-            limit={result.data.limit}
-            total={result.data.total}
+            page={result.data.meta.page}
+            limit={result.data.meta.limit}
+            total={result.data.meta.total}
           />
         </>
       )}

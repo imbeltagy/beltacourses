@@ -1,17 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import type { ListGroupsResult } from '../../groups.types';
-import { GroupResponse } from './group.dto';
+import {
+  ListResponseDto,
+  PaginationMetadataDto,
+} from '@repo/backend/pagination';
+import { Expose, Type } from 'class-transformer';
+import { GroupResponseDto } from './group.dto';
 
-export class ListGroupsResponse implements ListGroupsResult {
-  @ApiProperty({ type: [GroupResponse] })
-  items: GroupResponse[];
+export class ListGroupsResponseDto implements ListResponseDto<GroupResponseDto> {
+  @ApiProperty({ type: [GroupResponseDto] })
+  @Expose()
+  @Type(() => GroupResponseDto)
+  data: GroupResponseDto[];
 
-  @ApiProperty()
-  total: number;
-
-  @ApiProperty()
-  page: number;
-
-  @ApiProperty()
-  limit: number;
+  @ApiProperty({ type: PaginationMetadataDto })
+  @Expose()
+  @Type(() => PaginationMetadataDto)
+  meta: PaginationMetadataDto;
 }

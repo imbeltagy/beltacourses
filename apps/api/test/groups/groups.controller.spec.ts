@@ -6,6 +6,9 @@ import {
 } from '@repo/backend/core';
 import { GroupsController } from '../../src/groups/groups.controller';
 import { GroupsService } from '../../src/groups/groups.service';
+import { GroupResponseDto } from '../../src/groups/dto/response/group.dto';
+import { UserResponseDto } from '../../src/users/dto/response/user.dto';
+import { groupRow, userRow } from '../helpers/rows';
 
 describe('GroupsController', () => {
   let controller: GroupsController;
@@ -55,40 +58,45 @@ describe('GroupsController', () => {
 
   it('create delegates to the service', async () => {
     const dto = { name: 'Support', permissions: ['users:read'] };
-    groupsService.create.mockResolvedValue({ id: 'group-1' });
+    groupsService.create.mockResolvedValue(groupRow());
 
-    await expect(controller.create(dto as never)).resolves.toEqual({
-      id: 'group-1',
-    });
+    await expect(controller.create(dto as never)).resolves.toBeInstanceOf(
+      GroupResponseDto,
+    );
     expect(groupsService.create).toHaveBeenCalledWith(dto);
   });
 
-  it('list delegates to the service', async () => {
+  it('list maps each row to GroupResponseDto and keeps the meta', async () => {
     const query = { page: 1, limit: 20 };
     groupsService.list.mockResolvedValue({
-      items: [],
-      total: 0,
-      page: 1,
-      limit: 20,
+      data: [groupRow()],
+      meta: { total: 1, page: 1, limit: 20 },
     });
 
-    await controller.list(query as never);
+    const result = await controller.list(query as never);
 
     expect(groupsService.list).toHaveBeenCalledWith(query);
+    expect(result.data[0]).toBeInstanceOf(GroupResponseDto);
+    expect(result.data[0]).toMatchObject({
+      permissions: ['users:read'],
+      users_count: 2,
+    });
+    expect({ ...result.meta }).toEqual({ total: 1, page: 1, limit: 20 });
   });
 
   it('getById delegates to findById', async () => {
-    groupsService.findById.mockResolvedValue({ id: 'group-1' });
+    groupsService.findById.mockResolvedValue(groupRow());
 
-    await expect(controller.getById('group-1')).resolves.toEqual({
+    await expect(controller.getById('group-1')).resolves.toMatchObject({
       id: 'group-1',
+      permissions: ['users:read'],
     });
     expect(groupsService.findById).toHaveBeenCalledWith('group-1');
   });
 
   it('update delegates to the service with the path id', async () => {
     const dto = { name: 'New Name' };
-    groupsService.update.mockResolvedValue({ id: 'group-1' });
+    groupsService.update.mockResolvedValue(groupRow());
 
     await controller.update('group-1', dto as never);
 
@@ -111,15 +119,24 @@ describe('GroupsController', () => {
   });
 
   it('assignUser returns the updated user', async () => {
-    groupsService.assignUser.mockResolvedValue({
-      id: 'user-1',
-      group: { id: 'group-1' },
-    });
+    groupsService.assignUser.mockResolvedValue(
+      userRow({
+        group_id: 'group-1',
+        group: {
+          id: 'group-1',
+          name: 'Support',
+          description: null,
+          created_at: new Date(),
+          updated_at: new Date(),
+          deleted_at: null,
+        },
+      }),
+    );
 
-    await expect(controller.assignUser('group-1', 'user-1')).resolves.toEqual({
-      id: 'user-1',
-      group: { id: 'group-1' },
-    });
+    const result = await controller.assignUser('group-1', 'user-1');
+
+    expect(result).toBeInstanceOf(UserResponseDto);
+    expect({ ...result.group }).toEqual({ id: 'group-1', name: 'Support' });
     expect(groupsService.assignUser).toHaveBeenCalledWith('group-1', 'user-1');
   });
 

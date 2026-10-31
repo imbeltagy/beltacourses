@@ -1,9 +1,13 @@
-/** Every list endpoint on the API returns this envelope. */
-export type Paginated<T> = {
-  items: T[];
+export type PaginationMetadata = {
   total: number;
   page: number;
   limit: number;
+};
+
+/** Every list endpoint on the API returns this envelope. */
+export type Paginated<T> = {
+  data: T[];
+  meta: PaginationMetadata;
 };
 
 export type PaginationQuery = {

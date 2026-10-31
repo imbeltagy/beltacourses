@@ -3,6 +3,8 @@ import { Role } from '@repo/db';
 import { AccessTokenGuard } from '@repo/backend/core';
 import { AuthController } from '../../src/auth/auth.controller';
 import { AuthService } from '../../src/auth/auth.service';
+import { UserResponseDto } from '../../src/users/dto/response/user.dto';
+import { userRow } from '../helpers/rows';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -41,9 +43,12 @@ describe('AuthController', () => {
       name: 'A',
       role: Role.student,
     };
-    authService.register.mockResolvedValue({ id: 'user-1' });
+    authService.register.mockResolvedValue(userRow());
 
-    await expect(controller.register(dto)).resolves.toEqual({ id: 'user-1' });
+    const result = await controller.register(dto);
+
+    expect(result).toBeInstanceOf(UserResponseDto);
+    expect(result).not.toHaveProperty('hashed_password');
     expect(authService.register).toHaveBeenCalledWith(dto, undefined);
   });
 
@@ -55,7 +60,7 @@ describe('AuthController', () => {
       role: Role.student,
     };
     const avatar = { originalname: 'avatar.png' } as Express.Multer.File;
-    authService.register.mockResolvedValue({ id: 'user-1' });
+    authService.register.mockResolvedValue(userRow());
 
     await controller.register(dto, avatar);
 

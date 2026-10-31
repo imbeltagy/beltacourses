@@ -1,4 +1,5 @@
 import { errorWith } from '../helpers/error-with';
+import { userRow } from '../helpers/rows';
 import { ErrorCode } from '@repo/backend/errors';
 import { Role } from '@repo/db';
 import { PasswordService, SessionService } from '@repo/backend/core';
@@ -7,19 +8,9 @@ import { UsersService } from '../../src/users/users.service';
 import { AccountEmailsService } from '../../src/users/account-emails.service';
 import { StorageService } from '../../src/storage/storage.service';
 
-const publicUser = (overrides: Partial<Record<string, unknown>> = {}) => ({
-  id: 'user-1',
-  email: 'student@beltacourses.com',
-  name: 'Jane Doe',
-  role: Role.student,
-  confirmed: false,
-  bio: null,
-  gender: null,
-  date_of_birth: null,
-  avatar: null,
-  group: null,
-  created_at: new Date('2026-08-01T00:00:00.000Z'),
-  updated_at: new Date('2026-08-01T00:00:00.000Z'),
+// Loose overrides: tests pass partial relations (e.g. an avatar with only id + url).
+const user = (overrides: Partial<Record<string, unknown>> = {}) => ({
+  ...userRow(),
   ...overrides,
 });
 
@@ -87,29 +78,29 @@ describe('UsersService', () => {
       confirmed: false,
     };
 
-    it('hashes the password and never returns it', async () => {
+    // The row keeps its hash; UserResponseDto's @Expose list is what drops it.
+    it('stores the hash, never the plaintext password', async () => {
       repository.findIdByEmail.mockResolvedValue(null);
       passwordService.hash.mockResolvedValue('hashed-value');
-      repository.create.mockResolvedValue(publicUser());
+      repository.create.mockResolvedValue(user());
 
-      const result = await service.create(input);
+      await service.create(input);
 
       expect(passwordService.hash).toHaveBeenCalledWith('plaintext-password');
       expect(repository.create).toHaveBeenCalledWith(
         expect.objectContaining({ hashed_password: 'hashed-value' }),
       );
-      expect(result).not.toHaveProperty('hashed_password');
     });
 
     it('emails the new user in the given locale', async () => {
       repository.findIdByEmail.mockResolvedValue(null);
       passwordService.hash.mockResolvedValue('hashed-value');
-      repository.create.mockResolvedValue(publicUser());
+      repository.create.mockResolvedValue(user());
 
       await service.create(input, undefined, 'ar');
 
       expect(accountEmails.sendAccountCreated).toHaveBeenCalledWith(
-        publicUser(),
+        user(),
         'ar',
       );
     });
@@ -117,7 +108,7 @@ describe('UsersService', () => {
     it('sends no email when no locale is given (self-registration)', async () => {
       repository.findIdByEmail.mockResolvedValue(null);
       passwordService.hash.mockResolvedValue('hashed-value');
-      repository.create.mockResolvedValue(publicUser());
+      repository.create.mockResolvedValue(user());
 
       await service.create(input);
 
@@ -145,7 +136,7 @@ describe('UsersService', () => {
       passwordService.hash.mockResolvedValue('hashed-value');
       storageService.upload.mockResolvedValue({ id: 'file-1', url: 'url' });
       repository.create.mockResolvedValue(
-        publicUser({ avatar: { id: 'file-1', url: 'url' } }),
+        user({ avatar: { id: 'file-1', url: 'url' } }),
       );
 
       await service.create(input, avatarFile());
@@ -159,7 +150,7 @@ describe('UsersService', () => {
     it('does not upload anything when no avatar is provided', async () => {
       repository.findIdByEmail.mockResolvedValue(null);
       passwordService.hash.mockResolvedValue('hashed-value');
-      repository.create.mockResolvedValue(publicUser());
+      repository.create.mockResolvedValue(user());
 
       await service.create(input);
 
@@ -192,10 +183,10 @@ describe('UsersService', () => {
     });
 
     it('returns the user when found', async () => {
-      const user = publicUser();
-      repository.findById.mockResolvedValue(user);
+      const row = user();
+      repository.findById.mockResolvedValue(row);
 
-      await expect(service.findById('user-1')).resolves.toBe(user);
+      await expect(service.findById('user-1')).resolves.toBe(row);
     });
   });
 
@@ -209,8 +200,8 @@ describe('UsersService', () => {
     });
 
     it('never writes hashed_password', async () => {
-      repository.findById.mockResolvedValue(publicUser());
-      repository.update.mockResolvedValue(publicUser());
+      repository.findById.mockResolvedValue(user());
+      repository.update.mockResolvedValue(user());
 
       await service.update('user-1', { name: 'New Name' });
 
@@ -223,11 +214,11 @@ describe('UsersService', () => {
 
     it('uploads a new avatar, attaches it, and soft-deletes the previous one', async () => {
       repository.findById.mockResolvedValue(
-        publicUser({ avatar: { id: 'old-file', url: 'url' } }),
+        user({ avatar: { id: 'old-file', url: 'url' } }),
       );
       storageService.upload.mockResolvedValue({ id: 'new-file', url: 'url' });
       repository.update.mockResolvedValue(
-        publicUser({ avatar: { id: 'new-file', url: 'url' } }),
+        user({ avatar: { id: 'new-file', url: 'url' } }),
       );
 
       await service.update('user-1', {}, avatarFile());
@@ -241,10 +232,10 @@ describe('UsersService', () => {
     });
 
     it('does not soft-delete anything when there was no previous avatar', async () => {
-      repository.findById.mockResolvedValue(publicUser({ avatar: null }));
+      repository.findById.mockResolvedValue(user({ avatar: null }));
       storageService.upload.mockResolvedValue({ id: 'new-file', url: 'url' });
       repository.update.mockResolvedValue(
-        publicUser({ avatar: { id: 'new-file', url: 'url' } }),
+        user({ avatar: { id: 'new-file', url: 'url' } }),
       );
 
       await service.update('user-1', {}, avatarFile());
@@ -254,9 +245,9 @@ describe('UsersService', () => {
 
     it('does not upload or touch the avatar when none is provided', async () => {
       repository.findById.mockResolvedValue(
-        publicUser({ avatar: { id: 'old-file', url: 'url' } }),
+        user({ avatar: { id: 'old-file', url: 'url' } }),
       );
-      repository.update.mockResolvedValue(publicUser());
+      repository.update.mockResolvedValue(user());
 
       await service.update('user-1', { name: 'New Name' });
 
@@ -265,7 +256,7 @@ describe('UsersService', () => {
     });
 
     it('soft-deletes the newly uploaded avatar when the update fails', async () => {
-      repository.findById.mockResolvedValue(publicUser());
+      repository.findById.mockResolvedValue(user());
       storageService.upload.mockResolvedValue({ id: 'new-file', url: 'url' });
       repository.update.mockRejectedValue(new Error('unique constraint'));
 
@@ -294,7 +285,7 @@ describe('UsersService', () => {
 
   describe('findByEmailWithPassword', () => {
     it('delegates straight to the repository', async () => {
-      const row = { ...publicUser(), hashed_password: 'hashed-value' };
+      const row = { ...user(), hashed_password: 'hashed-value' };
       repository.findByEmailWithPassword.mockResolvedValue(row);
 
       await expect(
@@ -325,7 +316,7 @@ describe('UsersService', () => {
     });
 
     it('rejects a non-admin target with bad request', async () => {
-      repository.findById.mockResolvedValue(publicUser({ role: Role.teacher }));
+      repository.findById.mockResolvedValue(user({ role: Role.teacher }));
 
       await expect(service.setGroup('user-1', 'group-1')).rejects.toThrow(
         errorWith(ErrorCode.ONLY_ADMIN_CAN_HAVE_GROUP),
@@ -334,9 +325,9 @@ describe('UsersService', () => {
     });
 
     it('clears the group on null', async () => {
-      repository.findById.mockResolvedValue(publicUser({ role: Role.admin }));
+      repository.findById.mockResolvedValue(user({ role: Role.admin }));
       repository.update.mockResolvedValue(
-        publicUser({ role: Role.admin, group: null }),
+        user({ role: Role.admin, group: null }),
       );
 
       await service.setGroup('user-1', null);
@@ -347,11 +338,11 @@ describe('UsersService', () => {
     });
 
     it('calls removeAllUserSessions after the write, not before', async () => {
-      repository.findById.mockResolvedValue(publicUser({ role: Role.admin }));
+      repository.findById.mockResolvedValue(user({ role: Role.admin }));
       const callOrder: string[] = [];
       repository.update.mockImplementation(() => {
         callOrder.push('update');
-        return Promise.resolve(publicUser({ role: Role.admin }));
+        return Promise.resolve(user({ role: Role.admin }));
       });
       sessionService.removeAllUserSessions.mockImplementation(() => {
         callOrder.push('removeAllUserSessions');
@@ -364,8 +355,8 @@ describe('UsersService', () => {
     });
 
     it('propagates a removeAllUserSessions failure', async () => {
-      repository.findById.mockResolvedValue(publicUser({ role: Role.admin }));
-      repository.update.mockResolvedValue(publicUser({ role: Role.admin }));
+      repository.findById.mockResolvedValue(user({ role: Role.admin }));
+      repository.update.mockResolvedValue(user({ role: Role.admin }));
       sessionService.removeAllUserSessions.mockRejectedValue(
         new Error('ECONNREFUSED'),
       );

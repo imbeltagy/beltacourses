@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { UploadedFile } from '../../storage.types';
 
-export class UploadedFileResponse implements UploadedFile {
+export class UploadedFileResponseDto implements UploadedFile {
   @ApiProperty({
     description:
       'Id of the file metadata row. Reference files by this everywhere.',

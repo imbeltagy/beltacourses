@@ -2,36 +2,23 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@repo/backend/prisma';
 import type { Prisma, User } from '@repo/db';
 import type { ListUsersQueryDto } from './dto/request/list-users.dto';
-import type { PublicUser } from './users.types';
-
-const PUBLIC_USER_OMIT = {
-  hashed_password: true,
-  deleted_at: true,
-  group_id: true,
-} as const;
-
-const INCLUDE = {
-  avatar: { select: { id: true, url: true } },
-  group: { select: { id: true, name: true } },
-} as const;
+import { USER_INCLUDE, type UserWithRelations } from './users.types';
 
 @Injectable()
 export class UsersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(data: Prisma.UserUncheckedCreateInput): Promise<PublicUser> {
+  create(data: Prisma.UserUncheckedCreateInput): Promise<UserWithRelations> {
     return this.prisma.client.user.create({
       data,
-      include: INCLUDE,
-      omit: PUBLIC_USER_OMIT,
+      include: USER_INCLUDE,
     });
   }
 
-  findById(id: string): Promise<PublicUser | null> {
+  findById(id: string): Promise<UserWithRelations | null> {
     return this.prisma.client.user.findFirst({
       where: { id, deleted_at: null },
-      include: INCLUDE,
-      omit: PUBLIC_USER_OMIT,
+      include: USER_INCLUDE,
     });
   }
 
@@ -51,7 +38,7 @@ export class UsersRepository {
 
   async findMany(
     query: ListUsersQueryDto,
-  ): Promise<{ items: PublicUser[]; total: number }> {
+  ): Promise<{ items: UserWithRelations[]; total: number }> {
     const where: Prisma.UserWhereInput = {
       deleted_at: null,
       ...(query.role ? { role: query.role } : {}),
@@ -68,8 +55,7 @@ export class UsersRepository {
     const [items, total] = await this.prisma.client.$transaction([
       this.prisma.client.user.findMany({
         where,
-        include: INCLUDE,
-        omit: PUBLIC_USER_OMIT,
+        include: USER_INCLUDE,
         skip: (query.page - 1) * query.limit,
         take: query.limit,
         orderBy: { created_at: 'desc' },
@@ -83,12 +69,11 @@ export class UsersRepository {
   update(
     id: string,
     data: Prisma.UserUncheckedUpdateInput,
-  ): Promise<PublicUser> {
+  ): Promise<UserWithRelations> {
     return this.prisma.client.user.update({
       where: { id },
       data,
-      include: INCLUDE,
-      omit: PUBLIC_USER_OMIT,
+      include: USER_INCLUDE,
     });
   }
 

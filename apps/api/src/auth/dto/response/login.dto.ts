@@ -6,7 +6,7 @@ import { ApiProperty } from '@nestjs/swagger';
  * the first because both are produced by the same service method
  * (`AuthService`'s private `issueTokens`).
  */
-export class LoginResponse {
+export class LoginResponseDto {
   @ApiProperty({
     description:
       'Bearer access token. 30 min for clients, 5 min for moderators.',

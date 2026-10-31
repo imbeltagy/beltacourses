@@ -1,4 +1,4 @@
-import { ErrorResponse } from '../common/dto/response/error.dto';
+import { ErrorResponseDto } from '../common/dto/response/error.dto';
 import { Controller, Get } from '@nestjs/common';
 import { AppException, ErrorCode } from '@repo/backend/errors';
 import {
@@ -7,7 +7,7 @@ import {
   ApiServiceUnavailableResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { HealthStatusResponse } from './dto/response/health-status.dto';
+import { HealthStatusResponseDto } from './dto/response/health-status.dto';
 import { HealthCheckService } from './health-check.service';
 
 @ApiTags('health-check')
@@ -17,12 +17,12 @@ export class HealthCheckController {
 
   @Get()
   @ApiOperation({ summary: 'Check Postgres and Redis connectivity' })
-  @ApiOkResponse({ type: HealthStatusResponse })
+  @ApiOkResponse({ type: HealthStatusResponseDto })
   @ApiServiceUnavailableResponse({
-    type: ErrorResponse,
+    type: ErrorResponseDto,
     description: 'At least one dependency is unreachable.',
   })
-  async getStatus(): Promise<HealthStatusResponse> {
+  async getStatus(): Promise<HealthStatusResponseDto> {
     const status = await this.healthCheckService.getStatus();
     if (status.postgres === 'down' || status.redis === 'down') {
       throw new AppException(

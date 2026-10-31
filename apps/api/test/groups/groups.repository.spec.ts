@@ -58,20 +58,18 @@ describe('GroupsRepository', () => {
     repository = module.get(GroupsRepository);
   });
 
-  it('flattens permissions to string[] and reads users_count from _count', async () => {
+  it('returns the row as Prisma gives it, with permissions and _count', async () => {
     prisma.client.group.findFirst.mockResolvedValue(row());
 
-    const result = await repository.findById('group-1');
-
-    expect(result).toEqual({
-      id: 'group-1',
-      name: 'Support',
-      description: null,
-      permissions: ['users:read'],
-      users_count: 2,
-      created_at: row().created_at,
-      updated_at: row().updated_at,
-    });
+    await expect(repository.findById('group-1')).resolves.toEqual(row());
+    expect(prisma.client.group.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: {
+          permissions: true,
+          _count: { select: { users: true } },
+        },
+      }),
+    );
   });
 
   it('findById filters deleted_at: null', async () => {

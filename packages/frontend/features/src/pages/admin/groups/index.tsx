@@ -58,11 +58,11 @@ export default async function GroupsPage({
         </Alert>
       ) : (
         <>
-          <GroupsTable groups={result.data.items} />
+          <GroupsTable groups={result.data.data} />
           <TablePagination
-            page={result.data.page}
-            limit={result.data.limit}
-            total={result.data.total}
+            page={result.data.meta.page}
+            limit={result.data.meta.limit}
+            total={result.data.meta.total}
           />
         </>
       )}

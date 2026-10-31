@@ -1,20 +1,12 @@
 import { errorWith } from '../helpers/error-with';
+import { groupRow } from '../helpers/rows';
 import { ErrorCode } from '@repo/backend/errors';
 import { PERMISSION_GROUPS } from '@repo/backend/core';
 import { GroupsRepository } from '../../src/groups/groups.repository';
 import { GroupsService } from '../../src/groups/groups.service';
 import { UsersService } from '../../src/users/users.service';
 
-const group = (overrides: Partial<Record<string, unknown>> = {}) => ({
-  id: 'group-1',
-  name: 'Support',
-  description: null,
-  permissions: ['users:read'],
-  users_count: 0,
-  created_at: new Date('2026-08-01T00:00:00.000Z'),
-  updated_at: new Date('2026-08-01T00:00:00.000Z'),
-  ...overrides,
-});
+const group = groupRow;
 
 describe('GroupsService', () => {
   let service: GroupsService;

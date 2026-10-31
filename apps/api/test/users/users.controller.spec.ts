@@ -8,6 +8,8 @@ import {
 import type { RequestUser } from '@repo/backend/core';
 import { UsersController } from '../../src/users/users.controller';
 import { UsersService } from '../../src/users/users.service';
+import { UserResponseDto } from '../../src/users/dto/response/user.dto';
+import { userRow } from '../helpers/rows';
 
 const REQUEST_USER: RequestUser = {
   id: 'user-1',
@@ -52,50 +54,53 @@ describe('UsersController', () => {
 
   it('create delegates to the service', async () => {
     const dto = { email: 'a@example.com', password: 'password', name: 'A' };
-    usersService.create.mockResolvedValue({ id: '1' });
+    usersService.create.mockResolvedValue(userRow());
 
     await expect(
       controller.create(dto as never, undefined, 'en'),
-    ).resolves.toEqual({ id: '1' });
+    ).resolves.toBeInstanceOf(UserResponseDto);
     expect(usersService.create).toHaveBeenCalledWith(dto, undefined, 'en');
   });
 
   it('create forwards the uploaded avatar file to the service', async () => {
     const dto = { email: 'a@example.com', password: 'password', name: 'A' };
     const avatar = { originalname: 'avatar.png' } as Express.Multer.File;
-    usersService.create.mockResolvedValue({ id: '1' });
+    usersService.create.mockResolvedValue(userRow());
 
     await controller.create(dto as never, avatar, 'ar');
 
     expect(usersService.create).toHaveBeenCalledWith(dto, avatar, 'ar');
   });
 
-  it('list delegates to the service', async () => {
+  it('list maps each row to UserResponseDto and keeps the meta', async () => {
     const query = { page: 1, limit: 20 };
     usersService.list.mockResolvedValue({
-      items: [],
-      total: 0,
-      page: 1,
-      limit: 20,
+      data: [userRow()],
+      meta: { total: 1, page: 1, limit: 20 },
     });
 
-    await controller.list(query as never);
+    const result = await controller.list(query as never);
 
     expect(usersService.list).toHaveBeenCalledWith(query);
+    expect(result.data[0]).toBeInstanceOf(UserResponseDto);
+    expect(result.data[0]).not.toHaveProperty('hashed_password');
+    expect({ ...result.meta }).toEqual({ total: 1, page: 1, limit: 20 });
   });
 
   it('getById delegates to findById', async () => {
-    usersService.findById.mockResolvedValue({ id: 'user-1' });
+    usersService.findById.mockResolvedValue(userRow());
 
-    await expect(controller.getById('user-1')).resolves.toEqual({
-      id: 'user-1',
-    });
+    const result = await controller.getById('user-1');
+
+    expect(result).toBeInstanceOf(UserResponseDto);
+    expect(result).toMatchObject({ id: 'user-1' });
+    expect(result).not.toHaveProperty('hashed_password');
     expect(usersService.findById).toHaveBeenCalledWith('user-1');
   });
 
   it('update delegates to the service with the path id', async () => {
     const dto = { name: 'New Name' };
-    usersService.update.mockResolvedValue({ id: 'user-1', name: 'New Name' });
+    usersService.update.mockResolvedValue(userRow());
 
     await controller.update('user-1', dto as never);
 
@@ -105,7 +110,7 @@ describe('UsersController', () => {
   it('update forwards the uploaded avatar file to the service', async () => {
     const dto = { name: 'New Name' };
     const avatar = { originalname: 'avatar.png' } as Express.Multer.File;
-    usersService.update.mockResolvedValue({ id: 'user-1' });
+    usersService.update.mockResolvedValue(userRow());
 
     await controller.update('user-1', dto as never, avatar);
 
@@ -120,7 +125,7 @@ describe('UsersController', () => {
   });
 
   it('getMe resolves the profile through the token-derived user id', async () => {
-    usersService.findById.mockResolvedValue({ id: 'user-1' });
+    usersService.findById.mockResolvedValue(userRow());
 
     await controller.getMe(REQUEST_USER);
 
@@ -129,7 +134,7 @@ describe('UsersController', () => {
 
   it('updateMe updates the token-derived user, never a path id', async () => {
     const dto = { name: 'New Name' };
-    usersService.update.mockResolvedValue({ id: 'user-1', name: 'New Name' });
+    usersService.update.mockResolvedValue(userRow());
 
     await controller.updateMe(REQUEST_USER, dto as never);
 
@@ -139,7 +144,7 @@ describe('UsersController', () => {
   it('updateMe forwards the uploaded avatar file to the service', async () => {
     const dto = { name: 'New Name' };
     const avatar = { originalname: 'avatar.png' } as Express.Multer.File;
-    usersService.update.mockResolvedValue({ id: 'user-1' });
+    usersService.update.mockResolvedValue(userRow());
 
     await controller.updateMe(REQUEST_USER, dto as never, avatar);
 

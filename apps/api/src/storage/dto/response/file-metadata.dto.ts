@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UploadedFileResponse } from './uploaded-file.dto';
+import { UploadedFileResponseDto } from './uploaded-file.dto';
 import { FileMetadata } from '@repo/db';
 
-export class FileMetadataResponse
-  extends UploadedFileResponse
+export class FileMetadataResponseDto
+  extends UploadedFileResponseDto
   implements FileMetadata
 {
   @ApiProperty({

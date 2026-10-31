@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { AppException, ErrorCode } from '@repo/backend/errors';
 import { PERMISSION_GROUPS } from '@repo/backend/core';
-import type { PublicUser } from '../users/users.types';
+import type { Paginated } from '@repo/backend/pagination';
+import type { UserWithRelations } from '../users/users.types';
 import { UsersService } from '../users/users.service';
 import type { CreateGroupDto } from './dto/request/create-group.dto';
 import type { ListGroupsQueryDto } from './dto/request/list-groups.dto';
 import type { UpdateGroupDto } from './dto/request/update-group.dto';
 import { GroupsRepository } from './groups.repository';
-import type { ListGroupsResult, PublicGroup } from './groups.types';
+import type { GroupWithRelations } from './groups.types';
 
 @Injectable()
 export class GroupsService {
@@ -16,7 +17,7 @@ export class GroupsService {
     private readonly usersService: UsersService,
   ) {}
 
-  async create(dto: CreateGroupDto): Promise<PublicGroup> {
+  async create(dto: CreateGroupDto): Promise<GroupWithRelations> {
     const existing = await this.groupsRepository.findIdByName(dto.name);
     if (existing) throw new AppException(ErrorCode.GROUP_NAME_ALREADY_EXISTS);
 
@@ -27,22 +28,23 @@ export class GroupsService {
     });
   }
 
-  async findById(id: string): Promise<PublicGroup> {
+  async findById(id: string): Promise<GroupWithRelations> {
     const group = await this.groupsRepository.findById(id);
     if (!group) throw new AppException(ErrorCode.GROUP_NOT_FOUND);
     return group;
   }
 
-  async list(query: ListGroupsQueryDto): Promise<ListGroupsResult> {
-    return this.groupsRepository.findMany(query).then(({ items, total }) => ({
-      items,
-      total,
-      page: query.page,
-      limit: query.limit,
-    }));
+  async list(
+    query: ListGroupsQueryDto,
+  ): Promise<Paginated<GroupWithRelations>> {
+    const { items, total } = await this.groupsRepository.findMany(query);
+    return {
+      data: items,
+      meta: { total, page: query.page, limit: query.limit },
+    };
   }
 
-  async update(id: string, dto: UpdateGroupDto): Promise<PublicGroup> {
+  async update(id: string, dto: UpdateGroupDto): Promise<GroupWithRelations> {
     const existing = await this.groupsRepository.findById(id);
     if (!existing) throw new AppException(ErrorCode.GROUP_NOT_FOUND);
 
@@ -72,7 +74,10 @@ export class GroupsService {
     return PERMISSION_GROUPS;
   }
 
-  async assignUser(groupId: string, userId: string): Promise<PublicUser> {
+  async assignUser(
+    groupId: string,
+    userId: string,
+  ): Promise<UserWithRelations> {
     await this.findById(groupId);
     return this.usersService.setGroup(userId, groupId);
   }

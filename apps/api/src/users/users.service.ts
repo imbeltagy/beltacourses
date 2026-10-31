@@ -10,7 +10,8 @@ import { UsersRepository } from './users.repository';
 import type { CreateUserDto } from './dto/request/create-user.dto';
 import type { ListUsersQueryDto } from './dto/request/list-users.dto';
 import type { UpdateUserDto } from './dto/request/update-user.dto';
-import type { ListUsersResult, PublicUser } from './users.types';
+import type { Paginated } from '@repo/backend/pagination';
+import type { UserWithRelations } from './users.types';
 
 @Injectable()
 export class UsersService {
@@ -27,7 +28,7 @@ export class UsersService {
     avatar?: FileToUpload,
     /** Set by callers where staff create the account: the new user is emailed in this language. */
     welcomeLocale?: EmailLocale,
-  ): Promise<PublicUser> {
+  ): Promise<UserWithRelations> {
     const existing = await this.usersRepository.findIdByEmail(input.email);
     if (existing) throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
 
@@ -36,7 +37,7 @@ export class UsersService {
       ? await this.storageService.upload(avatar)
       : undefined;
 
-    let created: PublicUser;
+    let created: UserWithRelations;
     try {
       created = await this.usersRepository.create({
         email: input.email,
@@ -64,26 +65,25 @@ export class UsersService {
     return created;
   }
 
-  async findById(id: string): Promise<PublicUser> {
+  async findById(id: string): Promise<UserWithRelations> {
     const user = await this.usersRepository.findById(id);
     if (!user) throw new AppException(ErrorCode.USER_NOT_FOUND);
     return user;
   }
 
-  async list(query: ListUsersQueryDto): Promise<ListUsersResult> {
-    return this.usersRepository.findMany(query).then(({ items, total }) => ({
-      items,
-      total,
-      page: query.page,
-      limit: query.limit,
-    }));
+  async list(query: ListUsersQueryDto): Promise<Paginated<UserWithRelations>> {
+    const { items, total } = await this.usersRepository.findMany(query);
+    return {
+      data: items,
+      meta: { total, page: query.page, limit: query.limit },
+    };
   }
 
   async update(
     id: string,
     input: UpdateUserDto,
     avatar?: FileToUpload,
-  ): Promise<PublicUser> {
+  ): Promise<UserWithRelations> {
     const existing = await this.usersRepository.findById(id);
     if (!existing) throw new AppException(ErrorCode.USER_NOT_FOUND);
 
@@ -91,7 +91,7 @@ export class UsersService {
       ? await this.storageService.upload(avatar)
       : undefined;
 
-    let updated: PublicUser;
+    let updated: UserWithRelations;
     try {
       updated = await this.usersRepository.update(id, {
         ...(input.name !== undefined ? { name: input.name } : {}),
@@ -132,7 +132,10 @@ export class UsersService {
     return this.usersRepository.findByEmailWithPassword(email);
   }
 
-  async setGroup(userId: string, groupId: string | null): Promise<PublicUser> {
+  async setGroup(
+    userId: string,
+    groupId: string | null,
+  ): Promise<UserWithRelations> {
     const user = await this.usersRepository.findById(userId);
     if (!user) throw new AppException(ErrorCode.USER_NOT_FOUND);
 

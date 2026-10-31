@@ -1,16 +1,10 @@
-export type PublicGroup = {
-  id: string;
-  name: string;
-  description: string | null;
-  permissions: string[];
-  users_count: number;
-  created_at: Date;
-  updated_at: Date;
-};
+import type { Prisma } from '@repo/db';
 
-export type ListGroupsResult = {
-  items: PublicGroup[];
-  total: number;
-  page: number;
-  limit: number;
-};
+export const GROUP_INCLUDE = {
+  permissions: true,
+  _count: { select: { users: true } },
+} as const satisfies Prisma.GroupInclude;
+
+export type GroupWithRelations = Prisma.GroupGetPayload<{
+  include: typeof GROUP_INCLUDE;
+}>;
