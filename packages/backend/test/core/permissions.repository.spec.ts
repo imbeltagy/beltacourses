@@ -22,7 +22,6 @@ describe('PermissionsRepository', () => {
   it('returns the flattened permission strings', async () => {
     prisma.client.user.findFirst.mockResolvedValue({
       group: {
-        deleted_at: null,
         permissions: [{ permission: 'users:read' }, { permission: 'users:*' }],
       },
     });
@@ -35,17 +34,6 @@ describe('PermissionsRepository', () => {
 
   it('returns [] for a user with no group', async () => {
     prisma.client.user.findFirst.mockResolvedValue({ group: null });
-
-    await expect(repository.findByUserId('admin-1')).resolves.toEqual([]);
-  });
-
-  it('returns [] for a soft-deleted group', async () => {
-    prisma.client.user.findFirst.mockResolvedValue({
-      group: {
-        deleted_at: new Date(),
-        permissions: [{ permission: 'users:*' }],
-      },
-    });
 
     await expect(repository.findByUserId('admin-1')).resolves.toEqual([]);
   });

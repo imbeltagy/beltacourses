@@ -59,10 +59,11 @@ export class GroupsService {
     });
   }
 
-  // Admin whose group is soft-deleted silently loses all permissions
-  async softDelete(id: string): Promise<void> {
-    const changed = await this.groupsRepository.softDelete(id);
-    if (changed === 0) throw new AppException(ErrorCode.GROUP_NOT_FOUND);
+  // Admins in the group are left with no group, so no permissions
+  async delete(id: string): Promise<void> {
+    await this.findById(id); // throws if not found
+
+    await this.groupsRepository.delete(id);
   }
 
   permissionCatalog(): typeof PERMISSION_GROUPS {

@@ -93,8 +93,9 @@ other request uses the platform's normal, higher limit.
   metadata (`@Roles()` / `@Permissions()`), composed per controller with `@Auth()`.
 - Permissions are `resource:action` strings with per-segment `*` wildcards (Apache Shiro
   convention), from a hardcoded catalog covering `users` and `groups`.
-- An admin belongs to at most one group; their effective permissions are exactly the group's. A
-  soft-deleted group grants nothing.
+- An admin belongs to at most one group; their effective permissions are exactly the group's.
+  Deleting a group is permanent: its permissions cascade and its admins are left with no group, so
+  they hold no permissions.
 - `super_admin` bypasses every permission check. Group **writes** and **membership changes**
   (`PUT /users/:id/group` with a required `group_id`; there is no unassign yet) are
   `super_admin`-only; group **reads** accept

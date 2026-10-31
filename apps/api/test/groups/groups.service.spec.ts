@@ -15,7 +15,7 @@ describe('GroupsService', () => {
     findIdByName: jest.Mock;
     findMany: jest.Mock;
     update: jest.Mock;
-    softDelete: jest.Mock;
+    delete: jest.Mock;
   };
 
   beforeEach(() => {
@@ -25,7 +25,7 @@ describe('GroupsService', () => {
       findIdByName: jest.fn(),
       findMany: jest.fn(),
       update: jest.fn(),
-      softDelete: jest.fn(),
+      delete: jest.fn(),
     };
     service = new GroupsService(
       groupsRepository as unknown as GroupsRepository,
@@ -44,7 +44,7 @@ describe('GroupsService', () => {
   });
 
   describe('findById', () => {
-    it('throws missing resource for a missing or soft-deleted group', async () => {
+    it('throws missing resource for a missing group', async () => {
       groupsRepository.findById.mockResolvedValue(null);
 
       await expect(service.findById('group-1')).rejects.toThrow(
@@ -72,21 +72,20 @@ describe('GroupsService', () => {
     });
   });
 
-  describe('softDelete', () => {
+  describe('delete', () => {
     it('throws missing resource for a missing group', async () => {
-      groupsRepository.softDelete.mockResolvedValue(0);
+      groupsRepository.delete.mockResolvedValue(0);
 
-      await expect(service.softDelete('group-1')).rejects.toThrow(
+      await expect(service.delete('group-1')).rejects.toThrow(
         errorWith(ErrorCode.GROUP_NOT_FOUND),
       );
     });
 
-    it('throws on an already-deleted group', async () => {
-      groupsRepository.softDelete.mockResolvedValue(0);
+    it('resolves when the group was deleted', async () => {
+      groupsRepository.delete.mockResolvedValue(1);
 
-      await expect(service.softDelete('group-1')).rejects.toThrow(
-        errorWith(ErrorCode.GROUP_NOT_FOUND),
-      );
+      await expect(service.delete('group-1')).resolves.toBeUndefined();
+      expect(groupsRepository.delete).toHaveBeenCalledWith('group-1');
     });
   });
 

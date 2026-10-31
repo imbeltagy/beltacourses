@@ -45,6 +45,5 @@ export const groupRow = (
   _count: { users: 2 },
   created_at: DATE,
   updated_at: DATE,
-  deleted_at: null,
   ...overrides,
 });

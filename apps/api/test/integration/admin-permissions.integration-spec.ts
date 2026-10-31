@@ -192,7 +192,7 @@ describe('Admin permission groups (integration)', () => {
       .expect(204);
 
     // 9. Assigning a group to a teacher -> 400 (checked here, before the
-    // group is soft-deleted below, so the 400 isn't masked by a 404).
+    // group is deleted below, so the 400 isn't masked by a 404).
     await request(app.getHttpServer())
       .put(`/users/${teacherId}/group`)
       .set('Authorization', `Bearer ${superAdminAccessToken}`)
@@ -206,15 +206,30 @@ describe('Admin permission groups (integration)', () => {
       .send({ group_id: null })
       .expect(400);
 
-    // 6. Soft-delete the group -> the assigned admin gets 403 (fail-closed).
+    // 6. Delete the group -> the row and its permissions are gone, the admin
+    // is left with no group and gets 403; deleting again -> 404.
     await request(app.getHttpServer())
       .delete(`/groups/${groupId}`)
       .set('Authorization', `Bearer ${superAdminAccessToken}`)
       .expect(204);
+    await expect(
+      prisma.client.group.findUnique({ where: { id: groupId } }),
+    ).resolves.toBeNull();
+    await expect(
+      prisma.client.groupPermission.count({ where: { group_id: groupId } }),
+    ).resolves.toBe(0);
+    const adminRow = await prisma.client.user.findUniqueOrThrow({
+      where: { id: adminId },
+    });
+    expect(adminRow.group_id).toBeNull();
     await request(app.getHttpServer())
       .get('/users')
       .set('Authorization', `Bearer ${adminAccessToken}`)
       .expect(403);
+    await request(app.getHttpServer())
+      .delete(`/groups/${groupId}`)
+      .set('Authorization', `Bearer ${superAdminAccessToken}`)
+      .expect(404);
 
     // 7. super_admin reaches every route with no group at all.
     await request(app.getHttpServer())

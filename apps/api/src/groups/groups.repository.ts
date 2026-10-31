@@ -27,14 +27,14 @@ export class GroupsRepository {
 
   findById(id: string): Promise<GroupWithRelations | null> {
     return this.prisma.client.group.findFirst({
-      where: { id, deleted_at: null },
+      where: { id },
       include: GROUP_INCLUDE,
     });
   }
 
   findIdByName(name: string): Promise<{ id: string } | null> {
     return this.prisma.client.group.findFirst({
-      where: { name, deleted_at: null },
+      where: { name },
       select: { id: true },
     });
   }
@@ -43,7 +43,6 @@ export class GroupsRepository {
     query: ListGroupsQueryDto,
   ): Promise<{ items: GroupWithRelations[]; total: number }> {
     const where: Prisma.GroupWhereInput = {
-      deleted_at: null,
       ...(query.search
         ? { name: { contains: query.search, mode: 'insensitive' } }
         : {}),
@@ -89,11 +88,10 @@ export class GroupsRepository {
     });
   }
 
-  async softDelete(id: string): Promise<number> {
-    const result = await this.prisma.client.group.updateMany({
-      where: { id, deleted_at: null },
-      data: { deleted_at: new Date() },
+  /** Permissions cascade; members' `group_id` is cleared by the FK. */
+  async delete(id: string) {
+    await this.prisma.client.group.delete({
+      where: { id },
     });
-    return result.count;
   }
 }

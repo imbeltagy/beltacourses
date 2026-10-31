@@ -16,7 +16,7 @@ describe('GroupsController', () => {
     findById: jest.Mock;
     list: jest.Mock;
     update: jest.Mock;
-    softDelete: jest.Mock;
+    delete: jest.Mock;
     permissionCatalog: jest.Mock;
   };
 
@@ -26,7 +26,7 @@ describe('GroupsController', () => {
       findById: jest.fn(),
       list: jest.fn(),
       update: jest.fn(),
-      softDelete: jest.fn(),
+      delete: jest.fn(),
       permissionCatalog: jest.fn(),
     };
 
@@ -98,18 +98,18 @@ describe('GroupsController', () => {
     expect(groupsService.update).toHaveBeenCalledWith('group-1', dto);
   });
 
-  it('softDelete returns no body (204)', async () => {
-    const { softDelete } = controller;
+  it('delete returns no body (204)', async () => {
+    const { delete: deleteGroup } = controller;
 
     const decoratedStatus: number = Reflect.getMetadata(
       '__httpCode__',
-      softDelete,
+      deleteGroup,
     );
     expect(decoratedStatus).toBe(204);
 
-    groupsService.softDelete.mockResolvedValue(undefined);
+    groupsService.delete.mockResolvedValue(undefined);
 
-    await expect(controller.softDelete('group-1')).resolves.toBeUndefined();
-    expect(groupsService.softDelete).toHaveBeenCalledWith('group-1');
+    await expect(controller.delete('group-1')).resolves.toBeUndefined();
+    expect(groupsService.delete).toHaveBeenCalledWith('group-1');
   });
 });

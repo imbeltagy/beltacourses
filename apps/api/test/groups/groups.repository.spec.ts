@@ -23,7 +23,7 @@ describe('GroupsRepository', () => {
         findMany: jest.Mock;
         count: jest.Mock;
         update: jest.Mock;
-        updateMany: jest.Mock;
+        deleteMany: jest.Mock;
       };
       groupPermission: { deleteMany: jest.Mock; createMany: jest.Mock };
       $transaction: jest.Mock;
@@ -37,7 +37,7 @@ describe('GroupsRepository', () => {
       findMany: jest.fn(),
       count: jest.fn(),
       update: jest.fn(),
-      updateMany: jest.fn(),
+      deleteMany: jest.fn(),
     };
     const groupPermission = { deleteMany: jest.fn(), createMany: jest.fn() };
     prisma = {
@@ -72,17 +72,17 @@ describe('GroupsRepository', () => {
     );
   });
 
-  it('findById filters deleted_at: null', async () => {
+  it('findById looks up by id', async () => {
     prisma.client.group.findFirst.mockResolvedValue(null);
 
     await repository.findById('group-1');
 
     expect(prisma.client.group.findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 'group-1', deleted_at: null } }),
+      expect.objectContaining({ where: { id: 'group-1' } }),
     );
   });
 
-  it('findMany filters deleted_at: null', async () => {
+  it('findMany runs inside $transaction', async () => {
     prisma.client.$transaction.mockResolvedValue([[row()], 1]);
 
     await repository.findMany({ page: 1, limit: 20 });
@@ -118,14 +118,13 @@ describe('GroupsRepository', () => {
     );
   });
 
-  it('softDelete guards on deleted_at: null', async () => {
-    prisma.client.group.updateMany.mockResolvedValue({ count: 1 });
+  it('delete removes the row and returns the count', async () => {
+    prisma.client.group.deleteMany.mockResolvedValue({ count: 1 });
 
-    const count = await repository.softDelete('group-1');
+    const count = await repository.delete('group-1');
 
-    expect(prisma.client.group.updateMany).toHaveBeenCalledWith({
-      where: { id: 'group-1', deleted_at: null },
-      data: { deleted_at: expect.any(Date) as Date },
+    expect(prisma.client.group.deleteMany).toHaveBeenCalledWith({
+      where: { id: 'group-1' },
     });
     expect(count).toBe(1);
   });

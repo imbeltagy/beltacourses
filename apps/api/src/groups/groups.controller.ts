@@ -82,7 +82,7 @@ export class GroupsController {
   @ApiOkResponse({ type: GroupResponseDto })
   @ApiNotFoundResponse({
     type: ErrorResponseDto,
-    description: 'Unknown id, or the group was soft-deleted.',
+    description: 'Unknown id.',
   })
   async getById(
     @Param('id', ParseUUIDPipe) id: string,
@@ -98,7 +98,7 @@ export class GroupsController {
   @ApiOkResponse({ type: GroupResponseDto })
   @ApiNotFoundResponse({
     type: ErrorResponseDto,
-    description: 'Unknown id, or the group was soft-deleted.',
+    description: 'Unknown id.',
   })
   @ApiConflictResponse({
     type: ErrorResponseDto,
@@ -115,13 +115,16 @@ export class GroupsController {
   @Delete(':id')
   @HttpCode(204)
   @Auth({ roles: Role.super_admin })
-  @ApiOperation({ summary: 'Soft-delete a permission group' })
+  @ApiOperation({
+    summary: 'Delete a permission group',
+    description: 'Permanent. Admins in the group are left with no group.',
+  })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiNotFoundResponse({
     type: ErrorResponseDto,
-    description: 'Unknown id, or already deleted.',
+    description: 'Unknown id.',
   })
-  softDelete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.groupsService.softDelete(id);
+  delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    return this.groupsService.delete(id);
   }
 }

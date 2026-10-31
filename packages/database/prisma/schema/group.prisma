@@ -6,9 +6,8 @@ model Group {
   permissions GroupPermission[]
   users       User[]
 
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
-  deleted_at DateTime?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("groups")
 }
