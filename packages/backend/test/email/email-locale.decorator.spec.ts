@@ -1,5 +1,5 @@
 import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
-import { EmailLocaleParam } from '../../src/common/decorators/email-locale.decorator';
+import { EmailLocaleParam } from '../../src/email/email-locale.decorator';
 
 class Host {
   handler(@EmailLocaleParam() _locale: string) {}

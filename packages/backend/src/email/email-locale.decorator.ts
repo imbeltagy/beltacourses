@@ -1,5 +1,6 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { resolveEmailLocale, type EmailLocale } from '@repo/backend/email';
+import { resolveEmailLocale } from './email.locale';
+import type { EmailLocale } from './email.types';
 import type { Request } from 'express';
 
 /**

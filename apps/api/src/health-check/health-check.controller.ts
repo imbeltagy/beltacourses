@@ -1,4 +1,4 @@
-import { ErrorResponseDto } from '../common/dto/response/error.dto';
+import { ErrorResponseDto } from '@repo/backend/errors';
 import { Controller, Get } from '@nestjs/common';
 import { AppException, ErrorCode } from '@repo/backend/errors';
 import {

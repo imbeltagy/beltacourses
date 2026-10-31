@@ -1,4 +1,4 @@
-import { ErrorResponseDto } from '../../common/dto/response/error.dto';
+import { ErrorResponseDto } from '@repo/backend/errors';
 import { applyDecorators, Type, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,

@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ErrorBody, ErrorCode } from '@repo/backend/errors';
+import type { ErrorBody } from './error-body.types';
+import { ErrorCode } from './error-code';
 
 /** Body of every non-2xx response. Produced by `AppExceptionFilter`. */
 export class ErrorResponseDto implements ErrorBody {

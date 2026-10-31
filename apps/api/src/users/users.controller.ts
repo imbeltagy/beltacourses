@@ -1,4 +1,4 @@
-import { ErrorResponseDto } from '../common/dto/response/error.dto';
+import { ErrorResponseDto } from '@repo/backend/errors';
 import {
   Body,
   Controller,
@@ -27,8 +27,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser, MODERATOR_ROLES, PERMISSIONS } from '@repo/backend/core';
 import type { RequestUser } from '@repo/backend/core';
-import { EmailLocaleParam } from '../common/decorators/email-locale.decorator';
-import type { EmailLocale } from '@repo/backend/email';
+import { EmailLocaleParam, type EmailLocale } from '@repo/backend/email';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { CreateUserDto } from './dto/request/create-user.dto';
 import { ListUsersQueryDto } from './dto/request/list-users.dto';
