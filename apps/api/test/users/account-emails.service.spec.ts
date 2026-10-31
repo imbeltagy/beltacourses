@@ -1,8 +1,8 @@
 import { Logger } from '@nestjs/common';
 import { Role } from '@repo/db';
 
-process.env.CLIENT_URL = 'https://app.example.com/';
-process.env.ADMIN_URL = 'https://admin.example.com';
+process.env.CLIENT_FRONTEND_URL = 'https://app.example.com/';
+process.env.ADMIN_FRONTEND_URL = 'https://admin.example.com';
 
 import { AccountEmailsService } from '../../src/users/account-emails.service';
 
