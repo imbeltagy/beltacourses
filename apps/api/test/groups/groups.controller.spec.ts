@@ -7,8 +7,7 @@ import {
 import { GroupsController } from '../../src/groups/groups.controller';
 import { GroupsService } from '../../src/groups/groups.service';
 import { GroupResponseDto } from '../../src/groups/dto/response/group.dto';
-import { UserResponseDto } from '../../src/users/dto/response/user.dto';
-import { groupRow, userRow } from '../helpers/rows';
+import { groupRow } from '../helpers/rows';
 
 describe('GroupsController', () => {
   let controller: GroupsController;
@@ -19,8 +18,6 @@ describe('GroupsController', () => {
     update: jest.Mock;
     softDelete: jest.Mock;
     permissionCatalog: jest.Mock;
-    assignUser: jest.Mock;
-    unassignUser: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -31,8 +28,6 @@ describe('GroupsController', () => {
       update: jest.fn(),
       softDelete: jest.fn(),
       permissionCatalog: jest.fn(),
-      assignUser: jest.fn(),
-      unassignUser: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -116,47 +111,5 @@ describe('GroupsController', () => {
 
     await expect(controller.softDelete('group-1')).resolves.toBeUndefined();
     expect(groupsService.softDelete).toHaveBeenCalledWith('group-1');
-  });
-
-  it('assignUser returns the updated user', async () => {
-    groupsService.assignUser.mockResolvedValue(
-      userRow({
-        group_id: 'group-1',
-        group: {
-          id: 'group-1',
-          name: 'Support',
-          description: null,
-          created_at: new Date(),
-          updated_at: new Date(),
-          deleted_at: null,
-        },
-      }),
-    );
-
-    const result = await controller.assignUser('group-1', 'user-1');
-
-    expect(result).toBeInstanceOf(UserResponseDto);
-    expect({ ...result.group }).toEqual({ id: 'group-1', name: 'Support' });
-    expect(groupsService.assignUser).toHaveBeenCalledWith('group-1', 'user-1');
-  });
-
-  it('unassignUser returns no body (204)', async () => {
-    const { unassignUser } = controller;
-
-    const decoratedStatus: number = Reflect.getMetadata(
-      '__httpCode__',
-      unassignUser,
-    );
-    expect(decoratedStatus).toBe(204);
-
-    groupsService.unassignUser.mockResolvedValue(undefined);
-
-    await expect(
-      controller.unassignUser('group-1', 'user-1'),
-    ).resolves.toBeUndefined();
-    expect(groupsService.unassignUser).toHaveBeenCalledWith(
-      'group-1',
-      'user-1',
-    );
   });
 });

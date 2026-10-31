@@ -130,8 +130,9 @@ describe('Admin permission groups (integration)', () => {
     groupId = (createResponse.body as { id: string }).id;
 
     await request(app.getHttpServer())
-      .put(`/groups/${groupId}/users/${adminId}`)
+      .put(`/users/${adminId}/group`)
       .set('Authorization', `Bearer ${superAdminAccessToken}`)
+      .send({ group_id: groupId })
       .expect(200);
 
     let adminAccessToken = await loginAs(adminEmail);
@@ -157,8 +158,9 @@ describe('Admin permission groups (integration)', () => {
     // still-live access token from step 1/2 goes 401 immediately afterwards.
     const preRevokeAccessToken = adminAccessToken;
     await request(app.getHttpServer())
-      .put(`/groups/${groupId}/users/${adminId}`)
+      .put(`/users/${adminId}/group`)
       .set('Authorization', `Bearer ${superAdminAccessToken}`)
+      .send({ group_id: groupId })
       .expect(200);
     await request(app.getHttpServer())
       .get('/users/me')
@@ -189,40 +191,22 @@ describe('Admin permission groups (integration)', () => {
       .set('Authorization', `Bearer ${adminAccessToken}`)
       .expect(204);
 
-    // 5. Unassign -> revokes sessions (401 on the still-live token), then
-    // GET /users -> 403 on a fresh token; unassigning a non-member -> 404.
-    const preUnassignAccessToken = adminAccessToken;
-    await request(app.getHttpServer())
-      .delete(`/groups/${groupId}/users/${adminId}`)
-      .set('Authorization', `Bearer ${superAdminAccessToken}`)
-      .expect(204);
-    await request(app.getHttpServer())
-      .get('/users/me')
-      .set('Authorization', `Bearer ${preUnassignAccessToken}`)
-      .expect(401);
-    adminAccessToken = await loginAs(adminEmail);
-    await request(app.getHttpServer())
-      .get('/users')
-      .set('Authorization', `Bearer ${adminAccessToken}`)
-      .expect(403);
-    await request(app.getHttpServer())
-      .delete(`/groups/${groupId}/users/${adminId}`)
-      .set('Authorization', `Bearer ${superAdminAccessToken}`)
-      .expect(404);
-
     // 9. Assigning a group to a teacher -> 400 (checked here, before the
     // group is soft-deleted below, so the 400 isn't masked by a 404).
     await request(app.getHttpServer())
-      .put(`/groups/${groupId}/users/${teacherId}`)
+      .put(`/users/${teacherId}/group`)
       .set('Authorization', `Bearer ${superAdminAccessToken}`)
+      .send({ group_id: groupId })
+      .expect(400);
+
+    // An empty group is rejected: there is no unassign for now.
+    await request(app.getHttpServer())
+      .put(`/users/${adminId}/group`)
+      .set('Authorization', `Bearer ${superAdminAccessToken}`)
+      .send({ group_id: null })
       .expect(400);
 
     // 6. Soft-delete the group -> the assigned admin gets 403 (fail-closed).
-    await request(app.getHttpServer())
-      .put(`/groups/${groupId}/users/${adminId}`)
-      .set('Authorization', `Bearer ${superAdminAccessToken}`)
-      .expect(200);
-    adminAccessToken = await loginAs(adminEmail);
     await request(app.getHttpServer())
       .delete(`/groups/${groupId}`)
       .set('Authorization', `Bearer ${superAdminAccessToken}`)

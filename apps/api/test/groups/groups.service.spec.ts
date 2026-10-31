@@ -4,7 +4,6 @@ import { ErrorCode } from '@repo/backend/errors';
 import { PERMISSION_GROUPS } from '@repo/backend/core';
 import { GroupsRepository } from '../../src/groups/groups.repository';
 import { GroupsService } from '../../src/groups/groups.service';
-import { UsersService } from '../../src/users/users.service';
 
 const group = groupRow;
 
@@ -18,7 +17,6 @@ describe('GroupsService', () => {
     update: jest.Mock;
     softDelete: jest.Mock;
   };
-  let usersService: { setGroup: jest.Mock; findById: jest.Mock };
 
   beforeEach(() => {
     groupsRepository = {
@@ -29,10 +27,8 @@ describe('GroupsService', () => {
       update: jest.fn(),
       softDelete: jest.fn(),
     };
-    usersService = { setGroup: jest.fn(), findById: jest.fn() };
     service = new GroupsService(
       groupsRepository as unknown as GroupsRepository,
-      usersService as unknown as UsersService,
     );
   });
 
@@ -97,53 +93,6 @@ describe('GroupsService', () => {
   describe('permissionCatalog', () => {
     it('returns PERMISSION_GROUPS', () => {
       expect(service.permissionCatalog()).toBe(PERMISSION_GROUPS);
-    });
-  });
-
-  describe('assignUser', () => {
-    it('404s an unknown group before touching UsersService', async () => {
-      groupsRepository.findById.mockResolvedValue(null);
-
-      await expect(service.assignUser('group-1', 'user-1')).rejects.toThrow(
-        errorWith(ErrorCode.GROUP_NOT_FOUND),
-      );
-      expect(usersService.setGroup).not.toHaveBeenCalled();
-    });
-
-    it('delegates to setGroup(userId, groupId)', async () => {
-      groupsRepository.findById.mockResolvedValue(group());
-      usersService.setGroup.mockResolvedValue({ id: 'user-1' });
-
-      await service.assignUser('group-1', 'user-1');
-
-      expect(usersService.setGroup).toHaveBeenCalledWith('user-1', 'group-1');
-    });
-  });
-
-  describe('unassignUser', () => {
-    it('404s when the user is not in that group', async () => {
-      groupsRepository.findById.mockResolvedValue(group());
-      usersService.findById.mockResolvedValue({
-        id: 'user-1',
-        group: { id: 'a-different-group' },
-      });
-
-      await expect(service.unassignUser('group-1', 'user-1')).rejects.toThrow(
-        errorWith(ErrorCode.USER_NOT_IN_GROUP),
-      );
-      expect(usersService.setGroup).not.toHaveBeenCalled();
-    });
-
-    it('calls setGroup(userId, null) when the user is a member', async () => {
-      groupsRepository.findById.mockResolvedValue(group());
-      usersService.findById.mockResolvedValue({
-        id: 'user-1',
-        group: { id: 'group-1' },
-      });
-
-      await service.unassignUser('group-1', 'user-1');
-
-      expect(usersService.setGroup).toHaveBeenCalledWith('user-1', null);
     });
   });
 });

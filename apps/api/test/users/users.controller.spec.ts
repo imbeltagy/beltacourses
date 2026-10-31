@@ -26,6 +26,7 @@ describe('UsersController', () => {
     list: jest.Mock;
     update: jest.Mock;
     softDelete: jest.Mock;
+    assignGroup: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -35,6 +36,7 @@ describe('UsersController', () => {
       list: jest.fn(),
       update: jest.fn(),
       softDelete: jest.fn(),
+      assignGroup: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -149,5 +151,29 @@ describe('UsersController', () => {
     await controller.updateMe(REQUEST_USER, dto as never, avatar);
 
     expect(usersService.update).toHaveBeenCalledWith('user-1', dto, avatar);
+  });
+
+  it('assignGroup returns the updated user', async () => {
+    usersService.assignGroup.mockResolvedValue(
+      userRow({
+        group_id: 'group-1',
+        group: {
+          id: 'group-1',
+          name: 'Support',
+          description: null,
+          created_at: new Date(),
+          updated_at: new Date(),
+          deleted_at: null,
+        },
+      }),
+    );
+
+    const result = await controller.assignGroup('user-1', {
+      group_id: 'group-1',
+    });
+
+    expect(result).toBeInstanceOf(UserResponseDto);
+    expect({ ...result.group }).toEqual({ id: 'group-1', name: 'Support' });
+    expect(usersService.assignGroup).toHaveBeenCalledWith('user-1', 'group-1');
   });
 });

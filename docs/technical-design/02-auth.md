@@ -96,7 +96,8 @@ other request uses the platform's normal, higher limit.
 - An admin belongs to at most one group; their effective permissions are exactly the group's. A
   soft-deleted group grants nothing.
 - `super_admin` bypasses every permission check. Group **writes** and **membership changes**
-  (`PUT`/`DELETE /groups/:group_id/users/:user_id`) are `super_admin`-only; group **reads** accept
+  (`PUT /users/:id/group` with a required `group_id`; there is no unassign yet) are
+  `super_admin`-only; group **reads** accept
   `groups:read`, which an admin UI needs to render the catalog.
 - `PermissionsGuard` refuses every client role outright, so `@Permissions` is safe without an
   accompanying `@Roles` — a forgotten `@Roles` cannot expose a route to a student or teacher.

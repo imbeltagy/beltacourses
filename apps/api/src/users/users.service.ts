@@ -3,6 +3,7 @@ import { AppException, ErrorCode } from '@repo/backend/errors';
 import { PasswordService, SessionService } from '@repo/backend/core';
 import { Role, type User } from '@repo/db';
 import type { EmailLocale } from '@repo/backend/email';
+import { GroupsService } from '../groups/groups.service';
 import { StorageService } from '../storage/storage.service';
 import type { FileToUpload } from '../storage/storage.types';
 import { AccountEmailsService } from './account-emails.service';
@@ -21,6 +22,7 @@ export class UsersService {
     private readonly storageService: StorageService,
     private readonly sessionService: SessionService,
     private readonly accountEmails: AccountEmailsService,
+    private readonly groupsService: GroupsService,
   ) {}
 
   async create(
@@ -132,9 +134,10 @@ export class UsersService {
     return this.usersRepository.findByEmailWithPassword(email);
   }
 
-  async setGroup(
+  /** Ends the admin's live sessions so their permissions refresh. */
+  async assignGroup(
     userId: string,
-    groupId: string | null,
+    groupId: string,
   ): Promise<UserWithRelations> {
     const user = await this.usersRepository.findById(userId);
     if (!user) throw new AppException(ErrorCode.USER_NOT_FOUND);
@@ -142,6 +145,8 @@ export class UsersService {
     if (user.role !== Role.admin) {
       throw new AppException(ErrorCode.ONLY_ADMIN_CAN_HAVE_GROUP);
     }
+
+    await this.groupsService.findById(groupId);
 
     const updated = await this.usersRepository.update(userId, {
       group_id: groupId,

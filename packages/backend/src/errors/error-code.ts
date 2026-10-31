@@ -26,7 +26,6 @@ export enum ErrorCode {
   // Groups
   GROUP_NAME_ALREADY_EXISTS = 'GROUP_NAME_ALREADY_EXISTS',
   GROUP_NOT_FOUND = 'GROUP_NOT_FOUND',
-  USER_NOT_IN_GROUP = 'USER_NOT_IN_GROUP',
 
   // Storage
   FILE_NOT_FOUND = 'FILE_NOT_FOUND',
@@ -54,7 +53,6 @@ export const ERROR_STATUS: Record<ErrorCode, HttpStatus> = {
 
   [ErrorCode.GROUP_NAME_ALREADY_EXISTS]: HttpStatus.CONFLICT,
   [ErrorCode.GROUP_NOT_FOUND]: HttpStatus.NOT_FOUND,
-  [ErrorCode.USER_NOT_IN_GROUP]: HttpStatus.NOT_FOUND,
 
   [ErrorCode.FILE_NOT_FOUND]: HttpStatus.NOT_FOUND,
 };

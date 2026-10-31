@@ -9,7 +9,6 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
-  Put,
   Query,
 } from '@nestjs/common';
 import {
@@ -24,7 +23,6 @@ import {
 import { MODERATOR_ROLES, PERMISSIONS } from '@repo/backend/core';
 import { Role } from '@repo/db';
 import { Auth } from '../auth/decorators/auth.decorator';
-import { UserResponseDto } from '../users/dto/response/user.dto';
 import { CreateGroupDto } from './dto/request/create-group.dto';
 import { ListGroupsQueryDto } from './dto/request/list-groups.dto';
 import { UpdateGroupDto } from './dto/request/update-group.dto';
@@ -34,7 +32,6 @@ import { PERMISSION_CATALOG_SCHEMA } from './dto/response/permission-catalog.dto
 import type { PermissionCatalogResponse } from './dto/response/permission-catalog.dto';
 import { GroupsService } from './groups.service';
 import { GroupMapper } from './groups.mapper';
-import { UserMapper } from '../users/users.mapper';
 
 @ApiTags('groups')
 @Controller('groups')
@@ -126,41 +123,5 @@ export class GroupsController {
   })
   softDelete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.groupsService.softDelete(id);
-  }
-
-  @Put(':group_id/users/:user_id')
-  @Auth({ roles: Role.super_admin })
-  @ApiOperation({ summary: 'Assign an admin to a permission group' })
-  @ApiParam({ name: 'group_id', format: 'uuid' })
-  @ApiParam({ name: 'user_id', format: 'uuid' })
-  @ApiOkResponse({ type: UserResponseDto })
-  @ApiNotFoundResponse({
-    type: ErrorResponseDto,
-    description: 'Unknown group or user.',
-  })
-  async assignUser(
-    @Param('group_id', ParseUUIDPipe) groupId: string,
-    @Param('user_id', ParseUUIDPipe) userId: string,
-  ): Promise<UserResponseDto> {
-    const user = await this.groupsService.assignUser(groupId, userId);
-    return UserMapper.toDto(user);
-  }
-
-  @Delete(':group_id/users/:user_id')
-  @HttpCode(204)
-  @Auth({ roles: Role.super_admin })
-  @ApiOperation({ summary: 'Unassign an admin from a permission group' })
-  @ApiParam({ name: 'group_id', format: 'uuid' })
-  @ApiParam({ name: 'user_id', format: 'uuid' })
-  @ApiNotFoundResponse({
-    type: ErrorResponseDto,
-    description:
-      'Unknown group or user, or the user is not a member of that group.',
-  })
-  unassignUser(
-    @Param('group_id', ParseUUIDPipe) groupId: string,
-    @Param('user_id', ParseUUIDPipe) userId: string,
-  ): Promise<void> {
-    return this.groupsService.unassignUser(groupId, userId);
   }
 }

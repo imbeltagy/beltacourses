@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { AppException, ErrorCode } from '@repo/backend/errors';
 import { PERMISSION_GROUPS } from '@repo/backend/core';
 import type { Paginated } from '@repo/backend/pagination';
-import type { UserWithRelations } from '../users/users.types';
-import { UsersService } from '../users/users.service';
 import type { CreateGroupDto } from './dto/request/create-group.dto';
 import type { ListGroupsQueryDto } from './dto/request/list-groups.dto';
 import type { UpdateGroupDto } from './dto/request/update-group.dto';
@@ -12,10 +10,7 @@ import type { GroupWithRelations } from './groups.types';
 
 @Injectable()
 export class GroupsService {
-  constructor(
-    private readonly groupsRepository: GroupsRepository,
-    private readonly usersService: UsersService,
-  ) {}
+  constructor(private readonly groupsRepository: GroupsRepository) {}
 
   async create(dto: CreateGroupDto): Promise<GroupWithRelations> {
     const existing = await this.groupsRepository.findIdByName(dto.name);
@@ -72,24 +67,5 @@ export class GroupsService {
 
   permissionCatalog(): typeof PERMISSION_GROUPS {
     return PERMISSION_GROUPS;
-  }
-
-  async assignUser(
-    groupId: string,
-    userId: string,
-  ): Promise<UserWithRelations> {
-    await this.findById(groupId);
-    return this.usersService.setGroup(userId, groupId);
-  }
-
-  async unassignUser(groupId: string, userId: string): Promise<void> {
-    await this.findById(groupId);
-
-    const user = await this.usersService.findById(userId);
-    if (user.group?.id !== groupId) {
-      throw new AppException(ErrorCode.USER_NOT_IN_GROUP);
-    }
-
-    await this.usersService.setGroup(userId, null);
   }
 }

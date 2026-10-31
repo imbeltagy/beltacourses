@@ -1,12 +1,13 @@
 import { errorWith } from '../helpers/error-with';
 import { userRow } from '../helpers/rows';
-import { ErrorCode } from '@repo/backend/errors';
+import { AppException, ErrorCode } from '@repo/backend/errors';
 import { Role } from '@repo/db';
 import { PasswordService, SessionService } from '@repo/backend/core';
 import { UsersRepository } from '../../src/users/users.repository';
 import { UsersService } from '../../src/users/users.service';
 import { AccountEmailsService } from '../../src/users/account-emails.service';
 import { StorageService } from '../../src/storage/storage.service';
+import { GroupsService } from '../../src/groups/groups.service';
 
 // Loose overrides: tests pass partial relations (e.g. an avatar with only id + url).
 const user = (overrides: Partial<Record<string, unknown>> = {}) => ({
@@ -36,6 +37,7 @@ describe('UsersService', () => {
   let storageService: { upload: jest.Mock; softDelete: jest.Mock };
   let sessionService: { removeAllUserSessions: jest.Mock };
   let accountEmails: { sendAccountCreated: jest.Mock };
+  let groupsService: { findById: jest.Mock };
 
   beforeEach(() => {
     repository = {
@@ -60,12 +62,17 @@ describe('UsersService', () => {
       sendAccountCreated: jest.fn().mockResolvedValue(undefined),
     };
 
+    groupsService = {
+      findById: jest.fn().mockResolvedValue({ id: 'group-1' }),
+    };
+
     service = new UsersService(
       repository as unknown as UsersRepository,
       passwordService as unknown as PasswordService,
       storageService as unknown as StorageService,
       sessionService as unknown as SessionService,
       accountEmails as unknown as AccountEmailsService,
+      groupsService as unknown as GroupsService,
     );
   });
 
@@ -305,35 +312,49 @@ describe('UsersService', () => {
     });
   });
 
-  describe('setGroup', () => {
-    it('404s an unknown user', async () => {
+  describe('assignGroup', () => {
+    it('404s an unknown user before checking the group', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expect(service.setGroup('unknown', 'group-1')).rejects.toThrow(
+      await expect(service.assignGroup('unknown', 'group-1')).rejects.toThrow(
         errorWith(ErrorCode.USER_NOT_FOUND),
       );
+      expect(groupsService.findById).not.toHaveBeenCalled();
       expect(sessionService.removeAllUserSessions).not.toHaveBeenCalled();
     });
 
     it('rejects a non-admin target with bad request', async () => {
       repository.findById.mockResolvedValue(user({ role: Role.teacher }));
 
-      await expect(service.setGroup('user-1', 'group-1')).rejects.toThrow(
+      await expect(service.assignGroup('user-1', 'group-1')).rejects.toThrow(
         errorWith(ErrorCode.ONLY_ADMIN_CAN_HAVE_GROUP),
       );
+      expect(groupsService.findById).not.toHaveBeenCalled();
       expect(repository.update).not.toHaveBeenCalled();
     });
 
-    it('clears the group on null', async () => {
+    it('propagates an unknown group without writing', async () => {
       repository.findById.mockResolvedValue(user({ role: Role.admin }));
-      repository.update.mockResolvedValue(
-        user({ role: Role.admin, group: null }),
+      groupsService.findById.mockRejectedValue(
+        new AppException(ErrorCode.GROUP_NOT_FOUND),
       );
 
-      await service.setGroup('user-1', null);
+      await expect(service.assignGroup('user-1', 'group-1')).rejects.toThrow(
+        errorWith(ErrorCode.GROUP_NOT_FOUND),
+      );
+      expect(repository.update).not.toHaveBeenCalled();
+      expect(sessionService.removeAllUserSessions).not.toHaveBeenCalled();
+    });
 
+    it('links the group after checking it exists', async () => {
+      repository.findById.mockResolvedValue(user({ role: Role.admin }));
+      repository.update.mockResolvedValue(user({ role: Role.admin }));
+
+      await service.assignGroup('user-1', 'group-1');
+
+      expect(groupsService.findById).toHaveBeenCalledWith('group-1');
       expect(repository.update).toHaveBeenCalledWith('user-1', {
-        group_id: null,
+        group_id: 'group-1',
       });
     });
 
@@ -349,7 +370,7 @@ describe('UsersService', () => {
         return Promise.resolve(1);
       });
 
-      await service.setGroup('user-1', 'group-1');
+      await service.assignGroup('user-1', 'group-1');
 
       expect(callOrder).toEqual(['update', 'removeAllUserSessions']);
     });
@@ -361,7 +382,7 @@ describe('UsersService', () => {
         new Error('ECONNREFUSED'),
       );
 
-      await expect(service.setGroup('user-1', 'group-1')).rejects.toThrow(
+      await expect(service.assignGroup('user-1', 'group-1')).rejects.toThrow(
         'ECONNREFUSED',
       );
     });

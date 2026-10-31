@@ -9,12 +9,14 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
+  ApiBadRequestResponse,
   ApiConflictResponse,
   ApiConsumes,
   ApiHeader,
@@ -26,9 +28,11 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser, MODERATOR_ROLES, PERMISSIONS } from '@repo/backend/core';
+import { Role } from '@repo/db';
 import type { RequestUser } from '@repo/backend/core';
 import { EmailLocaleParam, type EmailLocale } from '@repo/backend/email';
 import { Auth } from '../auth/decorators/auth.decorator';
+import { AssignUserGroupDto } from './dto/request/assign-user-group.dto';
 import { CreateUserDto } from './dto/request/create-user.dto';
 import { ListUsersQueryDto } from './dto/request/list-users.dto';
 import { UpdateUserDto } from './dto/request/update-user.dto';
@@ -156,5 +160,29 @@ export class UsersController {
   })
   delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.usersService.softDelete(id);
+  }
+
+  @Put(':id/group')
+  @Auth({ roles: Role.super_admin })
+  @ApiOperation({
+    summary: 'Assign an admin to a permission group',
+    description: "Ends the admin's live sessions so their permissions refresh.",
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: UserResponseDto })
+  @ApiBadRequestResponse({
+    type: ErrorResponseDto,
+    description: 'The user is not an admin.',
+  })
+  @ApiNotFoundResponse({
+    type: ErrorResponseDto,
+    description: 'Unknown user or group, or either was soft-deleted.',
+  })
+  async assignGroup(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AssignUserGroupDto,
+  ): Promise<UserResponseDto> {
+    const user = await this.usersService.assignGroup(id, dto.group_id);
+    return UserMapper.toDto(user);
   }
 }

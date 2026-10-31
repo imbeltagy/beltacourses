@@ -102,27 +102,13 @@ export async function assignUserToGroupAction(
   groupId: string,
   userId: string,
 ): Promise<DataResult<User>> {
-  const result = await ApiClient.put<User>(
-    endpoints.groups.user(groupId, userId),
-    {},
-  );
+  const result = await ApiClient.put<User>(endpoints.users.group(userId), {
+    group_id: groupId,
+  });
 
   if (!result.success) {
     return { success: false, error: result.error };
   }
 
   return { success: true, data: result.data };
-}
-
-export async function unassignUserFromGroupAction(
-  groupId: string,
-  userId: string,
-): Promise<ActionResult> {
-  const result = await ApiClient.delete(endpoints.groups.user(groupId, userId));
-
-  if (!result.success) {
-    return { success: false, error: result.error };
-  }
-
-  return { success: true };
 }

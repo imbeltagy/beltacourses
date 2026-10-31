@@ -29,13 +29,12 @@ export const endpoints = {
     list: () => `${apiBaseUrl}/users`,
     me: () => `${apiBaseUrl}/users/me`,
     byId: (userId: string) => `${apiBaseUrl}/users/${userId}`,
+    group: (userId: string) => `${apiBaseUrl}/users/${userId}/group`,
   },
   groups: {
     list: () => `${apiBaseUrl}/groups`,
     /** Must stay above `byId` in any route-order-sensitive reasoning. */
     permissions: () => `${apiBaseUrl}/groups/permissions`,
     byId: (groupId: string) => `${apiBaseUrl}/groups/${groupId}`,
-    user: (groupId: string, userId: string) =>
-      `${apiBaseUrl}/groups/${groupId}/users/${userId}`,
   },
 };

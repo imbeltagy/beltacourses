@@ -14,10 +14,7 @@ import {
   SelectValue,
 } from "@repo/frontend/ui";
 import { useRouter } from "@repo/frontend/i18n/navigation";
-import {
-  assignUserToGroupAction,
-  unassignUserFromGroupAction,
-} from "../../../../actions/groups-actions";
+import { assignUserToGroupAction } from "../../../../actions/groups-actions";
 import type { Group } from "../../../../types/api/groups";
 import type { User } from "../../../../types/api/users";
 import { localizeError } from "../../../../utils/localize-error";
@@ -43,28 +40,17 @@ export function UserGroupCard({
   const [pending, setPending] = useState(false);
 
   const change = async (next: string) => {
-    const current = user.group?.id;
-    if (next === (current ?? NONE)) return;
+    // The API has no unassign yet, so "none" only displays the empty state.
+    if (next === NONE || next === user.group?.id) return;
 
     setPending(true);
 
-    // `current` is set whenever `next` is NONE: the no-op check above returned
-    // otherwise, so there is a group to remove.
-    const result =
-      next === NONE && current
-        ? await unassignUserFromGroupAction(current, user.id)
-        : await assignUserToGroupAction(next, user.id);
+    const result = await assignUserToGroupAction(next, user.id);
 
     setPending(false);
 
     if (!result.success) {
-      toast.error(
-        localizeError(
-          tErrors,
-          result.error,
-          next === NONE ? "unassignGroup" : "assignGroup",
-        ),
-      );
+      toast.error(localizeError(tErrors, result.error, "assignGroup"));
       return;
     }
 
@@ -88,7 +74,9 @@ export function UserGroupCard({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={NONE}>{t("none")}</SelectItem>
+            <SelectItem value={NONE} disabled>
+              {t("none")}
+            </SelectItem>
             {groups.map((group) => (
               <SelectItem key={group.id} value={group.id}>
                 {group.name}

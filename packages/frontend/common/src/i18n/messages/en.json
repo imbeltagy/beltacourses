@@ -208,7 +208,6 @@
       "ONLY_ADMIN_CAN_HAVE_GROUP": "Only an admin can be assigned a permission group.",
       "GROUP_NAME_ALREADY_EXISTS": "A group with this name already exists.",
       "GROUP_NOT_FOUND": "That group doesn't exist.",
-      "USER_NOT_IN_GROUP": "That user is not a member of this group.",
       "FILE_NOT_FOUND": "That file doesn't exist."
     },
     "client": {
@@ -232,8 +231,7 @@
       "createGroup": "Couldn't create the group.",
       "updateGroup": "Couldn't save the group.",
       "deleteGroup": "Couldn't delete the group.",
-      "assignGroup": "Couldn't assign the group.",
-      "unassignGroup": "Couldn't remove the group."
+      "assignGroup": "Couldn't assign the group."
     }
   },
   "genders": {

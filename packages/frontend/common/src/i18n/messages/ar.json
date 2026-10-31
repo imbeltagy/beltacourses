@@ -208,7 +208,6 @@
       "ONLY_ADMIN_CAN_HAVE_GROUP": "لا يمكن تعيين مجموعة صلاحيات إلا لمسؤول.",
       "GROUP_NAME_ALREADY_EXISTS": "توجد مجموعة بهذا الاسم بالفعل.",
       "GROUP_NOT_FOUND": "هذه المجموعة غير موجودة.",
-      "USER_NOT_IN_GROUP": "هذا المستخدم ليس عضوًا في هذه المجموعة.",
       "FILE_NOT_FOUND": "هذا الملف غير موجود."
     },
     "client": {
@@ -232,8 +231,7 @@
       "createGroup": "تعذّر إنشاء المجموعة.",
       "updateGroup": "تعذّر حفظ المجموعة.",
       "deleteGroup": "تعذّر حذف المجموعة.",
-      "assignGroup": "تعذّر تعيين المجموعة.",
-      "unassignGroup": "تعذّر إزالة المجموعة."
+      "assignGroup": "تعذّر تعيين المجموعة."
     }
   },
   "genders": {
