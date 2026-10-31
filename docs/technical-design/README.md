@@ -22,3 +22,4 @@ Other docs: [`../file-structure.md`](../file-structure.md) is the repo map.
 | [07-tenancy-and-courses.md](./07-tenancy-and-courses.md)             | 008, 017-019, 023              | Proposed    |
 | [08-academies.md](./08-academies.md)                                 | 022, 024, 035                  | Proposed    |
 | [09-finance-service.md](./09-finance-service.md)                     | 010, 012, 013, 015, 020        | Proposed    |
+| [10-resource-access.md](./10-resource-access.md)                     | 004, 022, 024, 035             | Proposed    |
