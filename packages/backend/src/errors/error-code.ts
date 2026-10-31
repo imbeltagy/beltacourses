@@ -1,6 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 
-export const enum ErrorCode {
+export enum ErrorCode {
   // Generic — what the exception filter falls back to.
   INTERNAL_ERROR = 'INTERNAL_ERROR',
   SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
