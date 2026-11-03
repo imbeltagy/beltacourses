@@ -93,9 +93,8 @@ export class AuthService {
     return pair;
   }
 
-  /** POST /auth/logout — ends only the caller's session. No-op without a sid. */
-  async logout(user: { id: string; sid?: string }): Promise<void> {
-    if (!user.sid) return;
+  /** POST /auth/logout — ends only the caller's session. */
+  async logout(user: { id: string; sid: string }): Promise<void> {
     await this.sessionService.remove(user.sid, user.id);
   }
 

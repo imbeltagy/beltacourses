@@ -1,79 +1,52 @@
-import { ErrorResponseDto } from '@repo/backend/errors';
-import { applyDecorators, Type, UseGuards } from '@nestjs/common';
+import { applyDecorators, SetMetadata } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import {
-  AccessTokenGuard,
-  Permissions,
-  PermissionsGuard,
-  Roles,
-  RolesGuard,
-  type Permission,
-} from '@repo/backend/core';
-import type { Role } from '@repo/db';
+import { ErrorResponseDto } from '@repo/backend/errors';
+import { AUTH_OPTIONS_KEY } from '../constants/iam.constants';
+import type { AuthOptions } from '../types/iam.types';
 
-export type AuthOptions = {
-  roles?: Role | readonly Role[];
-  /**
-   * `PermissionsGuard` refuses every client role outright (D9), so
-   * `@Auth({ permissions })` on its own already means "staff who hold these
-   * permissions" — a student cannot slip through a route that forgot
-   * `@Roles`. Passing both is still the clearer thing to write when a route
-   * is meant for one specific role (e.g. `super_admin`-only writes, which
-   * declare `roles` and no permissions at all). Do not "harden" this by
-   * making `roles` mandatory — it is not needed for safety.
-   */
-  permissions?: Permission | readonly Permission[];
-};
-
-function toArray<T>(value: T | readonly T[] | undefined): T[] {
-  if (value === undefined) return [];
-  return Array.isArray(value) ? [...value] : [value as T];
-}
+export type { AuthOptions };
 
 /**
- * `@Auth()` composes the three guards (in the fixed order `AccessTokenGuard,
- * RolesGuard, PermissionsGuard` — Nest runs them in the order given to
- * `UseGuards`) with the `@Roles()`/`@Permissions()` metadata decorators and
- * the matching Swagger annotations. Works as both a method and a class
- * decorator.
+ * Declares who may call a route; the global `AuthGuard` enforces it. Every
+ * route needs one — a route without it is a wiring error (500), so a route can
+ * never be public by forgetting a decorator.
+ *
+ * - `@Auth({ public: true })` — no token needed, `request.user` is `null`.
+ * - `@Auth({ public: false })` — any signed-in user.
+ * - `@Auth({ roles })` / `@Auth({ permissions })` / both — narrower.
+ *
+ * Permissions only ever apply to `admin` (`super_admin` bypasses them), so a
+ * client role on a permissions-only route is refused with 403. Works as a
+ * method and a class decorator.
  */
-export function Auth(options: AuthOptions = {}) {
-  const roles = toArray(options.roles);
-  const permissions = toArray(options.permissions);
+export function Auth(options: AuthOptions) {
+  if (options.public === true) {
+    return applyDecorators(SetMetadata(AUTH_OPTIONS_KEY, options));
+  }
 
-  const guards: Type[] = [AccessTokenGuard];
-  const decorators = [
+  const restricted =
+    options.roles !== undefined || options.permissions !== undefined;
+
+  return applyDecorators(
+    SetMetadata(AUTH_OPTIONS_KEY, options),
     ApiBearerAuth('access-token'),
     ApiUnauthorizedResponse({
       type: ErrorResponseDto,
       description:
         'Missing, invalid or expired access token, or the session was revoked.',
     }),
-  ];
-
-  if (roles.length > 0) {
-    guards.push(RolesGuard);
-    decorators.push(Roles(...roles));
-  }
-
-  if (permissions.length > 0) {
-    guards.push(PermissionsGuard);
-    decorators.push(Permissions(...permissions));
-  }
-
-  if (roles.length > 0 || permissions.length > 0) {
-    decorators.push(
-      ApiForbiddenResponse({
-        type: ErrorResponseDto,
-        description:
-          'Authenticated, but the role or permissions do not allow this.',
-      }),
-    );
-  }
-
-  return applyDecorators(UseGuards(...guards), ...decorators);
+    ...(restricted
+      ? [
+          ApiForbiddenResponse({
+            type: ErrorResponseDto,
+            description:
+              'Authenticated, but the role or permissions do not allow this.',
+          }),
+        ]
+      : []),
+  );
 }

@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
-import { LEGACY_GUARD_PROVIDERS } from '../iam/auth/legacy-guards.providers';
 import { S3Adapter } from './s3.adapter';
 import { StorageProcessor } from './storage.processor';
 import { StorageRepository } from './storage.repository';
@@ -19,13 +18,7 @@ import { StorageController } from './storage.controller';
     }),
   ],
   controllers: [StorageController],
-  providers: [
-    StorageService,
-    StorageRepository,
-    S3Adapter,
-    StorageProcessor,
-    ...LEGACY_GUARD_PROVIDERS,
-  ],
+  providers: [StorageService, StorageRepository, S3Adapter, StorageProcessor],
   exports: [StorageService],
 })
 export class StorageModule {}

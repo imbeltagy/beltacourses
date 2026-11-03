@@ -12,7 +12,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { ASSIGNABLE_ROLES } from '../../constants/iam.constants';
-import { blankToUndefined, toBoolean } from '@repo/backend/core';
+import { blankToUndefined, toBoolean } from '../../utils/transforms.util';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'student@beltacourses.com' })

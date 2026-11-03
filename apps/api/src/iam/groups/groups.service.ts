@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AppException, ErrorCode } from '@repo/backend/errors';
-import { PERMISSION_GROUPS } from '@repo/backend/core';
+import { PERMISSION_GROUPS } from '../constants/permissions.constants';
 import type { Paginated } from '@repo/backend/pagination';
 import type { CreateGroupDto } from '../dto/request/create-group.dto';
 import type { ListGroupsQueryDto } from '../dto/request/list-groups.dto';

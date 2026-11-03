@@ -1,9 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  AccessTokenGuard,
-  PermissionsGuard,
-  RolesGuard,
-} from '@repo/backend/core';
 import { StorageService } from '../../src/storage/storage.service';
 import { StorageController } from '../../src/storage/storage.controller';
 import { FileMetadata } from '@repo/db';
@@ -53,14 +48,7 @@ describe('StorageController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [StorageController],
       providers: [{ provide: StorageService, useValue: storageService }],
-    })
-      .overrideGuard(AccessTokenGuard)
-      .useValue({ canActivate: () => true })
-      .overrideGuard(RolesGuard)
-      .useValue({ canActivate: () => true })
-      .overrideGuard(PermissionsGuard)
-      .useValue({ canActivate: () => true })
-      .compile();
+    }).compile();
 
     controller = module.get(StorageController);
   });

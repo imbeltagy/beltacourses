@@ -1,5 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ALL_PERMISSIONS, type Permission } from '@repo/backend/core';
+import {
+  ALL_PERMISSIONS,
+  type Permission,
+} from '../../constants/permissions.constants';
 import {
   ArrayNotEmpty,
   IsArray,

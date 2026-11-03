@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Role } from '@repo/db';
-import { AccessTokenGuard } from '@repo/backend/core';
 import { AuthController } from '../../../src/iam/controllers/auth.controller';
 import { IamFacade } from '../../../src/iam/iam.facade';
 import { UserResponseDto } from '../../../src/iam/dto/response/user.dto';
@@ -28,10 +27,7 @@ describe('AuthController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [{ provide: IamFacade, useValue: iam }],
-    })
-      .overrideGuard(AccessTokenGuard)
-      .useValue({ canActivate: () => true })
-      .compile();
+    }).compile();
 
     controller = module.get(AuthController);
   });
@@ -134,6 +130,8 @@ describe('AuthController', () => {
       name: 'Admin',
       role: Role.admin,
       sid: 'sid-1',
+      groupId: null,
+      permissions: [],
     };
 
     await expect(controller.logout(user)).resolves.toBeUndefined();

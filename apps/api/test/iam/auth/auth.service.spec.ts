@@ -277,11 +277,5 @@ describe('AuthService', () => {
 
       expect(sessionService.remove).toHaveBeenCalledWith('sid-1', 'user-1');
     });
-
-    it('does nothing without a sid', async () => {
-      await service.logout({ id: 'user-1' });
-
-      expect(sessionService.remove).not.toHaveBeenCalled();
-    });
   });
 });

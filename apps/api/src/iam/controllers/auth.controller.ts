@@ -21,8 +21,8 @@ import {
   ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { CurrentUser } from '@repo/backend/core';
-import type { RequestUser } from '@repo/backend/core';
+import { CurrentUser } from '../decorators/current-user.decorator';
+import type { RequestUser } from '../types/iam.types';
 import { UserResponseDto } from '../dto/response/user.dto';
 import {
   AUTH_THROTTLE_LIMIT,
@@ -69,6 +69,7 @@ export class AuthController {
   constructor(private readonly iam: IamFacade) {}
 
   @Post('register')
+  @Auth({ public: true })
   @UseInterceptors(FileInterceptor('avatar'))
   @ApiConsumes('multipart/form-data')
   @ApiBody(REGISTER_BODY)
@@ -87,6 +88,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Auth({ public: true })
   @HttpCode(200)
   @Throttle(AUTH_THROTTLE)
   @ApiOperation({ summary: 'Log in with email and password (clients only)' })
@@ -104,6 +106,7 @@ export class AuthController {
   }
 
   @Post('moderators/login')
+  @Auth({ public: true })
   @HttpCode(200)
   @Throttle(AUTH_THROTTLE)
   @ApiOperation({ summary: 'Log in as staff (admin or super_admin only)' })
@@ -121,6 +124,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @Auth({ public: true })
   @HttpCode(200)
   @Throttle(AUTH_THROTTLE)
   @ApiOperation({ summary: 'Exchange a refresh token for a new access token' })
@@ -139,8 +143,8 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(204)
-  @Auth()
-  @ApiOperation({ summary: 'Log out (revokes the moderator session, if any)' })
+  @Auth({ public: false })
+  @ApiOperation({ summary: 'Log out (ends the current session)' })
   @ApiNoContentResponse()
   logout(@CurrentUser() user: RequestUser): Promise<void> {
     return this.iam.logout(user);

@@ -1,11 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Role } from '@repo/db';
-import {
-  AccessTokenGuard,
-  PermissionsGuard,
-  RolesGuard,
-} from '@repo/backend/core';
-import type { RequestUser } from '@repo/backend/core';
+import type { RequestUser } from '../../../src/iam/types/iam.types';
 import { UsersController } from '../../../src/iam/controllers/users.controller';
 import { IamFacade } from '../../../src/iam/iam.facade';
 import { UserResponseDto } from '../../../src/iam/dto/response/user.dto';
@@ -16,6 +11,9 @@ const REQUEST_USER: RequestUser = {
   email: 'student@beltacourses.com',
   name: 'Jane',
   role: Role.student,
+  sid: 'sid-1',
+  groupId: null,
+  permissions: [],
 };
 
 describe('UsersController', () => {
@@ -42,14 +40,7 @@ describe('UsersController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
       providers: [{ provide: IamFacade, useValue: iam }],
-    })
-      .overrideGuard(AccessTokenGuard)
-      .useValue({ canActivate: () => true })
-      .overrideGuard(RolesGuard)
-      .useValue({ canActivate: () => true })
-      .overrideGuard(PermissionsGuard)
-      .useValue({ canActivate: () => true })
-      .compile();
+    }).compile();
 
     controller = module.get(UsersController);
   });

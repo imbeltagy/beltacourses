@@ -13,6 +13,6 @@ import { TokensUtil } from './tokens.util';
     SessionService,
     SessionRepository,
   ],
-  exports: [AuthService, SessionService],
+  exports: [AuthService, SessionService, TokensUtil],
 })
 export class AuthModule {}

@@ -1,4 +1,4 @@
-import { PERMISSION_GROUPS } from '@repo/backend/core';
+import { PERMISSION_GROUPS } from '../../constants/permissions.constants';
 
 /**
  * Documents the shape of `PERMISSION_GROUPS` — a nested object of

@@ -21,8 +21,8 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { MODERATOR_ROLES } from '@repo/backend/core';
 import { Auth } from '../iam/decorators/auth.decorator';
+import { MODERATOR_ROLES } from '../iam/constants/iam.constants';
 import { StorageService } from './storage.service';
 import type { UploadedFile } from './storage.types';
 import { SoftDeleteFilesDto } from './dto/request/soft-delete-files.dto';
@@ -38,7 +38,7 @@ export class StorageController {
 
   @Post()
   @UseInterceptors(FilesInterceptor('files'))
-  @Auth()
+  @Auth({ public: false })
   @ApiOperation({
     summary: 'Upload one or more files',
     description: 'returns a list in same order as request',
@@ -80,7 +80,7 @@ export class StorageController {
   }
 
   @Get(':id')
-  @Auth()
+  @Auth({ public: false })
   @ApiOperation({
     summary: 'Get file metadata by id',
     description: 'Soft-deleted files are treated as missing and return 404.',

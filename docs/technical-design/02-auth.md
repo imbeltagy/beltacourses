@@ -91,7 +91,9 @@ expires_in, refresh_expires_in }`.
   is `at+jwt` for access and `rt+jwt` for refresh, and verify rejects a mismatch, so one cannot be
   used as the other. No `kid`: there is one key per token kind.
 - Access claims: `sub`, `sid`, `role`, `email`, `name`, `iss`, `aud`, `iat`, `exp`. Refresh claims:
-  `sid`, `userId`, `iss`, `aud`, `iat`, `exp`.
+  `sid`, `userId`, `jti`, `iss`, `aud`, `iat`, `exp`. The refresh `jti` is a random UUID per token:
+  without it two refreshes in the same second would sign identical tokens (same hash), which would
+  defeat single-use rotation.
 - `aud` is the `API_DOMAIN` env. `iss` is `${API_DOMAIN}/auth/login` for clients and
   `${API_DOMAIN}/auth/moderators/login` for moderators. Both are computed in the `TokensUtil`
   constructor, which throws one error naming every missing env, never at import time.

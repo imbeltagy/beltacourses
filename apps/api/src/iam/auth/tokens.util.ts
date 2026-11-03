@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { randomUUID } from 'node:crypto';
 import { AppException, ErrorCode } from '@repo/backend/errors';
 import {
   ACCESS_TOKEN_SECRET,
@@ -82,7 +83,9 @@ export class TokensUtil {
       },
     );
     const refresh_token = this.refreshJwt.sign(
-      { sid, userId: user.id },
+      // jti: without it two refreshes in one second sign identical tokens,
+      // which defeats single-use rotation.
+      { sid, userId: user.id, jti: randomUUID() },
       {
         algorithm: ALGORITHM,
         header: { alg: ALGORITHM, typ: REFRESH_TYP },
@@ -132,7 +135,11 @@ export class TokensUtil {
       REFRESH_TYP,
       error,
     );
-    if (typeof claims.sid !== 'string' || typeof claims.userId !== 'string') {
+    if (
+      typeof claims.sid !== 'string' ||
+      typeof claims.userId !== 'string' ||
+      typeof claims.jti !== 'string'
+    ) {
       throw new AppException(error);
     }
     return claims;

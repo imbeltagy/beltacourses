@@ -289,6 +289,8 @@ describe('IamFacade', () => {
         name: 'A',
         role: Role.admin,
         sid: 'sid-1',
+        groupId: null,
+        permissions: [],
       };
 
       await facade.logout(principal);

@@ -1,7 +1,7 @@
 import {
   hasAllPermissions,
   matchesPermission,
-} from '../../src/core/permissions';
+} from '../../../src/iam/utils/permissions.util';
 
 describe('matchesPermission', () => {
   const cases: Array<[string, string, boolean]> = [

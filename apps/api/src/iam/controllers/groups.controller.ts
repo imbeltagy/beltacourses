@@ -20,7 +20,8 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { MODERATOR_ROLES, PERMISSIONS } from '@repo/backend/core';
+import { MODERATOR_ROLES } from '../constants/iam.constants';
+import { PERMISSIONS } from '../constants/permissions.constants';
 import { Role } from '@repo/db';
 import { Auth } from '../decorators/auth.decorator';
 import { CreateGroupDto } from '../dto/request/create-group.dto';

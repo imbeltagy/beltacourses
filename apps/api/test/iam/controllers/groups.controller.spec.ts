@@ -1,9 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  AccessTokenGuard,
-  PermissionsGuard,
-  RolesGuard,
-} from '@repo/backend/core';
 import { GroupsController } from '../../../src/iam/controllers/groups.controller';
 import { IamFacade } from '../../../src/iam/iam.facade';
 import { GroupResponseDto } from '../../../src/iam/dto/response/group.dto';
@@ -33,14 +28,7 @@ describe('GroupsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [GroupsController],
       providers: [{ provide: IamFacade, useValue: iam }],
-    })
-      .overrideGuard(AccessTokenGuard)
-      .useValue({ canActivate: () => true })
-      .overrideGuard(RolesGuard)
-      .useValue({ canActivate: () => true })
-      .overrideGuard(PermissionsGuard)
-      .useValue({ canActivate: () => true })
-      .compile();
+    }).compile();
 
     controller = module.get(GroupsController);
   });

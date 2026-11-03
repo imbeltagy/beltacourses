@@ -52,3 +52,6 @@ export const MODERATOR_LOGIN_PATH = '/auth/moderators/login';
 
 export const SESSION_KEY_PREFIX = 'session:';
 export const USER_SESSIONS_KEY_PREFIX = 'users-sessions:';
+
+/** Reflector key `@Auth()` writes and `AuthGuard` reads. */
+export const AUTH_OPTIONS_KEY = 'iam:auth-options';

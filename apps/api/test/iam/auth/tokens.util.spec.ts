@@ -131,12 +131,25 @@ describe('TokensUtil', () => {
       expect(decoded.payload).toEqual({
         sid: 'sid-1',
         userId: 'admin-1',
+        jti: expect.any(String) as string,
         iss: `${DOMAIN}/auth/moderators/login`,
         aud: DOMAIN,
         iat: expect.any(Number) as number,
         exp: expect.any(Number) as number,
       });
     });
+  });
+
+  it('signs different refresh tokens for two pairs issued in the same second', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-01-01T00:00:00Z'));
+    try {
+      const first = tokens.signPair(CLIENT, 'sid-1');
+      const second = tokens.signPair(CLIENT, 'sid-1');
+
+      expect(second.refresh_token).not.toBe(first.refresh_token);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   describe('verifyAccess', () => {

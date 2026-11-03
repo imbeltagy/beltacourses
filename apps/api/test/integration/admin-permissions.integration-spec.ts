@@ -154,8 +154,9 @@ describe('Admin permission groups (integration)', () => {
       .send({ permissions: ['users:*'] })
       .expect(200);
 
-    // Assigning again revokes the admin's live sessions (D18): the
-    // still-live access token from step 1/2 goes 401 immediately afterwards.
+    // Permissions live in the session snapshot, so assigning again revokes the
+    // admin's sessions: the still-live access token from step 1/2 goes 401
+    // (SESSION_EXPIRED) immediately afterwards.
     const preRevokeAccessToken = adminAccessToken;
     await request(app.getHttpServer())
       .put(`/users/${adminId}/group`)
@@ -222,6 +223,9 @@ describe('Admin permission groups (integration)', () => {
       where: { id: adminId },
     });
     expect(adminRow.group_id).toBeNull();
+    // The session snapshot still holds the old permissions until the admin
+    // signs in again; a fresh login snapshots none, so GET /users is 403.
+    adminAccessToken = await loginAs(adminEmail);
     await request(app.getHttpServer())
       .get('/users')
       .set('Authorization', `Bearer ${adminAccessToken}`)
@@ -241,8 +245,8 @@ describe('Admin permission groups (integration)', () => {
       .set('Authorization', `Bearer ${superAdminAccessToken}`)
       .expect(404); // already deleted above
 
-    // 8. A student token on GET /users -> 403 from RolesGuard, and on a
-    // permissions-only route -> 403 from PermissionsGuard.
+    // 8. A student token on GET /users -> 403 from AuthGuard (role), and on a
+    // permissions-only route -> 403 (clients never hold permissions).
     const studentLogin = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: studentEmail, password: plainPassword })

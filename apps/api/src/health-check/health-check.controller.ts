@@ -7,6 +7,7 @@ import {
   ApiServiceUnavailableResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Auth } from '../iam/decorators/auth.decorator';
 import { HealthStatusResponseDto } from './dto/response/health-status.dto';
 import { HealthCheckService } from './health-check.service';
 
@@ -16,6 +17,7 @@ export class HealthCheckController {
   constructor(private readonly healthCheckService: HealthCheckService) {}
 
   @Get()
+  @Auth({ public: true })
   @ApiOperation({ summary: 'Check Postgres and Redis connectivity' })
   @ApiOkResponse({ type: HealthStatusResponseDto })
   @ApiServiceUnavailableResponse({

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { AppException, ErrorCode } from '@repo/backend/errors';
-import type { RequestUser } from '@repo/backend/core';
 import type { EmailLocale } from '@repo/backend/email';
 import type { Paginated } from '@repo/backend/pagination';
 import { Role } from '@repo/db';
@@ -24,6 +23,7 @@ import type { RefreshResponseDto } from './dto/response/refresh.dto';
 import type {
   AuthKind,
   GroupWithRelations,
+  RequestUser,
   UserWithRelations,
 } from './types/iam.types';
 

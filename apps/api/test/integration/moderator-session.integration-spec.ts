@@ -4,8 +4,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 import { Role } from '@repo/db';
-import { SessionService } from '@repo/backend/core';
 import { PasswordService } from '../../src/iam/auth/password.service';
+import { SessionService } from '../../src/iam/auth/session.service';
 import { PrismaService } from '@repo/backend/prisma';
 import { RedisService } from '@repo/backend/redis';
 import { AppModule } from '../../src/app.module';
@@ -93,13 +93,18 @@ describe('Moderator session lifecycle (integration)', () => {
 
     const claims = decodeClaims<{ sub: string; sid: string }>(access_token);
 
-    const sessionKeys = await redis.client.keys(`session:${claims.sub}:*`);
-    expect(sessionKeys.length).toBe(1);
-    const ttl = await redis.client.ttl(sessionKeys[0]!);
+    const sessionKey = `session:${claims.sid}`;
+    const stored = JSON.parse(
+      (await redis.client.get(sessionKey)) ?? 'null',
+    ) as { userId: string; role: string; hashedRefreshToken: string } | null;
+    expect(stored).toMatchObject({ userId: claims.sub, role: 'admin' });
+    const ttl = await redis.client.ttl(sessionKey);
     expect(ttl).toBeGreaterThan(0);
     expect(ttl).toBeLessThanOrEqual(10 * 60 * 60);
 
-    const indexMembers = await redis.client.smembers(`sessions:${claims.sub}`);
+    const indexMembers = await redis.client.smembers(
+      `users-sessions:${claims.sub}`,
+    );
     expect(indexMembers).toContain(claims.sid);
 
     // 3. A guarded route with the access token -> 200.
@@ -108,17 +113,20 @@ describe('Moderator session lifecycle (integration)', () => {
       .set('Authorization', `Bearer ${access_token}`)
       .expect(200);
 
-    // 4. Refresh -> new access token, same sid, and it works.
+    // 4. Refresh -> new pair on the same sid, and the new access token works.
     const refreshResponse = await request(app.getHttpServer())
       .post('/auth/refresh')
       .send({ refresh_token })
       .expect(200);
     const refreshBody = refreshResponse.body as {
       access_token: string;
-      refresh_token?: string;
+      refresh_token: string;
+      refresh_expires_in: number;
     };
     const newAccessToken = refreshBody.access_token;
-    expect(refreshBody.refresh_token).toBeUndefined();
+    const newRefreshToken = refreshBody.refresh_token;
+    expect(newRefreshToken).not.toBe(refresh_token);
+    expect(refreshBody.refresh_expires_in).toBe(10 * 60 * 60);
 
     const newClaims = decodeClaims<{ sid: string }>(newAccessToken);
     expect(newClaims.sid).toBe(claims.sid);
@@ -128,14 +136,22 @@ describe('Moderator session lifecycle (integration)', () => {
       .set('Authorization', `Bearer ${newAccessToken}`)
       .expect(200);
 
+    // 4b. Single use: replaying the first refresh token is refused.
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .send({ refresh_token })
+      .expect(401);
+
     // 5. Logout -> 204; the Redis key is gone.
     await request(app.getHttpServer())
       .post('/auth/logout')
       .set('Authorization', `Bearer ${newAccessToken}`)
       .expect(204);
 
-    const keysAfterLogout = await redis.client.keys(`session:${claims.sub}:*`);
-    expect(keysAfterLogout).toHaveLength(0);
+    await expect(redis.client.exists(sessionKey)).resolves.toBe(0);
+    await expect(
+      redis.client.smembers(`users-sessions:${claims.sub}`),
+    ).resolves.not.toContain(claims.sid);
 
     // 6. The same access token now -> 401 (logout kills access tokens too).
     await request(app.getHttpServer())
@@ -143,21 +159,21 @@ describe('Moderator session lifecycle (integration)', () => {
       .set('Authorization', `Bearer ${newAccessToken}`)
       .expect(401);
 
-    // 7. Refresh with the old refresh token -> 401.
+    // 7. Refresh with the latest refresh token -> 401 (the session is gone).
     await request(app.getHttpServer())
       .post('/auth/refresh')
-      .send({ refresh_token })
+      .send({ refresh_token: newRefreshToken })
       .expect(401);
 
     // 8. A refresh token whose signature was tampered with -> 401.
-    const tampered = `${refresh_token.slice(0, -1)}${refresh_token.at(-1) === 'a' ? 'b' : 'a'}`;
+    const tampered = `${newRefreshToken.slice(0, -1)}${newRefreshToken.at(-1) === 'a' ? 'b' : 'a'}`;
     await request(app.getHttpServer())
       .post('/auth/refresh')
       .send({ refresh_token: tampered })
       .expect(401);
   });
 
-  it('tracks two logins as two sids, and removeAllUserSessions kills both', async () => {
+  it('tracks two logins as two sids, and removeAllForUser kills both', async () => {
     const first = await request(app.getHttpServer())
       .post('/auth/moderators/login')
       .send({ email: superAdminEmail, password: plainPassword })
@@ -178,16 +194,23 @@ describe('Moderator session lifecycle (integration)', () => {
     );
 
     const indexMembers = await redis.client.smembers(
-      `sessions:${firstClaims.sub}`,
+      `users-sessions:${firstClaims.sub}`,
     );
     expect(indexMembers.sort()).toEqual(
       [firstClaims.sid, secondClaims.sid].sort(),
     );
 
-    const removed = await sessionService.removeAllUserSessions(firstClaims.sub);
+    const removed = await sessionService.removeAllForUser(firstClaims.sub);
     expect(removed).toBe(2);
 
-    const keysAfter = await redis.client.keys(`session:${firstClaims.sub}:*`);
-    expect(keysAfter).toHaveLength(0);
+    await expect(
+      redis.client.exists(
+        `session:${firstClaims.sid}`,
+        `session:${secondClaims.sid}`,
+      ),
+    ).resolves.toBe(0);
+    await expect(
+      redis.client.exists(`users-sessions:${firstClaims.sub}`),
+    ).resolves.toBe(0);
   });
 });

@@ -27,9 +27,11 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { CurrentUser, MODERATOR_ROLES, PERMISSIONS } from '@repo/backend/core';
+import { MODERATOR_ROLES } from '../constants/iam.constants';
+import { PERMISSIONS } from '../constants/permissions.constants';
+import { CurrentUser } from '../decorators/current-user.decorator';
 import { Role } from '@repo/db';
-import type { RequestUser } from '@repo/backend/core';
+import type { RequestUser } from '../types/iam.types';
 import { EmailLocaleParam, type EmailLocale } from '@repo/backend/email';
 import { Auth } from '../decorators/auth.decorator';
 import { AssignUserGroupDto } from '../dto/request/assign-user-group.dto';
@@ -86,7 +88,7 @@ export class UsersController {
   }
 
   @Get('me')
-  @Auth()
+  @Auth({ public: false })
   @ApiOperation({ summary: 'Get my own profile' })
   @ApiOkResponse({ type: UserResponseDto })
   async getMe(@CurrentUser() user: RequestUser): Promise<UserResponseDto> {
@@ -97,7 +99,7 @@ export class UsersController {
   @Patch('me')
   @UseInterceptors(FileInterceptor('avatar'))
   @ApiConsumes('multipart/form-data')
-  @Auth()
+  @Auth({ public: false })
   @ApiOperation({ summary: 'Update my own profile' })
   @ApiOkResponse({ type: UserResponseDto })
   async updateMe(

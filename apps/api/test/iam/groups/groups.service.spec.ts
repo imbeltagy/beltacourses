@@ -1,7 +1,7 @@
 import { errorWith } from '../../helpers/error-with';
 import { groupRow } from '../../helpers/rows';
 import { ErrorCode } from '@repo/backend/errors';
-import { PERMISSION_GROUPS } from '@repo/backend/core';
+import { PERMISSION_GROUPS } from '../../../src/iam/constants/permissions.constants';
 import { GroupsRepository } from '../../../src/iam/groups/groups.repository';
 import { GroupsService } from '../../../src/iam/groups/groups.service';
 

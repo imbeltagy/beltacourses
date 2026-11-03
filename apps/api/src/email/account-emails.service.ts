@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { isModerator } from '@repo/backend/core';
+import { isModerator } from '../iam/constants/iam.constants';
 import { EmailService, type EmailLocale } from '@repo/backend/email';
 import type { Role } from '@repo/db';
 import { ADMIN_FRONTEND_URL, CLIENT_FRONTEND_URL } from './email.constants';
