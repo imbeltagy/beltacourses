@@ -23,7 +23,11 @@ describe('IamFacade', () => {
     refresh: jest.Mock;
     logout: jest.Mock;
   };
-  let sessionService: { remove: jest.Mock; removeAllForUser: jest.Mock };
+  let sessionService: {
+    remove: jest.Mock;
+    removeAllForUser: jest.Mock;
+    removeAllForUsers: jest.Mock;
+  };
   let userService: {
     create: jest.Mock;
     findById: jest.Mock;
@@ -32,8 +36,14 @@ describe('IamFacade', () => {
     update: jest.Mock;
     softDelete: jest.Mock;
     setGroup: jest.Mock;
+    findIdsByGroup: jest.Mock;
   };
-  let groupsService: { findById: jest.Mock; findPermissions: jest.Mock };
+  let groupsService: {
+    findById: jest.Mock;
+    findPermissions: jest.Mock;
+    update: jest.Mock;
+    delete: jest.Mock;
+  };
   let accountEmails: { sendAccountCreated: jest.Mock };
 
   beforeEach(() => {
@@ -47,6 +57,7 @@ describe('IamFacade', () => {
     sessionService = {
       remove: jest.fn().mockResolvedValue(undefined),
       removeAllForUser: jest.fn().mockResolvedValue(0),
+      removeAllForUsers: jest.fn().mockResolvedValue(undefined),
     };
     userService = {
       create: jest.fn(),
@@ -56,10 +67,13 @@ describe('IamFacade', () => {
       update: jest.fn(),
       softDelete: jest.fn(),
       setGroup: jest.fn(),
+      findIdsByGroup: jest.fn().mockResolvedValue([]),
     };
     groupsService = {
       findById: jest.fn().mockResolvedValue({ id: 'group-1' }),
       findPermissions: jest.fn().mockResolvedValue(['users:read']),
+      update: jest.fn().mockResolvedValue({ id: 'group-1' }),
+      delete: jest.fn().mockResolvedValue(undefined),
     };
     accountEmails = {
       sendAccountCreated: jest.fn().mockResolvedValue(undefined),
@@ -402,6 +416,138 @@ describe('IamFacade', () => {
       await expect(facade.assignGroup('user-1', 'group-1')).rejects.toThrow(
         'ECONNREFUSED',
       );
+    });
+  });
+
+  describe('unassignGroup', () => {
+    it('404s an unknown user without writing or revoking', async () => {
+      userService.findById.mockRejectedValue(
+        new AppException(ErrorCode.USER_NOT_FOUND),
+      );
+
+      await expect(facade.unassignGroup('unknown')).rejects.toThrow(
+        errorWith(ErrorCode.USER_NOT_FOUND),
+      );
+      expect(userService.setGroup).not.toHaveBeenCalled();
+      expect(sessionService.removeAllForUser).not.toHaveBeenCalled();
+    });
+
+    it('clears the group, then revokes the sessions', async () => {
+      userService.findById.mockResolvedValue(user({ role: Role.admin }));
+      const callOrder: string[] = [];
+      userService.setGroup.mockImplementation(() => {
+        callOrder.push('setGroup');
+        return Promise.resolve(user());
+      });
+      sessionService.removeAllForUser.mockImplementation(() => {
+        callOrder.push('revoke');
+        return Promise.resolve(1);
+      });
+
+      await facade.unassignGroup('user-1');
+
+      expect(userService.setGroup).toHaveBeenCalledWith('user-1', null);
+      expect(sessionService.removeAllForUser).toHaveBeenCalledWith('user-1');
+      expect(callOrder).toEqual(['setGroup', 'revoke']);
+    });
+  });
+
+  describe('updateGroup', () => {
+    it('revokes every member session when permissions are in the body', async () => {
+      userService.findIdsByGroup.mockResolvedValue(['u1', 'u2']);
+
+      await facade.updateGroup('group-1', {
+        permissions: ['users:*'],
+      } as never);
+
+      expect(userService.findIdsByGroup).toHaveBeenCalledWith('group-1');
+      expect(sessionService.removeAllForUsers).toHaveBeenCalledWith([
+        'u1',
+        'u2',
+      ]);
+    });
+
+    it('revokes nothing when only name or description change', async () => {
+      await facade.updateGroup('group-1', { name: 'Renamed' } as never);
+
+      expect(groupsService.update).toHaveBeenCalled();
+      expect(userService.findIdsByGroup).not.toHaveBeenCalled();
+      expect(sessionService.removeAllForUsers).not.toHaveBeenCalled();
+    });
+
+    it('revokes nothing when the update fails', async () => {
+      groupsService.update.mockRejectedValue(
+        new AppException(ErrorCode.GROUP_NOT_FOUND),
+      );
+
+      await expect(
+        facade.updateGroup('group-1', { permissions: ['users:*'] } as never),
+      ).rejects.toThrow(errorWith(ErrorCode.GROUP_NOT_FOUND));
+      expect(sessionService.removeAllForUsers).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteGroup', () => {
+    it('reads members before the delete, revokes after', async () => {
+      const callOrder: string[] = [];
+      userService.findIdsByGroup.mockImplementation(() => {
+        callOrder.push('findIds');
+        return Promise.resolve(['u1']);
+      });
+      groupsService.delete.mockImplementation(() => {
+        callOrder.push('delete');
+        return Promise.resolve();
+      });
+      sessionService.removeAllForUsers.mockImplementation(() => {
+        callOrder.push('revoke');
+        return Promise.resolve();
+      });
+
+      await facade.deleteGroup('group-1');
+
+      expect(callOrder).toEqual(['findIds', 'delete', 'revoke']);
+      expect(sessionService.removeAllForUsers).toHaveBeenCalledWith(['u1']);
+    });
+
+    it('revokes nothing when the group is unknown', async () => {
+      groupsService.delete.mockRejectedValue(
+        new AppException(ErrorCode.GROUP_NOT_FOUND),
+      );
+
+      await expect(facade.deleteGroup('group-1')).rejects.toThrow(
+        errorWith(ErrorCode.GROUP_NOT_FOUND),
+      );
+      expect(sessionService.removeAllForUsers).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteUser', () => {
+    it('soft-deletes, then revokes every session of the user', async () => {
+      const callOrder: string[] = [];
+      userService.softDelete.mockImplementation(() => {
+        callOrder.push('softDelete');
+        return Promise.resolve();
+      });
+      sessionService.removeAllForUser.mockImplementation(() => {
+        callOrder.push('revoke');
+        return Promise.resolve(1);
+      });
+
+      await facade.deleteUser('user-1');
+
+      expect(callOrder).toEqual(['softDelete', 'revoke']);
+      expect(sessionService.removeAllForUser).toHaveBeenCalledWith('user-1');
+    });
+
+    it('revokes nothing when the user is unknown', async () => {
+      userService.softDelete.mockRejectedValue(
+        new AppException(ErrorCode.USER_NOT_FOUND),
+      );
+
+      await expect(facade.deleteUser('x')).rejects.toThrow(
+        errorWith(ErrorCode.USER_NOT_FOUND),
+      );
+      expect(sessionService.removeAllForUser).not.toHaveBeenCalled();
     });
   });
 });

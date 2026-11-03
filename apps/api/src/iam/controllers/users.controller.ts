@@ -21,6 +21,7 @@ import {
   ApiConsumes,
   ApiHeader,
   ApiCreatedResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -186,5 +187,23 @@ export class UsersController {
   ): Promise<UserResponseDto> {
     const user = await this.iam.assignGroup(id, dto.group_id);
     return UserMapper.toDto(user);
+  }
+
+  @Delete(':id/group')
+  @HttpCode(204)
+  @Auth({ roles: Role.super_admin })
+  @ApiOperation({
+    summary: "Remove an admin's permission group",
+    description:
+      'Leaves the admin with no permissions and ends their live sessions.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiNoContentResponse({ description: 'The group was cleared.' })
+  @ApiNotFoundResponse({
+    type: ErrorResponseDto,
+    description: 'Unknown user, or the user was soft-deleted.',
+  })
+  unassignGroup(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    return this.iam.unassignGroup(id);
   }
 }

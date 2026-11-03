@@ -151,9 +151,13 @@ export class IamFacade {
     return this.userService.update(id, dto, avatar);
   }
 
-  deleteUser(id: string): Promise<void> {
-    return this.userService.softDelete(id);
+  /** Soft delete also ends every live session of the user. */
+  async deleteUser(id: string): Promise<void> {
+    await this.userService.softDelete(id);
+    await this.sessionService.removeAllForUser(id);
   }
+
+  // TODO(T-018): reset-password must call SessionService.removeAllForUser(userId) after changing the password
 
   /** Ends the admin's live sessions so their permissions refresh. */
   async assignGroup(
@@ -173,6 +177,13 @@ export class IamFacade {
     await this.sessionService.removeAllForUser(userId);
 
     return updated;
+  }
+
+  /** Clears the admin's group and ends their live sessions. */
+  async unassignGroup(userId: string): Promise<void> {
+    await this.userService.findById(userId);
+    await this.userService.setGroup(userId, null);
+    await this.sessionService.removeAllForUser(userId);
   }
 
   // ---- groups ----
@@ -195,11 +206,25 @@ export class IamFacade {
     return this.groupsService.findById(id);
   }
 
-  updateGroup(id: string, dto: UpdateGroupDto): Promise<GroupWithRelations> {
-    return this.groupsService.update(id, dto);
+  /** A permissions change ends the sessions of every member of the group. */
+  async updateGroup(
+    id: string,
+    dto: UpdateGroupDto,
+  ): Promise<GroupWithRelations> {
+    const updated = await this.groupsService.update(id, dto);
+
+    if (dto.permissions !== undefined) {
+      const memberIds = await this.userService.findIdsByGroup(id);
+      await this.sessionService.removeAllForUsers(memberIds);
+    }
+
+    return updated;
   }
 
-  deleteGroup(id: string): Promise<void> {
-    return this.groupsService.delete(id);
+  /** Members are read before the delete: the FK then nulls their group_id. */
+  async deleteGroup(id: string): Promise<void> {
+    const memberIds = await this.userService.findIdsByGroup(id);
+    await this.groupsService.delete(id);
+    await this.sessionService.removeAllForUsers(memberIds);
   }
 }

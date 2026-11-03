@@ -30,6 +30,7 @@ describe('UserService', () => {
     findMany: jest.Mock;
     update: jest.Mock;
     softDelete: jest.Mock;
+    findIdsByGroup: jest.Mock;
   };
   let passwordService: { hash: jest.Mock };
   let storageService: { upload: jest.Mock; softDelete: jest.Mock };
@@ -43,6 +44,7 @@ describe('UserService', () => {
       findMany: jest.fn(),
       update: jest.fn(),
       softDelete: jest.fn(),
+      findIdsByGroup: jest.fn(),
     };
     passwordService = { hash: jest.fn() };
     storageService = {
@@ -259,6 +261,18 @@ describe('UserService', () => {
       await expect(
         service.findByEmailWithPassword('unknown@example.com'),
       ).resolves.toBeNull();
+    });
+  });
+
+  describe('findIdsByGroup', () => {
+    it('delegates to the repository', async () => {
+      repository.findIdsByGroup.mockResolvedValue(['a', 'b']);
+
+      await expect(service.findIdsByGroup('group-1')).resolves.toEqual([
+        'a',
+        'b',
+      ]);
+      expect(repository.findIdsByGroup).toHaveBeenCalledWith('group-1');
     });
   });
 

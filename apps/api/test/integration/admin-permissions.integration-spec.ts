@@ -200,7 +200,7 @@ describe('Admin permission groups (integration)', () => {
       .send({ group_id: groupId })
       .expect(400);
 
-    // An empty group is rejected: there is no unassign for now.
+    // A null group id on PUT is rejected; unassigning is DELETE /users/:id/group.
     await request(app.getHttpServer())
       .put(`/users/${adminId}/group`)
       .set('Authorization', `Bearer ${superAdminAccessToken}`)

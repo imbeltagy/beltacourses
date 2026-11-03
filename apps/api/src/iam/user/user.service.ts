@@ -123,6 +123,10 @@ export class UserService {
     return this.usersRepository.findByEmailWithPassword(email);
   }
 
+  findIdsByGroup(groupId: string): Promise<string[]> {
+    return this.usersRepository.findIdsByGroup(groupId);
+  }
+
   setGroup(userId: string, groupId: string | null): Promise<UserWithRelations> {
     return this.usersRepository.update(userId, { group_id: groupId });
   }

@@ -66,6 +66,15 @@ export class UserRepository {
     return { items, total };
   }
 
+  /** Ids of every user in the group, soft-deleted ones included. */
+  async findIdsByGroup(groupId: string): Promise<string[]> {
+    const rows = await this.prisma.client.user.findMany({
+      where: { group_id: groupId },
+      select: { id: true },
+    });
+    return rows.map((row) => row.id);
+  }
+
   update(
     id: string,
     data: Prisma.UserUncheckedUpdateInput,

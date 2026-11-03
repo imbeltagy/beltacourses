@@ -25,6 +25,7 @@ describe('UsersController', () => {
     updateUser: jest.Mock;
     deleteUser: jest.Mock;
     assignGroup: jest.Mock;
+    unassignGroup: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -35,6 +36,7 @@ describe('UsersController', () => {
       updateUser: jest.fn(),
       deleteUser: jest.fn(),
       assignGroup: jest.fn(),
+      unassignGroup: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -165,5 +167,12 @@ describe('UsersController', () => {
     expect(result).toBeInstanceOf(UserResponseDto);
     expect({ ...result.group }).toEqual({ id: 'group-1', name: 'Support' });
     expect(iam.assignGroup).toHaveBeenCalledWith('user-1', 'group-1');
+  });
+
+  it('unassignGroup delegates and returns nothing', async () => {
+    iam.unassignGroup.mockResolvedValue(undefined);
+
+    await expect(controller.unassignGroup('user-1')).resolves.toBeUndefined();
+    expect(iam.unassignGroup).toHaveBeenCalledWith('user-1');
   });
 });
