@@ -2,7 +2,7 @@ import { errorWith } from '../../helpers/error-with';
 import { userRow } from '../../helpers/rows';
 import { ErrorCode } from '@repo/backend/errors';
 import { Role } from '@repo/db';
-import { PasswordService } from '@repo/backend/core';
+import { PasswordService } from '../../../src/iam/auth/password.service';
 import { UserRepository } from '../../../src/iam/user/user.repository';
 import { UserService } from '../../../src/iam/user/user.service';
 import { StorageService } from '../../../src/storage/storage.service';

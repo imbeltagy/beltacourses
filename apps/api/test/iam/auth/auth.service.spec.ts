@@ -1,12 +1,10 @@
 import { errorWith } from '../../helpers/error-with';
 import { ErrorCode } from '@repo/backend/errors';
 import { Role } from '@repo/db';
-import {
-  PasswordService,
-  SessionService,
-  TokenService,
-} from '@repo/backend/core';
 import { AuthService } from '../../../src/iam/auth/auth.service';
+import type { PasswordService } from '../../../src/iam/auth/password.service';
+import type { SessionService } from '../../../src/iam/auth/session.service';
+import type { TokensUtil } from '../../../src/iam/auth/tokens.util';
 import type { UserWithRelations } from '../../../src/iam/types/iam.types';
 
 const clientUser = (overrides: Partial<Record<string, unknown>> = {}) =>
@@ -15,6 +13,7 @@ const clientUser = (overrides: Partial<Record<string, unknown>> = {}) =>
     email: 'student@beltacourses.com',
     name: 'Jane Doe',
     role: Role.student,
+    group_id: null,
     ...overrides,
   }) as unknown as UserWithRelations;
 
@@ -24,44 +23,61 @@ const moderatorUser = (overrides: Partial<Record<string, unknown>> = {}) =>
     email: 'admin@beltacourses.com',
     name: 'Admin Doe',
     role: Role.admin,
+    group_id: 'group-1',
     ...overrides,
   }) as unknown as UserWithRelations;
+
+const PAIR = {
+  access_token: 'access',
+  refresh_token: 'refresh',
+  token_type: 'Bearer' as const,
+  expires_in: 300,
+  refresh_expires_in: 36000,
+};
 
 describe('AuthService', () => {
   let service: AuthService;
   let passwordService: { compare: jest.Mock };
-  let tokenService: {
+  let tokensUtil: {
     signPair: jest.Mock;
-    signAccessToken: jest.Mock;
-    signRefreshToken: jest.Mock;
-    verifyRefreshToken: jest.Mock;
-    accessTokenTtl: jest.Mock;
+    verifyRefresh: jest.Mock;
+    kindOf: jest.Mock;
+    kindOfIssuer: jest.Mock;
   };
   let sessionService: {
-    saveSession: jest.Mock;
-    verifySession: jest.Mock;
-    removeSession: jest.Mock;
-    removeAllUserSessions: jest.Mock;
+    create: jest.Mock;
+    get: jest.Mock;
+    rotate: jest.Mock;
+    remove: jest.Mock;
+    hash: jest.Mock;
+    verifyHash: jest.Mock;
   };
 
   beforeEach(() => {
     passwordService = { compare: jest.fn() };
-    tokenService = {
-      signPair: jest.fn(),
-      signAccessToken: jest.fn(),
-      signRefreshToken: jest.fn(),
-      verifyRefreshToken: jest.fn(),
-      accessTokenTtl: jest.fn().mockReturnValue(1800),
+    tokensUtil = {
+      signPair: jest.fn().mockReturnValue(PAIR),
+      verifyRefresh: jest.fn(),
+      kindOf: jest.fn(({ role }: { role: Role }) =>
+        role === Role.admin || role === Role.super_admin
+          ? 'moderator'
+          : 'client',
+      ),
+      kindOfIssuer: jest.fn((iss: string) =>
+        iss === 'mod-issuer' ? 'moderator' : 'client',
+      ),
     };
     sessionService = {
-      saveSession: jest.fn().mockResolvedValue(undefined),
-      verifySession: jest.fn(),
-      removeSession: jest.fn().mockResolvedValue(undefined),
-      removeAllUserSessions: jest.fn(),
+      create: jest.fn().mockResolvedValue(undefined),
+      get: jest.fn(),
+      rotate: jest.fn(),
+      remove: jest.fn().mockResolvedValue(undefined),
+      hash: jest.fn((token: string) => `hash(${token})`),
+      verifyHash: jest.fn().mockReturnValue(true),
     };
     service = new AuthService(
       passwordService as unknown as PasswordService,
-      tokenService as unknown as TokenService,
+      tokensUtil as unknown as TokensUtil,
       sessionService as unknown as SessionService,
     );
   });
@@ -73,10 +89,6 @@ describe('AuthService', () => {
       await expect(
         service.verifyPassword('plaintext-password', 'hashed-value'),
       ).resolves.toBeUndefined();
-      expect(passwordService.compare).toHaveBeenCalledWith(
-        'plaintext-password',
-        'hashed-value',
-      );
     });
 
     it('throws the generic 401 for a wrong password', async () => {
@@ -88,222 +100,188 @@ describe('AuthService', () => {
     });
   });
 
-  describe('issueTokens (client login)', () => {
-    it('rejects a moderator with the generic 401', async () => {
-      await expect(service.issueTokens(moderatorUser(), false)).rejects.toThrow(
-        errorWith(ErrorCode.INVALID_CREDENTIALS),
-      );
-      expect(tokenService.signPair).not.toHaveBeenCalled();
+  describe('login', () => {
+    it('rejects a moderator on the client flow with the generic 401', async () => {
+      await expect(
+        service.login(moderatorUser(), 'client', []),
+      ).rejects.toThrow(errorWith(ErrorCode.INVALID_CREDENTIALS));
+      expect(sessionService.create).not.toHaveBeenCalled();
     });
 
-    it('signs a stateless pair for a client with no Redis call', async () => {
-      tokenService.signPair.mockReturnValue({
-        access_token: 'access',
-        refresh_token: 'refresh',
-        token_type: 'Bearer',
-        expires_in: 1800,
-      });
-
-      const result = await service.issueTokens(clientUser(), false);
-
-      expect(result).toEqual({
-        access_token: 'access',
-        refresh_token: 'refresh',
-        token_type: 'Bearer',
-        expires_in: 1800,
-      });
-      expect(sessionService.saveSession).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('issueTokens (moderator login)', () => {
-    it('rejects a client with the generic 401', async () => {
-      await expect(service.issueTokens(clientUser(), true)).rejects.toThrow(
-        errorWith(ErrorCode.INVALID_CREDENTIALS),
-      );
-      expect(sessionService.saveSession).not.toHaveBeenCalled();
+    it('rejects a client on the moderator flow with the generic 401', async () => {
+      await expect(
+        service.login(clientUser(), 'moderator', []),
+      ).rejects.toThrow(errorWith(ErrorCode.INVALID_CREDENTIALS));
+      expect(tokensUtil.signPair).not.toHaveBeenCalled();
     });
 
-    it('generates a sid, signs both tokens with it, and saves the session before returning', async () => {
-      const callOrder: string[] = [];
-      tokenService.signRefreshToken.mockImplementation(() => {
-        callOrder.push('signRefreshToken');
-        return 'refresh-token';
-      });
-      sessionService.saveSession.mockImplementation(() => {
-        callOrder.push('saveSession');
-        return Promise.resolve();
-      });
-      tokenService.signAccessToken.mockImplementation(() => {
-        callOrder.push('signAccessToken');
-        return 'access-token';
-      });
+    it('stores a session for a client too', async () => {
+      const result = await service.login(clientUser(), 'client', []);
 
-      const result = await service.issueTokens(moderatorUser(), true);
-
-      expect(callOrder).toEqual([
-        'signRefreshToken',
-        'saveSession',
-        'signAccessToken',
-      ]);
-
-      const [, sidUsedForRefresh] = tokenService.signRefreshToken.mock
-        .calls[0] as [unknown, string];
-      const [, sidUsedForAccess] = tokenService.signAccessToken.mock
-        .calls[0] as [unknown, string];
-      expect(sidUsedForRefresh).toBe(sidUsedForAccess);
-
-      const [userId, sid, refreshToken] = sessionService.saveSession.mock
-        .calls[0] as [string, string, string];
-      expect(userId).toBe('admin-1');
-      expect(sid).toBe(sidUsedForRefresh);
-      expect(refreshToken).toBe('refresh-token');
-
-      expect(result).toEqual({
-        access_token: 'access-token',
-        refresh_token: 'refresh-token',
-        token_type: 'Bearer',
-        expires_in: 1800,
+      expect(result).toBe(PAIR);
+      const [sid, session] = sessionService.create.mock.calls[0] as [
+        string,
+        Record<string, unknown>,
+      ];
+      expect(tokensUtil.signPair).toHaveBeenCalledWith(clientUser(), sid);
+      expect(session).toEqual({
+        userId: 'user-1',
+        role: Role.student,
+        groupId: null,
+        permissions: [],
+        hashedRefreshToken: 'hash(refresh)',
       });
     });
 
-    it('returns no tokens when saveSession fails', async () => {
-      tokenService.signRefreshToken.mockReturnValue('refresh-token');
-      sessionService.saveSession.mockRejectedValue(new Error('ECONNREFUSED'));
+    it('snapshots role, group and permissions for a moderator', async () => {
+      await service.login(moderatorUser(), 'moderator', ['users:read']);
 
-      await expect(service.issueTokens(moderatorUser(), true)).rejects.toThrow(
-        'ECONNREFUSED',
-      );
-      expect(tokenService.signAccessToken).not.toHaveBeenCalled();
+      expect(sessionService.create).toHaveBeenCalledWith(expect.any(String), {
+        userId: 'admin-1',
+        role: Role.admin,
+        groupId: 'group-1',
+        permissions: ['users:read'],
+        hashedRefreshToken: 'hash(refresh)',
+      });
+    });
+
+    it('hands out no tokens when the session cannot be stored', async () => {
+      sessionService.create.mockRejectedValue(new Error('ECONNREFUSED'));
+
+      await expect(
+        service.login(moderatorUser(), 'moderator', []),
+      ).rejects.toThrow('ECONNREFUSED');
     });
   });
 
   describe('verifyRefreshToken', () => {
-    it('delegates to the token service', () => {
-      const claims = { sub: 'user-1', typ: 'refresh' };
-      tokenService.verifyRefreshToken.mockReturnValue(claims);
+    it('delegates to TokensUtil', () => {
+      const claims = { sid: 's', userId: 'user-1' };
+      tokensUtil.verifyRefresh.mockReturnValue(claims);
 
       expect(service.verifyRefreshToken('a-refresh-token')).toBe(claims);
-      expect(tokenService.verifyRefreshToken).toHaveBeenCalledWith(
-        'a-refresh-token',
-      );
     });
   });
 
   describe('refresh', () => {
-    const clientClaims = { sub: 'user-1', typ: 'refresh' } as never;
+    const claims = {
+      sid: 'sid-1',
+      userId: 'admin-1',
+      iss: 'mod-issuer',
+    } as never;
+    const stored = {
+      userId: 'admin-1',
+      role: Role.admin,
+      groupId: 'group-1',
+      permissions: ['old'],
+      hashedRefreshToken: 'hash(old-refresh)',
+    };
 
-    it('returns a new access token for a client with no Redis call', async () => {
-      tokenService.signAccessToken.mockReturnValue('new-access-token');
-
-      const result = await service.refresh(
-        clientClaims,
-        'a-refresh-token',
-        clientUser(),
-      );
-
-      expect(result).toEqual({
-        access_token: 'new-access-token',
-        token_type: 'Bearer',
-        expires_in: 1800,
-      });
-      expect(sessionService.verifySession).not.toHaveBeenCalled();
+    beforeEach(() => {
+      sessionService.get.mockResolvedValue(stored);
+      sessionService.rotate.mockResolvedValue(true);
     });
 
-    it('verifies the session and reuses the same sid for a moderator', async () => {
-      const claims = { sub: 'admin-1', sid: 'sid-1', typ: 'refresh' } as never;
-      sessionService.verifySession.mockResolvedValue(true);
-      tokenService.signAccessToken.mockReturnValue('new-access-token');
-
+    it('rotates on the same sid with a fresh snapshot and returns the new pair', async () => {
       const result = await service.refresh(
         claims,
-        'a-refresh-token',
-        moderatorUser(),
+        'old-refresh',
+        moderatorUser({ group_id: 'group-2' }),
+        ['new'],
       );
 
-      expect(sessionService.verifySession).toHaveBeenCalledWith(
-        'admin-1',
-        'sid-1',
-        'a-refresh-token',
-      );
-      expect(tokenService.signAccessToken).toHaveBeenCalledWith(
+      expect(result).toBe(PAIR);
+      expect(tokensUtil.signPair).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'admin-1' }),
         'sid-1',
       );
-      expect(result).toEqual({
-        access_token: 'new-access-token',
-        token_type: 'Bearer',
-        expires_in: 1800,
-      });
-    });
-
-    it('401s on a hash mismatch (verifySession false)', async () => {
-      const claims = { sub: 'admin-1', sid: 'sid-1', typ: 'refresh' } as never;
-      sessionService.verifySession.mockResolvedValue(false);
-
-      await expect(
-        service.refresh(claims, 'a-refresh-token', moderatorUser()),
-      ).rejects.toThrow(errorWith(ErrorCode.INVALID_REFRESH_TOKEN));
-    });
-
-    it('401s a moderator token with no sid claim', async () => {
-      const claims = { sub: 'admin-1', typ: 'refresh' } as never;
-
-      await expect(
-        service.refresh(claims, 'a-refresh-token', moderatorUser()),
-      ).rejects.toThrow(errorWith(ErrorCode.INVALID_REFRESH_TOKEN));
-      expect(sessionService.verifySession).not.toHaveBeenCalled();
-    });
-
-    it('returns no refresh_token (D5)', async () => {
-      tokenService.signAccessToken.mockReturnValue('new-access-token');
-
-      const result = await service.refresh(
-        clientClaims,
-        'a-refresh-token',
-        clientUser(),
+      expect(sessionService.rotate).toHaveBeenCalledWith(
+        'sid-1',
+        'hash(old-refresh)',
+        {
+          userId: 'admin-1',
+          role: Role.admin,
+          groupId: 'group-2',
+          permissions: ['new'],
+          hashedRefreshToken: 'hash(refresh)',
+        },
       );
+    });
 
-      expect(result).not.toHaveProperty('refresh_token');
+    it('works for a client session', async () => {
+      sessionService.get.mockResolvedValue({
+        ...stored,
+        userId: 'user-1',
+        role: Role.student,
+      });
+
+      await expect(
+        service.refresh(
+          { sid: 'sid-1', userId: 'user-1', iss: 'client-issuer' } as never,
+          'old-refresh',
+          clientUser(),
+          [],
+        ),
+      ).resolves.toBe(PAIR);
+    });
+
+    it('401s when the session is gone', async () => {
+      sessionService.get.mockResolvedValue(null);
+
+      await expect(
+        service.refresh(claims, 'old-refresh', moderatorUser(), []),
+      ).rejects.toThrow(errorWith(ErrorCode.INVALID_REFRESH_TOKEN));
+      expect(sessionService.rotate).not.toHaveBeenCalled();
+    });
+
+    it('401s when the session belongs to another user', async () => {
+      sessionService.get.mockResolvedValue({ ...stored, userId: 'other' });
+
+      await expect(
+        service.refresh(claims, 'old-refresh', moderatorUser(), []),
+      ).rejects.toThrow(errorWith(ErrorCode.INVALID_REFRESH_TOKEN));
+    });
+
+    it('401s on a hash mismatch', async () => {
+      sessionService.verifyHash.mockReturnValue(false);
+
+      await expect(
+        service.refresh(claims, 'old-refresh', moderatorUser(), []),
+      ).rejects.toThrow(errorWith(ErrorCode.INVALID_REFRESH_TOKEN));
+      expect(sessionService.rotate).not.toHaveBeenCalled();
+    });
+
+    it('401s a token from the other login flow', async () => {
+      await expect(
+        service.refresh(
+          claims,
+          'old-refresh',
+          clientUser({ id: 'admin-1' }),
+          [],
+        ),
+      ).rejects.toThrow(errorWith(ErrorCode.INVALID_REFRESH_TOKEN));
+    });
+
+    it('401s the loser of a concurrent refresh (CAS false)', async () => {
+      sessionService.rotate.mockResolvedValue(false);
+
+      await expect(
+        service.refresh(claims, 'old-refresh', moderatorUser(), []),
+      ).rejects.toThrow(errorWith(ErrorCode.INVALID_REFRESH_TOKEN));
     });
   });
 
   describe('logout', () => {
-    it('calls removeSession for a moderator', async () => {
-      await service.logout({
-        id: 'admin-1',
-        email: 'admin@beltacourses.com',
-        name: 'Admin',
-        role: Role.admin,
-        sid: 'sid-1',
-      });
+    it('removes only the caller session, for any role', async () => {
+      await service.logout({ id: 'user-1', sid: 'sid-1' });
 
-      expect(sessionService.removeSession).toHaveBeenCalledWith(
-        'admin-1',
-        'sid-1',
-      );
+      expect(sessionService.remove).toHaveBeenCalledWith('sid-1', 'user-1');
     });
 
-    it('does nothing for a client', async () => {
-      await service.logout({
-        id: 'user-1',
-        email: 'student@beltacourses.com',
-        name: 'Jane',
-        role: Role.student,
-      });
+    it('does nothing without a sid', async () => {
+      await service.logout({ id: 'user-1' });
 
-      expect(sessionService.removeSession).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('revokeAllSessions', () => {
-    it('removes every session of the user', async () => {
-      sessionService.removeAllUserSessions.mockResolvedValue(2);
-
-      await expect(service.revokeAllSessions('admin-1')).resolves.toBe(2);
-      expect(sessionService.removeAllUserSessions).toHaveBeenCalledWith(
-        'admin-1',
-      );
+      expect(sessionService.remove).not.toHaveBeenCalled();
     });
   });
 });

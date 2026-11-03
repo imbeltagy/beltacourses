@@ -1,121 +1,121 @@
 import { Injectable } from '@nestjs/common';
 import { AppException, ErrorCode } from '@repo/backend/errors';
 import { randomUUID } from 'node:crypto';
-import {
-  isModerator,
-  PasswordService,
-  SessionService,
-  TokenService,
-} from '@repo/backend/core';
-import type { TokenClaims, RequestUser, TokenUser } from '@repo/backend/core';
-import type { UserWithRelations } from '../types/iam.types';
 import type { LoginResponseDto } from '../dto/response/login.dto';
 import type { RefreshResponseDto } from '../dto/response/refresh.dto';
+import type {
+  AuthKind,
+  RefreshClaims,
+  Session,
+  TokenPair,
+  UserWithRelations,
+} from '../types/iam.types';
+import { PasswordService } from './password.service';
+import { SessionService } from './session.service';
+import { TokensUtil } from './tokens.util';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly passwordService: PasswordService,
-    private readonly tokenService: TokenService,
+    private readonly tokensUtil: TokensUtil,
     private readonly sessionService: SessionService,
   ) {}
 
   /**
-   * Shared by both login endpoints. Same generic 401 as a wrong password on
-   * a role mismatch, so neither endpoint reveals whether an address is staff.
+   * Shared by both login endpoints. A role/flow mismatch is the same generic
+   * 401 as a wrong password, so neither endpoint reveals whether an address is
+   * staff. `permissions` is the snapshot the facade loaded for the session.
    */
-  async issueTokens(
+  async login(
     user: UserWithRelations,
-    expectModerator: boolean,
+    kind: AuthKind,
+    permissions: string[],
   ): Promise<LoginResponseDto> {
-    if (isModerator(user.role) !== expectModerator) {
+    if (this.tokensUtil.kindOf(user) !== kind) {
       throw new AppException(ErrorCode.INVALID_CREDENTIALS);
     }
 
-    const tokenUser: TokenUser = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    };
-
-    if (!expectModerator) {
-      return this.tokenService.signPair(tokenUser);
-    }
-
-    // The sid must exist before the refresh token is signed — it is a claim inside it.
     const sid = randomUUID();
-    const refresh_token = this.tokenService.signRefreshToken(tokenUser, sid);
-    // If this throws (Redis down), the login fails with a 503; no token is
-    // handed out. Never fall back to a session-less moderator token.
-    await this.sessionService.saveSession(user.id, sid, refresh_token);
-    const access_token = this.tokenService.signAccessToken(tokenUser, sid);
+    const pair = this.tokensUtil.signPair(user, sid);
+    // If this throws (Redis down) the login fails; no token is handed out.
+    await this.sessionService.create(
+      sid,
+      this.snapshot(user, permissions, pair.refresh_token),
+    );
 
-    return {
-      access_token,
-      refresh_token,
-      token_type: 'Bearer',
-      expires_in: this.tokenService.accessTokenTtl(user.role),
-    };
+    return pair;
   }
 
-  /** Verifies the refresh token's signature and expiry. */
-  verifyRefreshToken(refreshToken: string): TokenClaims {
-    return this.tokenService.verifyRefreshToken(refreshToken);
+  /** Verifies the refresh token's signature, alg, typ, aud, iss and expiry. */
+  verifyRefreshToken(refreshToken: string): RefreshClaims {
+    return this.tokensUtil.verifyRefresh(refreshToken);
   }
 
-  /** POST /auth/refresh — both role groups. `user` is the current DB row for `claims.sub`. */
+  /**
+   * POST /auth/refresh. `user` and `permissions` are freshly loaded by the
+   * facade. Single use: the session is swapped by compare-and-swap on the
+   * stored hash, so of two concurrent refreshes with one token the loser 401s.
+   */
   async refresh(
-    claims: TokenClaims,
+    claims: RefreshClaims,
     refreshToken: string,
     user: UserWithRelations,
+    permissions: string[],
   ): Promise<RefreshResponseDto> {
-    const tokenUser: TokenUser = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    };
+    const invalid = new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
 
-    // Branch on the current DB role, not the role inside the token.
-    if (isModerator(user.role)) {
-      if (!claims.sid) throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
-
-      const ok = await this.sessionService.verifySession(
-        user.id,
-        claims.sid,
-        refreshToken,
-      );
-      if (!ok) throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
-
-      return {
-        access_token: this.tokenService.signAccessToken(tokenUser, claims.sid),
-        token_type: 'Bearer',
-        expires_in: this.tokenService.accessTokenTtl(user.role),
-      };
+    const session = await this.sessionService.get(claims.sid);
+    if (
+      !session ||
+      session.userId !== claims.userId ||
+      session.userId !== user.id ||
+      !this.sessionService.verifyHash(refreshToken, session.hashedRefreshToken)
+    ) {
+      throw invalid;
     }
 
-    return {
-      access_token: this.tokenService.signAccessToken(tokenUser),
-      token_type: 'Bearer',
-      expires_in: this.tokenService.accessTokenTtl(user.role),
-    };
+    // A token issued by the other login flow must not outlive a role change.
+    if (
+      this.tokensUtil.kindOfIssuer(claims.iss) !== this.tokensUtil.kindOf(user)
+    ) {
+      throw invalid;
+    }
+
+    const pair = this.tokensUtil.signPair(user, claims.sid);
+    const rotated = await this.sessionService.rotate(
+      claims.sid,
+      session.hashedRefreshToken,
+      this.snapshot(user, permissions, pair.refresh_token),
+    );
+    if (!rotated) throw invalid;
+
+    return pair;
   }
 
-  /** POST /auth/logout — kills the Redis session for a moderator; no-op for a client. */
-  async logout(user: RequestUser): Promise<void> {
+  /** POST /auth/logout — ends only the caller's session. No-op without a sid. */
+  async logout(user: { id: string; sid?: string }): Promise<void> {
     if (!user.sid) return;
-    await this.sessionService.removeSession(user.id, user.sid);
-  }
-
-  /** Called by UsersService when an admin's group changes. */
-  revokeAllSessions(userId: string): Promise<number> {
-    return this.sessionService.removeAllUserSessions(userId);
+    await this.sessionService.remove(user.sid, user.id);
   }
 
   /** Throws the generic INVALID_CREDENTIALS unless `password` matches `hash`. */
   async verifyPassword(password: string, hash: string): Promise<void> {
     const valid = await this.passwordService.compare(password, hash);
     if (!valid) throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+  }
+
+  private snapshot(
+    user: UserWithRelations,
+    permissions: string[],
+    refreshToken: TokenPair['refresh_token'],
+  ): Session {
+    return {
+      userId: user.id,
+      role: user.role,
+      groupId: user.group_id,
+      permissions,
+      hashedRefreshToken: this.sessionService.hash(refreshToken),
+    };
   }
 }

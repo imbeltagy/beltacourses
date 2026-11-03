@@ -1,6 +1,5 @@
 export * from './auth.constants';
 export * from './auth.types';
-export * from './password.service';
 export * from './token.service';
 export * from './session.service';
 export * from './permissions';

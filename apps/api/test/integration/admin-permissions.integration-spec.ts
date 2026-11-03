@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 import { Role } from '@repo/db';
-import { PasswordService } from '@repo/backend/core';
+import { PasswordService } from '../../src/iam/auth/password.service';
 import { PrismaService } from '@repo/backend/prisma';
 import { RedisService } from '@repo/backend/redis';
 import { AppModule } from '../../src/app.module';

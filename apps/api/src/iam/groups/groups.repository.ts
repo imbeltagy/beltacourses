@@ -32,6 +32,15 @@ export class GroupsRepository {
     });
   }
 
+  /** Permission strings granted by a group; `[]` for an unknown group. */
+  async findPermissions(groupId: string): Promise<string[]> {
+    const rows = await this.prisma.client.groupPermission.findMany({
+      where: { group_id: groupId },
+      select: { permission: true },
+    });
+    return rows.map((row) => row.permission);
+  }
+
   findIdByName(name: string): Promise<{ id: string } | null> {
     return this.prisma.client.group.findFirst({
       where: { name },

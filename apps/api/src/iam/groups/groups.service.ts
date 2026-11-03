@@ -29,6 +29,11 @@ export class GroupsService {
     return group;
   }
 
+  /** Permissions a group grants — the snapshot a session carries. */
+  findPermissions(groupId: string): Promise<string[]> {
+    return this.groupsRepository.findPermissions(groupId);
+  }
+
   async list(
     query: ListGroupsQueryDto,
   ): Promise<Paginated<GroupWithRelations>> {

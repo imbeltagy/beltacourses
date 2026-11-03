@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
- * No `refresh_token` here — there is no rotation (D5). The refresh token
- * presented to `POST /auth/refresh` stays valid for its full TTL.
+ * Refresh tokens rotate: the one presented to `POST /auth/refresh` is spent,
+ * and the response carries its replacement (same session).
  */
 export class RefreshResponseDto {
   @ApiProperty({
@@ -12,6 +12,13 @@ export class RefreshResponseDto {
   })
   access_token: string;
 
+  @ApiProperty({
+    description:
+      'The new refresh token; the one just used no longer works. 7 d for clients, 10 h for moderators.',
+    example: 'eyJhbGciOiJIUzI1NiIs...',
+  })
+  refresh_token: string;
+
   @ApiProperty({ example: 'Bearer' })
   token_type: 'Bearer';
 
@@ -20,4 +27,10 @@ export class RefreshResponseDto {
     example: 1800,
   })
   expires_in: number;
+
+  @ApiProperty({
+    description: 'Refresh token lifetime in seconds.',
+    example: 604800,
+  })
+  refresh_expires_in: number;
 }

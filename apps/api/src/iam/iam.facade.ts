@@ -7,6 +7,7 @@ import { Role } from '@repo/db';
 import { AccountEmailsService } from '../email/account-emails.service';
 import type { FileToUpload } from '../storage/storage.types';
 import { AuthService } from './auth/auth.service';
+import { SessionService } from './auth/session.service';
 import { GroupsService } from './groups/groups.service';
 import { UserService } from './user/user.service';
 import type { CreateGroupDto } from './dto/request/create-group.dto';
@@ -20,7 +21,11 @@ import type { UpdateUserDto } from './dto/request/update-user.dto';
 import type { LoginResponseDto } from './dto/response/login.dto';
 import type { PermissionCatalogResponse } from './dto/response/permission-catalog.dto';
 import type { RefreshResponseDto } from './dto/response/refresh.dto';
-import type { GroupWithRelations, UserWithRelations } from './types/iam.types';
+import type {
+  AuthKind,
+  GroupWithRelations,
+  UserWithRelations,
+} from './types/iam.types';
 
 /**
  * The only entry point controllers use. Holds every rule that spans more
@@ -30,6 +35,7 @@ import type { GroupWithRelations, UserWithRelations } from './types/iam.types';
 export class IamFacade {
   constructor(
     private readonly authService: AuthService,
+    private readonly sessionService: SessionService,
     private readonly userService: UserService,
     private readonly groupsService: GroupsService,
     private readonly accountEmails: AccountEmailsService,
@@ -55,14 +61,12 @@ export class IamFacade {
 
   /** POST /auth/login — clients only. */
   async login(dto: LoginDto): Promise<LoginResponseDto> {
-    const user = await this.verifyCredentials(dto.email, dto.password);
-    return this.authService.issueTokens(user, false);
+    return this.signIn(dto, 'client');
   }
 
   /** POST /auth/moderators/login — staff only. */
   async loginModerator(dto: LoginDto): Promise<LoginResponseDto> {
-    const user = await this.verifyCredentials(dto.email, dto.password);
-    return this.authService.issueTokens(user, true);
+    return this.signIn(dto, 'moderator');
   }
 
   async refresh(refreshToken: string): Promise<RefreshResponseDto> {
@@ -70,22 +74,40 @@ export class IamFacade {
 
     let user: UserWithRelations;
     try {
-      user = await this.userService.findById(claims.sub);
+      user = await this.userService.findById(claims.userId);
     } catch (error) {
       if (
         error instanceof AppException &&
         error.error === ErrorCode.USER_NOT_FOUND
       ) {
+        // Deleted since login: the session must not outlive the account.
+        await this.sessionService.remove(claims.sid, claims.userId);
         throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
       }
       throw error;
     }
 
-    return this.authService.refresh(claims, refreshToken, user);
+    const permissions = await this.loadPermissions(user);
+    return this.authService.refresh(claims, refreshToken, user, permissions);
   }
 
   logout(user: RequestUser): Promise<void> {
     return this.authService.logout(user);
+  }
+
+  private async signIn(
+    dto: LoginDto,
+    kind: AuthKind,
+  ): Promise<LoginResponseDto> {
+    const user = await this.verifyCredentials(dto.email, dto.password);
+    const permissions = await this.loadPermissions(user);
+    return this.authService.login(user, kind, permissions);
+  }
+
+  /** An admin's group permissions; every other role has none. */
+  private async loadPermissions(user: UserWithRelations): Promise<string[]> {
+    if (user.role !== Role.admin || !user.group_id) return [];
+    return this.groupsService.findPermissions(user.group_id);
   }
 
   private async verifyCredentials(
@@ -148,7 +170,7 @@ export class IamFacade {
 
     const updated = await this.userService.setGroup(userId, groupId);
 
-    await this.authService.revokeAllSessions(userId);
+    await this.sessionService.removeAllForUser(userId);
 
     return updated;
   }

@@ -82,6 +82,7 @@ describe('AuthController', () => {
       refresh_token: 'refresh',
       token_type: 'Bearer' as const,
       expires_in: 1800,
+      refresh_expires_in: 604800,
     };
     iam.login.mockResolvedValue(tokens);
 
@@ -96,6 +97,7 @@ describe('AuthController', () => {
       refresh_token: 'refresh',
       token_type: 'Bearer' as const,
       expires_in: 300,
+      refresh_expires_in: 36000,
     };
     iam.loginModerator.mockResolvedValue(tokens);
 
@@ -106,8 +108,10 @@ describe('AuthController', () => {
   it('refresh delegates to the service with the raw refresh token', async () => {
     const response = {
       access_token: 'new-access',
+      refresh_token: 'new-refresh',
       token_type: 'Bearer' as const,
       expires_in: 1800,
+      refresh_expires_in: 604800,
     };
     iam.refresh.mockResolvedValue(response);
 

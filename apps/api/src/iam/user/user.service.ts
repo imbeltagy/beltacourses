@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AppException, ErrorCode } from '@repo/backend/errors';
-import { PasswordService } from '@repo/backend/core';
+import { PasswordService } from '../auth/password.service';
 import type { User } from '@repo/db';
 import { StorageService } from '../../storage/storage.service';
 import type { FileToUpload } from '../../storage/storage.types';

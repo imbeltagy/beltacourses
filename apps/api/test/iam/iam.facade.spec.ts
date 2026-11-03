@@ -3,6 +3,7 @@ import { userRow } from '../helpers/rows';
 import { AppException, ErrorCode } from '@repo/backend/errors';
 import { Role } from '@repo/db';
 import { IamFacade } from '../../src/iam/iam.facade';
+import type { SessionService } from '../../src/iam/auth/session.service';
 import type { AuthService } from '../../src/iam/auth/auth.service';
 import type { UserService } from '../../src/iam/user/user.service';
 import type { GroupsService } from '../../src/iam/groups/groups.service';
@@ -16,13 +17,13 @@ const user = (overrides: Partial<Record<string, unknown>> = {}) => ({
 describe('IamFacade', () => {
   let facade: IamFacade;
   let authService: {
-    issueTokens: jest.Mock;
+    login: jest.Mock;
     verifyPassword: jest.Mock;
     verifyRefreshToken: jest.Mock;
     refresh: jest.Mock;
     logout: jest.Mock;
-    revokeAllSessions: jest.Mock;
   };
+  let sessionService: { remove: jest.Mock; removeAllForUser: jest.Mock };
   let userService: {
     create: jest.Mock;
     findById: jest.Mock;
@@ -32,17 +33,20 @@ describe('IamFacade', () => {
     softDelete: jest.Mock;
     setGroup: jest.Mock;
   };
-  let groupsService: { findById: jest.Mock };
+  let groupsService: { findById: jest.Mock; findPermissions: jest.Mock };
   let accountEmails: { sendAccountCreated: jest.Mock };
 
   beforeEach(() => {
     authService = {
-      issueTokens: jest.fn(),
+      login: jest.fn(),
       verifyPassword: jest.fn().mockResolvedValue(undefined),
       verifyRefreshToken: jest.fn(),
       refresh: jest.fn(),
       logout: jest.fn(),
-      revokeAllSessions: jest.fn().mockResolvedValue(0),
+    };
+    sessionService = {
+      remove: jest.fn().mockResolvedValue(undefined),
+      removeAllForUser: jest.fn().mockResolvedValue(0),
     };
     userService = {
       create: jest.fn(),
@@ -55,6 +59,7 @@ describe('IamFacade', () => {
     };
     groupsService = {
       findById: jest.fn().mockResolvedValue({ id: 'group-1' }),
+      findPermissions: jest.fn().mockResolvedValue(['users:read']),
     };
     accountEmails = {
       sendAccountCreated: jest.fn().mockResolvedValue(undefined),
@@ -62,6 +67,7 @@ describe('IamFacade', () => {
 
     facade = new IamFacade(
       authService as unknown as AuthService,
+      sessionService as unknown as SessionService,
       userService as unknown as UserService,
       groupsService as unknown as GroupsService,
       accountEmails as unknown as AccountEmailsService,
@@ -146,14 +152,14 @@ describe('IamFacade', () => {
       });
       const profile = user();
       userService.findById.mockResolvedValue(profile);
-      authService.issueTokens.mockResolvedValue({ access_token: 'a' });
+      authService.login.mockResolvedValue({ access_token: 'a' });
 
       await expect(facade.login(dto)).resolves.toEqual({ access_token: 'a' });
       expect(authService.verifyPassword).toHaveBeenCalledWith(
         'password',
         'hashed-value',
       );
-      expect(authService.issueTokens).toHaveBeenCalledWith(profile, false);
+      expect(authService.login).toHaveBeenCalledWith(profile, 'client', []);
     });
 
     it('loginModerator issues with the moderator flag', async () => {
@@ -161,13 +167,29 @@ describe('IamFacade', () => {
         id: 'admin-1',
         hashed_password: 'hashed-value',
       });
-      const profile = user({ role: Role.admin });
+      const profile = user({ role: Role.admin, group_id: 'group-1' });
       userService.findById.mockResolvedValue(profile);
-      authService.issueTokens.mockResolvedValue({ access_token: 'a' });
+      authService.login.mockResolvedValue({ access_token: 'a' });
 
       await facade.loginModerator(dto);
 
-      expect(authService.issueTokens).toHaveBeenCalledWith(profile, true);
+      expect(authService.login).toHaveBeenCalledWith(profile, 'moderator', [
+        'users:read',
+      ]);
+    });
+
+    it('gives an admin with no group no permissions', async () => {
+      userService.findByEmailWithPassword.mockResolvedValue({
+        id: 'admin-1',
+        hashed_password: 'hashed-value',
+      });
+      const profile = user({ role: Role.admin, group_id: null });
+      userService.findById.mockResolvedValue(profile);
+
+      await facade.loginModerator(dto);
+
+      expect(groupsService.findPermissions).not.toHaveBeenCalled();
+      expect(authService.login).toHaveBeenCalledWith(profile, 'moderator', []);
     });
 
     it('throws the same 401 for an unknown email', async () => {
@@ -192,14 +214,15 @@ describe('IamFacade', () => {
         errorWith(ErrorCode.INVALID_CREDENTIALS),
       );
       expect(userService.findById).not.toHaveBeenCalled();
-      expect(authService.issueTokens).not.toHaveBeenCalled();
+      expect(authService.login).not.toHaveBeenCalled();
     });
   });
 
   describe('refresh', () => {
-    it('loads the user from the verified claims and hands over to AuthService', async () => {
-      const claims = { sub: 'user-1' };
-      const profile = user();
+    const claims = { sid: 'sid-1', userId: 'user-1' };
+
+    it('loads the user and permissions, then hands over to AuthService', async () => {
+      const profile = user({ role: Role.admin, group_id: 'group-1' });
       authService.verifyRefreshToken.mockReturnValue(claims);
       userService.findById.mockResolvedValue(profile);
       authService.refresh.mockResolvedValue({ access_token: 'new' });
@@ -208,15 +231,33 @@ describe('IamFacade', () => {
         access_token: 'new',
       });
       expect(userService.findById).toHaveBeenCalledWith('user-1');
+      expect(groupsService.findPermissions).toHaveBeenCalledWith('group-1');
       expect(authService.refresh).toHaveBeenCalledWith(
         claims,
         'a-refresh-token',
         profile,
+        ['users:read'],
       );
     });
 
-    it('401s a soft-deleted or unknown user (missing resource mapped to 401)', async () => {
-      authService.verifyRefreshToken.mockReturnValue({ sub: 'unknown' });
+    it('passes no permissions for a client', async () => {
+      const profile = user();
+      authService.verifyRefreshToken.mockReturnValue(claims);
+      userService.findById.mockResolvedValue(profile);
+
+      await facade.refresh('a-refresh-token');
+
+      expect(groupsService.findPermissions).not.toHaveBeenCalled();
+      expect(authService.refresh).toHaveBeenCalledWith(
+        claims,
+        'a-refresh-token',
+        profile,
+        [],
+      );
+    });
+
+    it('removes the session and 401s a soft-deleted or unknown user', async () => {
+      authService.verifyRefreshToken.mockReturnValue(claims);
       userService.findById.mockRejectedValue(
         new AppException(ErrorCode.USER_NOT_FOUND),
       );
@@ -224,16 +265,18 @@ describe('IamFacade', () => {
       await expect(facade.refresh('a-refresh-token')).rejects.toThrow(
         errorWith(ErrorCode.INVALID_REFRESH_TOKEN),
       );
+      expect(sessionService.remove).toHaveBeenCalledWith('sid-1', 'user-1');
       expect(authService.refresh).not.toHaveBeenCalled();
     });
 
     it('lets other lookup failures through', async () => {
-      authService.verifyRefreshToken.mockReturnValue({ sub: 'user-1' });
+      authService.verifyRefreshToken.mockReturnValue(claims);
       userService.findById.mockRejectedValue(new Error('db down'));
 
       await expect(facade.refresh('a-refresh-token')).rejects.toThrow(
         'db down',
       );
+      expect(sessionService.remove).not.toHaveBeenCalled();
     });
   });
 
@@ -294,7 +337,7 @@ describe('IamFacade', () => {
         errorWith(ErrorCode.USER_NOT_FOUND),
       );
       expect(groupsService.findById).not.toHaveBeenCalled();
-      expect(authService.revokeAllSessions).not.toHaveBeenCalled();
+      expect(sessionService.removeAllForUser).not.toHaveBeenCalled();
     });
 
     it('rejects a non-admin target with bad request', async () => {
@@ -317,7 +360,7 @@ describe('IamFacade', () => {
         errorWith(ErrorCode.GROUP_NOT_FOUND),
       );
       expect(userService.setGroup).not.toHaveBeenCalled();
-      expect(authService.revokeAllSessions).not.toHaveBeenCalled();
+      expect(sessionService.removeAllForUser).not.toHaveBeenCalled();
     });
 
     it('links the group after checking it exists', async () => {
@@ -337,7 +380,7 @@ describe('IamFacade', () => {
         callOrder.push('setGroup');
         return Promise.resolve(user({ role: Role.admin }));
       });
-      authService.revokeAllSessions.mockImplementation(() => {
+      sessionService.removeAllForUser.mockImplementation(() => {
         callOrder.push('revokeAllSessions');
         return Promise.resolve(1);
       });
@@ -350,7 +393,7 @@ describe('IamFacade', () => {
     it('propagates a session revocation failure', async () => {
       userService.findById.mockResolvedValue(user({ role: Role.admin }));
       userService.setGroup.mockResolvedValue(user({ role: Role.admin }));
-      authService.revokeAllSessions.mockRejectedValue(
+      sessionService.removeAllForUser.mockRejectedValue(
         new Error('ECONNREFUSED'),
       );
 

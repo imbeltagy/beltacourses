@@ -1,13 +1,6 @@
 import { Module } from '@nestjs/common';
-import {
-  AccessTokenGuard,
-  PermissionsGuard,
-  PermissionsRepository,
-  RolesGuard,
-  SessionService,
-  TokenService,
-} from '@repo/backend/core';
 import { EmailModule } from '../email/email.module';
+import { LEGACY_GUARD_PROVIDERS } from './auth/legacy-guards.providers';
 import { AuthModule } from './auth/auth.module';
 import { AuthController } from './controllers/auth.controller';
 import { GroupsController } from './controllers/groups.controller';
@@ -22,12 +15,7 @@ import { UserModule } from './user/user.module';
   providers: [
     IamFacade,
     // Guards composed by @Auth() resolve in the module that owns the controllers.
-    TokenService,
-    SessionService,
-    PermissionsRepository,
-    AccessTokenGuard,
-    RolesGuard,
-    PermissionsGuard,
+    ...LEGACY_GUARD_PROVIDERS,
   ],
 })
 export class IamModule {}

@@ -2,14 +2,7 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
-import {
-  AccessTokenGuard,
-  PermissionsGuard,
-  PermissionsRepository,
-  RolesGuard,
-  SessionService,
-  TokenService,
-} from '@repo/backend/core';
+import { LEGACY_GUARD_PROVIDERS } from '../iam/auth/legacy-guards.providers';
 import { S3Adapter } from './s3.adapter';
 import { StorageProcessor } from './storage.processor';
 import { StorageRepository } from './storage.repository';
@@ -31,12 +24,7 @@ import { StorageController } from './storage.controller';
     StorageRepository,
     S3Adapter,
     StorageProcessor,
-    TokenService,
-    SessionService,
-    PermissionsRepository,
-    AccessTokenGuard,
-    RolesGuard,
-    PermissionsGuard,
+    ...LEGACY_GUARD_PROVIDERS,
   ],
   exports: [StorageService],
 })

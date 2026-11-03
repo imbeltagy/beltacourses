@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { PASSWORD_SALT, PASSWORD_SALT_ROUNDS } from './core.constants';
+import {
+  PASSWORD_SALT,
+  PASSWORD_SALT_ROUNDS,
+} from '../constants/iam.constants';
 
 const DEFAULT_SALT_ROUNDS = 12;
 const MIN_SALT_ROUNDS = 4;
