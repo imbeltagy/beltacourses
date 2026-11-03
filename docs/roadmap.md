@@ -44,7 +44,7 @@ Rules:
 | T-014 | Refund request + refund to student wallet, deduct from teacher & system wallet                                           | [015](./user-stories/015-refunds.md)                                     | Pending     | T-011               |
 | T-015 | Course close (hidden for everyone except students who already purchased)                                                 | [034](./user-stories/034-course-closing.md)                              | Pending     | T-008, T-010        |
 | T-034 | Course analytics for teacher & admin (owners, purchases, refunds, anonymized transactions, per-lecture completion)       | [031](./user-stories/031-course-analytics.md)                            | Pending     | T-011, T-013, T-014 |
-| T-035 | IAM refactor — `iam/` module with one facade, one global `@Auth` guard, rotating refresh tokens, sessions for every role | [003](./user-stories/003-authN.md)<br>[004](./user-stories/004-authZ.md) | In progress | T-005               |
+| T-035 | IAM refactor — `iam/` module with one facade, one global `@Auth` guard, rotating refresh tokens, sessions for every role | [003](./user-stories/003-authN.md)<br>[004](./user-stories/004-authZ.md) | Done        | T-005               |
 
 ## Phase 2 — Teacher Platform & Monetization
 

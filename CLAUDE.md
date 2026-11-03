@@ -58,7 +58,7 @@ This is the first decision for any backend feature.
 **Used by more than one app** → `packages/backend/src/<name>/`, imported as `@repo/backend/<name>`.
 Example: the storage service — the API, and later a worker or admin app, all upload files.
 
-**Used by exactly one app** → keep it inside that app, e.g. `apps/api/src/users/`. Do not put it in
+**Used by exactly one app** → keep it inside that app, e.g. `apps/api/src/iam/user/`. Do not put it in
 `packages/backend` "in case someone needs it later." Move it when a second app actually needs it.
 
 When unsure, start app-local. Promoting later is a file move; demoting is a dependency cleanup across
