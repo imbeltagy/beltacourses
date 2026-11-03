@@ -42,7 +42,7 @@ barrel file is missing, not the map.
 
 | Package                   | `exports`                    | So `X` resolves to                                                            |
 | ------------------------- | ---------------------------- | ----------------------------------------------------------------------------- |
-| `@repo/backend`           | `"./*": "./src/*/index.ts"`  | `@repo/backend/core` → `src/core/index.ts`                                    |
+| `@repo/backend`           | `"./*": "./src/*/index.ts"`  | `@repo/backend/prisma` → `src/prisma/index.ts`                                |
 | `@repo/frontend`          | `"./*": "./src/*/index.tsx"` | `@repo/frontend/components/logo` → `src/components/logo/index.tsx`            |
 | `@repo/frontend-features` | `"./*": "./src/*/index.tsx"` | `@repo/frontend-features/pages/auth/login` → `src/pages/auth/login/index.tsx` |
 | `@repo/db`                | `".": "./src/index.ts"`      | one entry point, no subpaths                                                  |
@@ -86,6 +86,32 @@ apps/api/src/storage/
         ├── file-metadata.dto.ts        GET    /storage/:id
         └── soft-delete-files.dto.ts    DELETE /storage/soft
 ```
+
+### The `iam/` feature
+
+Identity and access — auth, users and groups — is one feature in one app, so it lives in
+`apps/api/src/iam/` and is the exception to one-folder-per-resource:
+
+```
+apps/api/src/
+├── iam/
+│   ├── iam.module.ts  iam.facade.ts      wiring; the only class controllers inject
+│   ├── controllers/                      auth, users, groups
+│   ├── decorators/                       @Auth, @CurrentUser
+│   ├── guards/auth.guard.ts              the one global APP_GUARD
+│   ├── constants/                        env reads, TTLs, issuer paths, permission catalog
+│   ├── types/  utils/  mappers/  dto/
+│   ├── auth/                             AuthService, SessionService + repository,
+│   │                                     TokensUtil, PasswordService
+│   ├── user/                             UserService + repository
+│   └── groups/                           GroupsService + repository
+└── email/                                email.module, account-emails.service, URL envs
+```
+
+`controllers → IamFacade → sub-services`. Sub-services never inject each other; the facade owns every
+rule that crosses them (loading permissions, revoking sessions, sending the account email). Other
+features import `@Auth` from `../iam`. See
+[`technical-design/02-auth.md`](./technical-design/02-auth.md).
 
 ### Layering
 
@@ -142,8 +168,8 @@ Providers shared across backend apps, plus the shared pagination DTOs:
 
 ```
 packages/backend/src/
-├── core/        auth primitives: password, token, session, permissions,
-│                guards and decorators.  @repo/backend/core
+├── email/       email sending provider.  @repo/backend/email
+├── errors/      ErrorCode, AppException, AppExceptionFilter.  @repo/backend/errors
 ├── pagination/  PaginationQueryDto, PaginationMetadataDto, ListResponseDto,
 │                Paginated<T>.  @repo/backend/pagination
 ├── prisma/      PrismaService — the one Prisma handle.  @repo/backend/prisma
@@ -156,7 +182,7 @@ runs the worker), so each app declares its own.
 
 `prisma` and `redis` are the two deliberate exceptions: a single connection must be shared
 process-wide, so both ship a `@Global()` module that `AppModule` imports once. That is what lets
-`SessionService` in `core` reach Redis with no module edge to wire. Each has a `nestjs-module.md`
+the API's `SessionRepository` reach Redis with no module edge to wire. Each has a `nestjs-module.md`
 beside it recording the call.
 
 `index.ts` exports repositories and adapters too, for wiring and tests — but a module's `exports`
@@ -168,7 +194,7 @@ signature; define a structural type instead. See [`packages/backend/README.md`](
 ### Which side does a new service go on?
 
 Used by more than one app → `packages/backend/src/<name>/`. Used by exactly one → keep it in that
-app, e.g. `apps/api/src/users/`.
+app, e.g. `apps/api/src/iam/`.
 
 When unsure, start app-local. Promoting later is a file move; demoting is a dependency cleanup across
 every consumer.
@@ -202,8 +228,8 @@ when a feature has as many spec files as source files:
 
 ```
 packages/backend/
-├── src/core/session.service.ts
-└── test/core/session.service.spec.ts
+├── src/storage/storage.service.ts
+└── test/storage/storage.service.spec.ts
 ```
 
 Jest's `rootDir` is the package root and `testRegex` matches `*.spec.ts` **anywhere** — so a spec
@@ -400,27 +426,27 @@ adding a primitive.
 
 # Where does X go?
 
-| You are adding                  | It goes in                                                                  |
-| ------------------------------- | --------------------------------------------------------------------------- |
-| An HTTP endpoint                | `apps/api/src/<feature>/<feature>.controller.ts`                            |
-| Business logic used by one app  | `apps/api/src/<feature>/<feature>.service.ts`                               |
-| Business logic used by two apps | `packages/backend/src/<name>/` (+ `index.ts`)                               |
-| A Prisma query                  | `<feature>.repository.ts` — never in a service or controller                |
-| A third-party SDK call          | `<feature>.adapter.ts` — never alongside Prisma                             |
-| A validated request body        | `apps/api/src/<feature>/dto/request/<endpoint>.dto.ts`                      |
-| A documented response           | `apps/api/src/<feature>/dto/response/<endpoint>.dto.ts`                     |
-| A compile-time-only shape       | `<feature>.types.ts`                                                        |
-| A database model                | `packages/database/prisma/schema/<domain>.prisma`                           |
-| A scheduled job                 | `<feature>.processor.ts`, scheduled in `onModuleInit`                       |
-| A page                          | `packages/frontend/features/src/pages/<area>/<page>/`                       |
-| A route for that page           | `apps/<app>/src/app/.../page.tsx`, one re-export line                       |
-| A server action                 | `packages/frontend/features/src/actions/<area>-actions.ts`                  |
-| An API wire type                | `packages/frontend/features/src/types/api/<area>.ts`                        |
-| An API URL                      | `packages/frontend/features/src/configs/endpoints.ts`                       |
-| A shadcn primitive              | `packages/frontend/common/src/ui/` + a line in `ui/index.ts`                |
-| A reusable component            | `packages/frontend/common/src/components/<name>/index.tsx`                  |
-| A component used by pages only  | `packages/frontend/features/src/components/<name>/index.tsx`                |
-| A page shell                    | `packages/frontend/features/src/layout/<name>/index.tsx`                    |
-| An email template               | `packages/frontend/emails/src/templates/<name>.tsx` + both `locales/*.json` |
-| An env var                      | the app's `.env.example` **and** `globalEnv` in `turbo.json`                |
-| A unit test                     | `<package-or-app>/test/`, mirroring the path under `src/`                   |
+| You are adding                  | It goes in                                                                                           |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| An HTTP endpoint                | `apps/api/src/<feature>/<feature>.controller.ts`; auth/users/groups: `apps/api/src/iam/controllers/` |
+| Business logic used by one app  | `apps/api/src/<feature>/<feature>.service.ts`                                                        |
+| Business logic used by two apps | `packages/backend/src/<name>/` (+ `index.ts`)                                                        |
+| A Prisma query                  | `<feature>.repository.ts` — never in a service or controller                                         |
+| A third-party SDK call          | `<feature>.adapter.ts` — never alongside Prisma                                                      |
+| A validated request body        | `apps/api/src/<feature>/dto/request/<endpoint>.dto.ts`                                               |
+| A documented response           | `apps/api/src/<feature>/dto/response/<endpoint>.dto.ts`                                              |
+| A compile-time-only shape       | `<feature>.types.ts`                                                                                 |
+| A database model                | `packages/database/prisma/schema/<domain>.prisma`                                                    |
+| A scheduled job                 | `<feature>.processor.ts`, scheduled in `onModuleInit`                                                |
+| A page                          | `packages/frontend/features/src/pages/<area>/<page>/`                                                |
+| A route for that page           | `apps/<app>/src/app/.../page.tsx`, one re-export line                                                |
+| A server action                 | `packages/frontend/features/src/actions/<area>-actions.ts`                                           |
+| An API wire type                | `packages/frontend/features/src/types/api/<area>.ts`                                                 |
+| An API URL                      | `packages/frontend/features/src/configs/endpoints.ts`                                                |
+| A shadcn primitive              | `packages/frontend/common/src/ui/` + a line in `ui/index.ts`                                         |
+| A reusable component            | `packages/frontend/common/src/components/<name>/index.tsx`                                           |
+| A component used by pages only  | `packages/frontend/features/src/components/<name>/index.tsx`                                         |
+| A page shell                    | `packages/frontend/features/src/layout/<name>/index.tsx`                                             |
+| An email template               | `packages/frontend/emails/src/templates/<name>.tsx` + both `locales/*.json`                          |
+| An env var                      | the app's `.env.example` **and** `globalEnv` in `turbo.json`                                         |
+| A unit test                     | `<package-or-app>/test/`, mirroring the path under `src/`                                            |

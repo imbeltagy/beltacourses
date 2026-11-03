@@ -4,4 +4,5 @@ A user who forgot their password can set a new one.
 - The link sets a new password; it works once.
 - An unknown email gets the same response as a known one, so the form never reveals who has an account.
 - A staff member created by the super admin uses the same flow to choose their first password.
-- Clients and moderators both use it; resetting ends the moderator's existing sessions.
+- Clients and moderators both use it; resetting ends all of that user's existing sessions, client or
+  moderator.

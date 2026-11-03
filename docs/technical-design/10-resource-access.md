@@ -105,7 +105,8 @@ Routes:
   A malformed id resolves to not found.
 - A missing resource is `NOT_FOUND`. A resource the user holds no permission on is `FORBIDDEN`.
 - A required permission whose resource is neither in `access` nor in the global catalog is a wiring bug.
-  The guard throws a server error, as `RolesGuard` does today without `@Roles()`.
+  The guard throws a server error, as `AuthGuard` does today for a route with no `@Auth()`
+  (a public route must say `@Auth({ public: true })`).
 - Only some permissions can be put in an admin group (e.g. `lecture:read` for content review). The
   catalog marks which ones; `POST/PATCH /groups` still accepts only those.
 
