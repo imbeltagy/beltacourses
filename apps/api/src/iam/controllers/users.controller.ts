@@ -1,0 +1,188 @@
+import { ErrorResponseDto } from '@repo/backend/errors';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Put,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiConsumes,
+  ApiHeader,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
+import { CurrentUser, MODERATOR_ROLES, PERMISSIONS } from '@repo/backend/core';
+import { Role } from '@repo/db';
+import type { RequestUser } from '@repo/backend/core';
+import { EmailLocaleParam, type EmailLocale } from '@repo/backend/email';
+import { Auth } from '../decorators/auth.decorator';
+import { AssignUserGroupDto } from '../dto/request/assign-user-group.dto';
+import { CreateUserDto } from '../dto/request/create-user.dto';
+import { ListUsersQueryDto } from '../dto/request/list-users.dto';
+import { UpdateUserDto } from '../dto/request/update-user.dto';
+import { ListUsersResponseDto } from '../dto/response/list-users.dto';
+import { UserResponseDto } from '../dto/response/user.dto';
+import { IamFacade } from '../iam.facade';
+import { UserMapper } from '../mappers/user.mapper';
+import { UpdateMyProfileDto } from '../dto/request/update-my-profile.dto';
+
+@ApiTags('users')
+@Controller('users')
+export class UsersController {
+  constructor(private readonly iam: IamFacade) {}
+
+  @Post()
+  @UseInterceptors(FileInterceptor('avatar'))
+  @ApiConsumes('multipart/form-data')
+  @Auth({ roles: MODERATOR_ROLES, permissions: PERMISSIONS.USERS_CREATE })
+  @ApiOperation({
+    summary: 'Create a user',
+    description:
+      'Emails the new user that their account exists, in the language of `Accept-Language`.',
+  })
+  @ApiHeader({
+    name: 'Accept-Language',
+    required: false,
+    description:
+      'Language of the email, `en` or `ar`. Anything else gets `en`.',
+  })
+  @ApiCreatedResponse({ type: UserResponseDto })
+  @ApiConflictResponse({
+    type: ErrorResponseDto,
+    description: 'Email already in use.',
+  })
+  async create(
+    @Body() dto: CreateUserDto,
+    @UploadedFile() avatar: Express.Multer.File | undefined,
+    @EmailLocaleParam() locale: EmailLocale,
+  ): Promise<UserResponseDto> {
+    const user = await this.iam.createUser(dto, avatar, locale);
+    return UserMapper.toDto(user);
+  }
+
+  @Get()
+  @Auth({ roles: MODERATOR_ROLES, permissions: PERMISSIONS.USERS_READ })
+  @ApiOperation({ summary: 'List users' })
+  @ApiOkResponse({ type: ListUsersResponseDto })
+  async list(@Query() query: ListUsersQueryDto): Promise<ListUsersResponseDto> {
+    const result = await this.iam.listUsers(query);
+    return UserMapper.toListDto(result);
+  }
+
+  @Get('me')
+  @Auth()
+  @ApiOperation({ summary: 'Get my own profile' })
+  @ApiOkResponse({ type: UserResponseDto })
+  async getMe(@CurrentUser() user: RequestUser): Promise<UserResponseDto> {
+    const profile = await this.iam.getUser(user.id);
+    return UserMapper.toDto(profile);
+  }
+
+  @Patch('me')
+  @UseInterceptors(FileInterceptor('avatar'))
+  @ApiConsumes('multipart/form-data')
+  @Auth()
+  @ApiOperation({ summary: 'Update my own profile' })
+  @ApiOkResponse({ type: UserResponseDto })
+  async updateMe(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: UpdateMyProfileDto,
+    @UploadedFile() avatar?: Express.Multer.File,
+  ): Promise<UserResponseDto> {
+    const updated = await this.iam.updateUser(user.id, dto, avatar);
+    return UserMapper.toDto(updated);
+  }
+
+  @Get(':id')
+  @Auth({ roles: MODERATOR_ROLES, permissions: PERMISSIONS.USERS_READ })
+  @ApiOperation({ summary: 'Get a user by id' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: UserResponseDto })
+  @ApiNotFoundResponse({
+    type: ErrorResponseDto,
+    description: 'Unknown id, or the user was soft-deleted.',
+  })
+  async getById(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<UserResponseDto> {
+    const user = await this.iam.getUser(id);
+    return UserMapper.toDto(user);
+  }
+
+  @Patch(':id')
+  @UseInterceptors(FileInterceptor('avatar'))
+  @ApiConsumes('multipart/form-data')
+  @Auth({ roles: MODERATOR_ROLES, permissions: PERMISSIONS.USERS_UPDATE })
+  @ApiOperation({ summary: 'Update a user' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: UserResponseDto })
+  @ApiNotFoundResponse({
+    type: ErrorResponseDto,
+    description: 'Unknown id, or the user was soft-deleted.',
+  })
+  @ApiConflictResponse({
+    type: ErrorResponseDto,
+    description: 'Email already in use.',
+  })
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateUserDto,
+    @UploadedFile() avatar?: Express.Multer.File,
+  ): Promise<UserResponseDto> {
+    const user = await this.iam.updateUser(id, dto, avatar);
+    return UserMapper.toDto(user);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @Auth({ roles: MODERATOR_ROLES, permissions: PERMISSIONS.USERS_DELETE })
+  @ApiOperation({ summary: 'Soft-delete a user' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiNotFoundResponse({
+    type: ErrorResponseDto,
+    description: 'Unknown id, or already deleted.',
+  })
+  delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    return this.iam.deleteUser(id);
+  }
+
+  @Put(':id/group')
+  @Auth({ roles: Role.super_admin })
+  @ApiOperation({
+    summary: 'Assign an admin to a permission group',
+    description: "Ends the admin's live sessions so their permissions refresh.",
+  })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ type: UserResponseDto })
+  @ApiBadRequestResponse({
+    type: ErrorResponseDto,
+    description: 'The user is not an admin.',
+  })
+  @ApiNotFoundResponse({
+    type: ErrorResponseDto,
+    description: 'Unknown user or group, or either was soft-deleted.',
+  })
+  async assignGroup(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AssignUserGroupDto,
+  ): Promise<UserResponseDto> {
+    const user = await this.iam.assignGroup(id, dto.group_id);
+    return UserMapper.toDto(user);
+  }
+}

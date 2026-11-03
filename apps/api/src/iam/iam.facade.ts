@@ -1,0 +1,183 @@
+import { Injectable } from '@nestjs/common';
+import { AppException, ErrorCode } from '@repo/backend/errors';
+import type { RequestUser } from '@repo/backend/core';
+import type { EmailLocale } from '@repo/backend/email';
+import type { Paginated } from '@repo/backend/pagination';
+import { Role } from '@repo/db';
+import { AccountEmailsService } from '../email/account-emails.service';
+import type { FileToUpload } from '../storage/storage.types';
+import { AuthService } from './auth/auth.service';
+import { GroupsService } from './groups/groups.service';
+import { UserService } from './user/user.service';
+import type { CreateGroupDto } from './dto/request/create-group.dto';
+import type { CreateUserDto } from './dto/request/create-user.dto';
+import type { ListGroupsQueryDto } from './dto/request/list-groups.dto';
+import type { ListUsersQueryDto } from './dto/request/list-users.dto';
+import type { LoginDto } from './dto/request/login.dto';
+import type { RegisterDto } from './dto/request/register.dto';
+import type { UpdateGroupDto } from './dto/request/update-group.dto';
+import type { UpdateUserDto } from './dto/request/update-user.dto';
+import type { LoginResponseDto } from './dto/response/login.dto';
+import type { PermissionCatalogResponse } from './dto/response/permission-catalog.dto';
+import type { RefreshResponseDto } from './dto/response/refresh.dto';
+import type { GroupWithRelations, UserWithRelations } from './types/iam.types';
+
+/**
+ * The only entry point controllers use. Holds every rule that spans more
+ * than one sub-service; the sub-services never inject each other.
+ */
+@Injectable()
+export class IamFacade {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+    private readonly groupsService: GroupsService,
+    private readonly accountEmails: AccountEmailsService,
+  ) {}
+
+  // ---- auth ----
+
+  register(
+    dto: RegisterDto,
+    avatar?: FileToUpload,
+  ): Promise<UserWithRelations> {
+    return this.userService.create(
+      {
+        email: dto.email,
+        password: dto.password,
+        name: dto.name,
+        role: dto.role,
+        confirmed: false,
+      },
+      avatar,
+    );
+  }
+
+  /** POST /auth/login — clients only. */
+  async login(dto: LoginDto): Promise<LoginResponseDto> {
+    const user = await this.verifyCredentials(dto.email, dto.password);
+    return this.authService.issueTokens(user, false);
+  }
+
+  /** POST /auth/moderators/login — staff only. */
+  async loginModerator(dto: LoginDto): Promise<LoginResponseDto> {
+    const user = await this.verifyCredentials(dto.email, dto.password);
+    return this.authService.issueTokens(user, true);
+  }
+
+  async refresh(refreshToken: string): Promise<RefreshResponseDto> {
+    const claims = this.authService.verifyRefreshToken(refreshToken);
+
+    let user: UserWithRelations;
+    try {
+      user = await this.userService.findById(claims.sub);
+    } catch (error) {
+      if (
+        error instanceof AppException &&
+        error.error === ErrorCode.USER_NOT_FOUND
+      ) {
+        throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+      }
+      throw error;
+    }
+
+    return this.authService.refresh(claims, refreshToken, user);
+  }
+
+  logout(user: RequestUser): Promise<void> {
+    return this.authService.logout(user);
+  }
+
+  private async verifyCredentials(
+    email: string,
+    password: string,
+  ): Promise<UserWithRelations> {
+    const user = await this.userService.findByEmailWithPassword(email);
+    if (!user) throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+
+    await this.authService.verifyPassword(password, user.hashed_password);
+
+    return this.userService.findById(user.id);
+  }
+
+  // ---- users ----
+
+  /** Staff-created account: the new user is emailed in `locale`. */
+  async createUser(
+    dto: CreateUserDto,
+    avatar: FileToUpload | undefined,
+    locale: EmailLocale,
+  ): Promise<UserWithRelations> {
+    const user = await this.userService.create(dto, avatar);
+    await this.accountEmails.sendAccountCreated(user, locale);
+    return user;
+  }
+
+  listUsers(query: ListUsersQueryDto): Promise<Paginated<UserWithRelations>> {
+    return this.userService.list(query);
+  }
+
+  getUser(id: string): Promise<UserWithRelations> {
+    return this.userService.findById(id);
+  }
+
+  updateUser(
+    id: string,
+    dto: UpdateUserDto,
+    avatar?: FileToUpload,
+  ): Promise<UserWithRelations> {
+    return this.userService.update(id, dto, avatar);
+  }
+
+  deleteUser(id: string): Promise<void> {
+    return this.userService.softDelete(id);
+  }
+
+  /** Ends the admin's live sessions so their permissions refresh. */
+  async assignGroup(
+    userId: string,
+    groupId: string,
+  ): Promise<UserWithRelations> {
+    const user = await this.userService.findById(userId);
+
+    if (user.role !== Role.admin) {
+      throw new AppException(ErrorCode.ONLY_ADMIN_CAN_HAVE_GROUP);
+    }
+
+    await this.groupsService.findById(groupId);
+
+    const updated = await this.userService.setGroup(userId, groupId);
+
+    await this.authService.revokeAllSessions(userId);
+
+    return updated;
+  }
+
+  // ---- groups ----
+
+  permissionCatalog(): PermissionCatalogResponse {
+    return this.groupsService.permissionCatalog();
+  }
+
+  createGroup(dto: CreateGroupDto): Promise<GroupWithRelations> {
+    return this.groupsService.create(dto);
+  }
+
+  listGroups(
+    query: ListGroupsQueryDto,
+  ): Promise<Paginated<GroupWithRelations>> {
+    return this.groupsService.list(query);
+  }
+
+  getGroup(id: string): Promise<GroupWithRelations> {
+    return this.groupsService.findById(id);
+  }
+
+  updateGroup(id: string, dto: UpdateGroupDto): Promise<GroupWithRelations> {
+    return this.groupsService.update(id, dto);
+  }
+
+  deleteGroup(id: string): Promise<void> {
+    return this.groupsService.delete(id);
+  }
+}

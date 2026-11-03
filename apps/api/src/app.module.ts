@@ -9,9 +9,8 @@ import { AppExceptionFilter } from '@repo/backend/errors';
 import { RedisModule } from '@repo/backend/redis';
 import { HealthCheckModule } from './health-check/health-check.module';
 import { StorageModule } from './storage/storage.module';
-import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
-import { GroupsModule } from './groups/groups.module';
+import { IamModule } from './iam/iam.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -30,9 +29,8 @@ import { GroupsModule } from './groups/groups.module';
     }),
     HealthCheckModule,
     StorageModule,
-    UsersModule,
-    AuthModule,
-    GroupsModule,
+    EmailModule,
+    IamModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
