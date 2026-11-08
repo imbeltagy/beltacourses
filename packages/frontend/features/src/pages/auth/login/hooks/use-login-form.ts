@@ -5,6 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslations } from "next-intl";
 import * as yup from "yup";
 import { toast } from "sonner";
+import { useRouter } from "@repo/frontend/i18n/navigation";
 import { localizeError } from "../../../../utils/localize-error";
 import { loginAction } from "../../../../actions/auth-actions";
 
@@ -24,6 +25,7 @@ export type LoginFormInputs = yup.InferType<ReturnType<typeof buildSchema>>;
  * API call behind the submit does.
  */
 export function useLoginForm() {
+  const router = useRouter();
   const t = useTranslations("validation");
   const tErrors = useTranslations("errors");
   const tActions = useTranslations("actions");
@@ -40,6 +42,10 @@ export function useLoginForm() {
     }
 
     toast.success(tActions("welcomeBack"));
+    // `replace` so Back does not return to the login form, and `refresh` so
+    // the guarded layouts re-run with the cookies that were just set.
+    router.replace("/");
+    router.refresh();
   };
 
   return { form, onSubmit: form.handleSubmit(submit) };

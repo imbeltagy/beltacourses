@@ -5,6 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslations } from "next-intl";
 import * as yup from "yup";
 import { toast } from "sonner";
+import { useRouter } from "@repo/frontend/i18n/navigation";
 import { localizeError } from "../../../../utils/localize-error";
 import { registerAction } from "../../../../actions/auth-actions";
 import type { RegisterableRole } from "../../../../types/api/auth";
@@ -41,6 +42,7 @@ const REGISTERABLE_ROLES = [
 ] as const satisfies readonly RegisterableRole[];
 
 export function useRegisterForm() {
+  const router = useRouter();
   const tValidation = useTranslations("validation");
   const tRoles = useTranslations("roles");
   const tErrors = useTranslations("errors");
@@ -66,6 +68,10 @@ export function useRegisterForm() {
     }
 
     toast.success(tActions("accountReady"));
+    // `replace` so Back does not return to the register form, and `refresh` so
+    // the guarded layouts re-run with the cookies that were just set.
+    router.replace("/");
+    router.refresh();
   };
 
   return {

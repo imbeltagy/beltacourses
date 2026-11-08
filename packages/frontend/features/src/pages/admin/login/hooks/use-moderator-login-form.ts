@@ -40,7 +40,7 @@ export function useModeratorLoginForm() {
 
     toast.success(tActions("welcomeBack"));
     // `replace` so Back does not return to the login form, and `refresh` so
-    // the guarded layout re-runs with the cookies that were just set.
+    // the guarded layout re-runs with the cookies the route handler just set.
     router.replace("/");
     router.refresh();
   };
