@@ -31,6 +31,8 @@ export type LoginResponse = {
   token_type: "Bearer";
   /** Access token lifetime in seconds. */
   expires_in: number;
+  /** Refresh token lifetime in seconds. */
+  refresh_expires_in: number;
 };
 
 /** `POST /auth/refresh`. No `refresh_token` — the API does not rotate them. */

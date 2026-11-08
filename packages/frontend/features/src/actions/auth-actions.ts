@@ -18,7 +18,11 @@ import type {
  */
 async function storeSession(tokens: LoginResponse): Promise<void> {
   await setCookie(Cookies.ACCESS_TOKEN, tokens.access_token, tokens.expires_in);
-  await setCookie(Cookies.REFRESH_TOKEN, tokens.refresh_token);
+  await setCookie(
+    Cookies.REFRESH_TOKEN,
+    tokens.refresh_token,
+    tokens.refresh_expires_in,
+  );
 }
 
 export async function loginAction(data: LoginRequest): Promise<ActionResult> {
