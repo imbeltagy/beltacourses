@@ -50,9 +50,9 @@ barrel file is missing, not the map.
 Exact keys beat the wildcard, and exist only where a barrel is `.ts` rather than `.tsx`, or is not a
 module at all:
 
-- `@repo/frontend`: `./ui`, `./utils/api-client`, `./utils/cookies`, `./styles/theme.css`
-- `@repo/frontend-features`: `./actions/*`, `./types/*`, `./configs/*` — these are flat files
-  (`src/actions/auth-actions.ts`), not directories with barrels.
+- `@repo/frontend`: `./ui`, `./utils/api-client`, `./utils/auth-store`, `./utils/cookies`, `./styles/theme.css`
+- `@repo/frontend-features`: `./actions/*`, `./types/*`, `./configs/*`, `./route-handlers/*` — these
+  are flat files (`src/actions/auth-actions.ts`), not directories with barrels.
 
 A consequence worth knowing: a directory with no `index.tsx` and no exact key is **private to its
 package**. `src/hooks/use-query-state.ts` in features is internal for exactly this reason, as are
@@ -258,18 +258,25 @@ export { default } from "@repo/frontend-features/pages/admin/users";
 apps/admin/src/app/
 ├── layout.tsx                 root: fonts, theme, globals.css
 ├── globals.css
+├── api/auth/                  route handlers: login, moderators/login, refresh, logout
+│   └── <name>/route.ts        → route-handlers/auth/<name> (re-export)
 ├── (auth)/
 │   ├── layout.tsx             guest-only guard + AuthLayout
 │   └── login/page.tsx         → pages/admin/login
 └── (dashboard)/
-    ├── layout.tsx             auth guard + DashboardLayout
+    ├── layout.tsx             AuthGuard + DashboardLayout
     ├── page.tsx               → pages/admin/home
     ├── users/page.tsx         → pages/admin/users
     └── groups/page.tsx        → pages/admin/groups
 ```
 
+`apps/client` has the same shape: `api/auth/{login,refresh,logout}`, an `(auth)` group, and a `(main)`
+group whose layout wraps its children in `AuthGuard`. (Paths above omit the `[locale]` segment.)
+
 Only what genuinely cannot leave the app stays in it: `middleware.ts`, route handlers,
-`not-found.tsx`, `globals.css`, the root layout, and route-group layouts that guard access. Because
+`not-found.tsx`, `globals.css`, the root layout, and route-group layouts that guard access. Route
+handlers stay too, but only as a one-line `route.ts` re-exporting the handler from
+`@repo/frontend-features/route-handlers/...`. Because
 of this, `apps/admin` mounts the same pages `apps/client` could, and a page can move between URLs
 without its code moving.
 
@@ -286,7 +293,8 @@ packages/frontend/common/src/           @repo/frontend
 ├── styles/theme.css     design tokens — and the @source roots (see below)
 └── utils/
     ├── index.tsx        cn()
-    ├── api-client/      static ApiClient (`{ guest: true }` per call) → @repo/frontend/utils/api-client
+    ├── api-client/      browser-only static ApiClient (`{ guest: true }` per call) → @repo/frontend/utils/api-client
+    ├── auth-store/      zustand `useAuthStore`, the in-memory access token → @repo/frontend/utils/auth-store
     └── cookies/         "use server" cookie accessors  → @repo/frontend/utils/cookies
 ```
 
@@ -297,14 +305,15 @@ entry.
 ```
 packages/frontend/features/src/         @repo/frontend-features
 ├── pages/<area>/<page>/  the page triad — see below
-├── layout/<name>/        auth-layout, dashboard-layout
+├── layout/<name>/        auth-layout, dashboard-layout, auth-provider, auth-guard
 ├── components/<name>/    shared across pages (page-wrapper, table-search, table-pagination)
-├── actions/              "use server" entry points, one file per API area
+├── actions/              plain browser functions over ApiClient, one file per API area
+├── route-handlers/       auth/ (login, moderator-login, refresh, logout) + shared/ (session, api-fetch)
 ├── types/
 │   ├── action.ts         ActionResult / DataResult
 │   └── api/              wire shapes mirroring the API's DTOs
 ├── configs/endpoints.ts  every API URL, and the only place the base URL is interpolated
-└── hooks/                cross-page hooks (internal — no barrel, so not importable outside)
+└── hooks/                use-api, use-current-user, use-query-state (internal — no barrel)
 ```
 
 ## The page triad
@@ -313,7 +322,7 @@ A page directory splits three ways so each part changes for one reason:
 
 ```
 pages/admin/login/
-├── index.tsx                          server component: the static half
+├── index.tsx                          server component: translations and params
 ├── components/
 │   └── moderator-login-form.tsx       "use client": markup and interaction
 └── hooks/
@@ -321,24 +330,32 @@ pages/admin/login/
 ```
 
 - **`index.tsx`** stays a server component and holds what does not need hydration — headings, copy,
-  and (for a list page) the fetch itself.
+  translations, and (for a list page) the parsed `searchParams`, which it passes down as props. It
+  never fetches: `ApiClient` is browser-only.
 - **`components/`** reads state from a hook and renders it. It contains no schema and no API call, so
   wiring a form to a different action does not touch it.
 - **`hooks/`** owns the form schema, the `useForm` instance and the submit handler.
 
-A page uses only the parts it needs. `pages/admin/users/` has `components/` but no `hooks/`, because
-its state lives in the URL and the server component reads it directly — there is nothing left for a
-hook to own.
+A page uses only the parts it needs. A form page has no data hook; a list page's client components
+call `useApi` directly with the URL params the server page handed down.
 
 Only `index.tsx` is reachable from outside the package; `components/` and `hooks/` are private by
 virtue of the export pattern.
 
 ## Actions, types, and list state
 
-Server actions are grouped by **API area** (`auth-actions.ts`, `users-actions.ts`,
-`groups-actions.ts`), not by page, because two pages often hit the same endpoint. They call
-`@repo/frontend/utils/api-client` and return a discriminated result, so a caller branches on
-`success` rather than catching. Actions never throw and never leak a status code to the UI.
+Actions are plain browser functions (no `"use server"`) grouped by **API area** (`auth-actions.ts`,
+`users-actions.ts`, `groups-actions.ts`), not by page, because two pages often hit the same endpoint.
+They call `@repo/frontend/utils/api-client` and return a discriminated result, so a caller branches
+on `success` rather than catching. Actions never throw and never leak a status code to the UI.
+
+**The session.** The access token lives in `useAuthStore` (memory only). The httpOnly cookies are set
+and cleared only by the route handlers in `route-handlers/auth/` (mounted at `/api/auth/*`), which
+proxy to the API and set each cookie's `maxAge` from `expires_in` / `refresh_expires_in`. On a 401
+`ApiClient` makes one single-flight call to the same-origin refresh route and replays the request;
+if refresh fails, or the replay is 401 again, the session ends and the page reloads. `layout/auth-provider`
+(server) hydrates the store from the access cookie; `layout/auth-guard` (server) redirects to `/login`
+when neither cookie exists. The API allows the browser origins through `CORS_ORIGINS`.
 
 Success copy belongs to the action, not to the API response. The auth endpoints return no `message`
 field, and passing the api-client's fallback straight through once put the literal string `"success"`
@@ -348,9 +365,10 @@ in a toast.
 are hand-written rather than generated from the OpenAPI schema for now; if that becomes a drift
 problem, the generator is the fix, not looser types.
 
-**List state lives in the URL.** Page, search and filters are read from `searchParams`, which is what
-keeps a list page a server component: it reads, fetches and renders, while only the controls are
-client components. It also makes a filtered list shareable and survivable across a refresh. The
+**List state lives in the URL.** Page, search and filters are read from `searchParams` by the server
+`index.tsx`, which passes them to client components; those fetch through `hooks/use-api.ts` and
+refetch when the params change. It also makes a filtered list shareable and survivable across a
+refresh. The signed-in user comes from `hooks/use-current-user.ts`. The
 `useQueryState` hook centralises the URL writes, and resets `page` whenever a filter changes — page 4
 of an unfiltered list is rarely a valid page of the filtered one.
 
@@ -426,27 +444,28 @@ adding a primitive.
 
 # Where does X go?
 
-| You are adding                  | It goes in                                                                                           |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| An HTTP endpoint                | `apps/api/src/<feature>/<feature>.controller.ts`; auth/users/groups: `apps/api/src/iam/controllers/` |
-| Business logic used by one app  | `apps/api/src/<feature>/<feature>.service.ts`                                                        |
-| Business logic used by two apps | `packages/backend/src/<name>/` (+ `index.ts`)                                                        |
-| A Prisma query                  | `<feature>.repository.ts` — never in a service or controller                                         |
-| A third-party SDK call          | `<feature>.adapter.ts` — never alongside Prisma                                                      |
-| A validated request body        | `apps/api/src/<feature>/dto/request/<endpoint>.dto.ts`                                               |
-| A documented response           | `apps/api/src/<feature>/dto/response/<endpoint>.dto.ts`                                              |
-| A compile-time-only shape       | `<feature>.types.ts`                                                                                 |
-| A database model                | `packages/database/prisma/schema/<domain>.prisma`                                                    |
-| A scheduled job                 | `<feature>.processor.ts`, scheduled in `onModuleInit`                                                |
-| A page                          | `packages/frontend/features/src/pages/<area>/<page>/`                                                |
-| A route for that page           | `apps/<app>/src/app/.../page.tsx`, one re-export line                                                |
-| A server action                 | `packages/frontend/features/src/actions/<area>-actions.ts`                                           |
-| An API wire type                | `packages/frontend/features/src/types/api/<area>.ts`                                                 |
-| An API URL                      | `packages/frontend/features/src/configs/endpoints.ts`                                                |
-| A shadcn primitive              | `packages/frontend/common/src/ui/` + a line in `ui/index.ts`                                         |
-| A reusable component            | `packages/frontend/common/src/components/<name>/index.tsx`                                           |
-| A component used by pages only  | `packages/frontend/features/src/components/<name>/index.tsx`                                         |
-| A page shell                    | `packages/frontend/features/src/layout/<name>/index.tsx`                                             |
-| An email template               | `packages/frontend/emails/src/templates/<name>.tsx` + both `locales/*.json`                          |
-| An env var                      | the app's `.env.example` **and** `globalEnv` in `turbo.json`                                         |
-| A unit test                     | `<package-or-app>/test/`, mirroring the path under `src/`                                            |
+| You are adding                   | It goes in                                                                                           |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| An HTTP endpoint                 | `apps/api/src/<feature>/<feature>.controller.ts`; auth/users/groups: `apps/api/src/iam/controllers/` |
+| Business logic used by one app   | `apps/api/src/<feature>/<feature>.service.ts`                                                        |
+| Business logic used by two apps  | `packages/backend/src/<name>/` (+ `index.ts`)                                                        |
+| A Prisma query                   | `<feature>.repository.ts` — never in a service or controller                                         |
+| A third-party SDK call           | `<feature>.adapter.ts` — never alongside Prisma                                                      |
+| A validated request body         | `apps/api/src/<feature>/dto/request/<endpoint>.dto.ts`                                               |
+| A documented response            | `apps/api/src/<feature>/dto/response/<endpoint>.dto.ts`                                              |
+| A compile-time-only shape        | `<feature>.types.ts`                                                                                 |
+| A database model                 | `packages/database/prisma/schema/<domain>.prisma`                                                    |
+| A scheduled job                  | `<feature>.processor.ts`, scheduled in `onModuleInit`                                                |
+| A page                           | `packages/frontend/features/src/pages/<area>/<page>/`                                                |
+| A route for that page            | `apps/<app>/src/app/.../page.tsx`, one re-export line                                                |
+| An API call from a page          | `packages/frontend/features/src/actions/<area>-actions.ts` (browser function), run via `useApi`      |
+| A cookie-setting endpoint        | `packages/frontend/features/src/route-handlers/<area>/<name>.ts` + a re-export `route.ts` per app    |
+| An API wire type                 | `packages/frontend/features/src/types/api/<area>.ts`                                                 |
+| An API URL                       | `packages/frontend/features/src/configs/endpoints.ts`                                                |
+| A shadcn primitive               | `packages/frontend/common/src/ui/` + a line in `ui/index.ts`                                         |
+| A reusable component             | `packages/frontend/common/src/components/<name>/index.tsx`                                           |
+| A component used by pages only   | `packages/frontend/features/src/components/<name>/index.tsx`                                         |
+| A page shell                     | `packages/frontend/features/src/layout/<name>/index.tsx`                                             |
+| An email template                | `packages/frontend/emails/src/templates/<name>.tsx` + both `locales/*.json`                          |
+| An env var (e.g. `CORS_ORIGINS`) | the app's `.env.example` **and** `globalEnv` in `turbo.json`                                         |
+| A unit test                      | `<package-or-app>/test/`, mirroring the path under `src/`                                            |

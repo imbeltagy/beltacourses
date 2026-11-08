@@ -37,15 +37,18 @@ export { default } from "@repo/frontend-features/pages/auth/login";
 ```
 
 Only what cannot leave the app stays in it — `middleware.ts`, route handlers, `not-found.tsx`,
-`globals.css`, the root layout, and route-group layouts that guard access. Pages, server actions,
-API types and page shells go in `@repo/frontend-features`; anything a second app would reuse
+`globals.css`, the root layout, and route-group layouts that guard access. Route handlers stay as a
+one-line `route.ts` re-exporting the handler from `@repo/frontend-features/route-handlers/...`.
+Pages, actions, API types and page shells go in `@repo/frontend-features`; anything a second app would reuse
 unchanged goes in `@repo/frontend`. Each package's README documents its own layout and export
 pattern.
 
 A page directory splits three ways, so each part changes for one reason: `index.tsx` is a server
-component holding the static half, `components/` is the `"use client"` markup, and `hooks/` owns the
-schema, form instance and submit handler. List state (page, search, filters) lives in the URL, which
-is what keeps a list page a server component.
+component holding the static half (translations, params), `components/` is the `"use client"` markup,
+and `hooks/` owns the schema, form instance and submit handler. `ApiClient` is browser-only, so a
+server component never fetches: client components load data with `hooks/use-api.ts`. List state
+(page, search, filters) lives in the URL; the server page parses it and passes it down. Only route
+handlers set or clear the httpOnly auth cookies.
 
 **Tailwind does not scan `node_modules`.** `@repo/frontend/styles/theme.css` declares the `@source`
 roots for both frontend packages, and every app imports it from `globals.css`. Drop that import and
@@ -176,8 +179,8 @@ of the `ErrorCode` enum (`@repo/backend/errors`), `message` optional English for
 - **The backend never localizes.** Adding a code means: the enum + `ERROR_STATUS`, the mirror list in
   `packages/frontend/features/src/types/api/errors.ts`, and a message under `errors.api` in both
   `en.json` and `ar.json` (`localizeError` is type-checked against them).
-- **Actions return `{ success: false, error }`** and never text. The caller (a hook, or a server
-  page) turns it into a string with `localizeError(t, result.error, "<fallback>")`. An unknown code
+- **Actions return `{ success: false, error }`** and never text. The caller (a hook or client
+  component) turns it into a string with `localizeError(t, result.error, "<fallback>")`. An unknown code
   falls back to a per-request message under `errors.fallback` — add one for each new action.
 - **The api-client validates the contract** and reports every failure to `ErrorNotifier`
   (`@repo/frontend/utils/error-notifier`, secrets redacted). A non-2xx body that breaks the shape

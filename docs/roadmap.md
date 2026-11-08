@@ -26,25 +26,25 @@ Rules:
 
 ## Phase 1 — MVP
 
-| #     | Task                                                                                                                     | Story                                                                    | Status      | Depends on          |
-| ----- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ----------- | ------------------- |
-| T-001 | File upload service                                                                                                      | [005](./user-stories/005-file-upload.md)                                 | Done        | —                   |
-| T-002 | Email service                                                                                                            | [006](./user-stories/006-email-service.md)                               | Done        | —                   |
-| T-003 | Users CRUD + get profile (roles: student, teacher, academy moderator, admin, super admin)                                | [001](./user-stories/001-users.md)                                       | Done        | T-001               |
-| T-004 | Authentication — email/password login, refresh token, JWT + Redis session id, auth guard                                 | [002](./user-stories/002-login.md)<br>[003](./user-stories/003-authN.md) | Done        | T-003               |
-| T-005 | Authorization — roles guard, permissions, admin permission groups (RBAC)                                                 | [004](./user-stories/004-authZ.md)                                       | Done        | T-004               |
-| T-006 | Video upload service                                                                                                     | [007](./user-stories/007-video-upload.md)                                | Pending     | T-001               |
-| T-007 | Course creation — courses, modules, lectures                                                                             | [008](./user-stories/008-course-authoring.md)                            | Pending     | T-005, T-006        |
-| T-008 | Course publish (instant) + revert to draft while unpurchased                                                             | [009](./user-stories/009-course-publishing.md)                           | Pending     | T-007               |
-| T-009 | System wallet + user wallets                                                                                             | [010](./user-stories/010-wallets.md)                                     | Pending     | T-003               |
-| T-010 | Student favourites list + owned list                                                                                     | [011](./user-stories/011-student-course-lists.md)                        | Pending     | T-008               |
-| T-011 | Stripe payment (course purchase) + transactions                                                                          | [012](./user-stories/012-course-purchase.md)                             | Pending     | T-009, T-010        |
-| T-012 | Wallet withdrawal (teacher & student) via PayPal payout                                                                  | [013](./user-stories/013-wallet-withdrawal.md)                           | Pending     | T-009               |
-| T-013 | Course progress tracker (lecture completion unlocks the next item + overall %)                                           | [014](./user-stories/014-progress-tracking.md)                           | Pending     | T-010               |
-| T-014 | Refund request + refund to student wallet, deduct from teacher & system wallet                                           | [015](./user-stories/015-refunds.md)                                     | Pending     | T-011               |
-| T-015 | Course close (hidden for everyone except students who already purchased)                                                 | [034](./user-stories/034-course-closing.md)                              | Pending     | T-008, T-010        |
-| T-034 | Course analytics for teacher & admin (owners, purchases, refunds, anonymized transactions, per-lecture completion)       | [031](./user-stories/031-course-analytics.md)                            | Pending     | T-011, T-013, T-014 |
-| T-035 | IAM refactor — `iam/` module with one facade, one global `@Auth` guard, rotating refresh tokens, sessions for every role | [003](./user-stories/003-authN.md)<br>[004](./user-stories/004-authZ.md) | Done        | T-005               |
+| #     | Task                                                                                                                     | Story                                                                    | Status  | Depends on          |
+| ----- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------- | ------------------- |
+| T-001 | File upload service                                                                                                      | [005](./user-stories/005-file-upload.md)                                 | Done    | —                   |
+| T-002 | Email service                                                                                                            | [006](./user-stories/006-email-service.md)                               | Done    | —                   |
+| T-003 | Users CRUD + get profile (roles: student, teacher, academy moderator, admin, super admin)                                | [001](./user-stories/001-users.md)                                       | Done    | T-001               |
+| T-004 | Authentication — email/password login, refresh token, JWT + Redis session id, auth guard                                 | [002](./user-stories/002-login.md)<br>[003](./user-stories/003-authN.md) | Done    | T-003               |
+| T-005 | Authorization — roles guard, permissions, admin permission groups (RBAC)                                                 | [004](./user-stories/004-authZ.md)                                       | Done    | T-004               |
+| T-006 | Video upload service                                                                                                     | [007](./user-stories/007-video-upload.md)                                | Pending | T-001               |
+| T-007 | Course creation — courses, modules, lectures                                                                             | [008](./user-stories/008-course-authoring.md)                            | Pending | T-005, T-006        |
+| T-008 | Course publish (instant) + revert to draft while unpurchased                                                             | [009](./user-stories/009-course-publishing.md)                           | Pending | T-007               |
+| T-009 | System wallet + user wallets                                                                                             | [010](./user-stories/010-wallets.md)                                     | Pending | T-003               |
+| T-010 | Student favourites list + owned list                                                                                     | [011](./user-stories/011-student-course-lists.md)                        | Pending | T-008               |
+| T-011 | Stripe payment (course purchase) + transactions                                                                          | [012](./user-stories/012-course-purchase.md)                             | Pending | T-009, T-010        |
+| T-012 | Wallet withdrawal (teacher & student) via PayPal payout                                                                  | [013](./user-stories/013-wallet-withdrawal.md)                           | Pending | T-009               |
+| T-013 | Course progress tracker (lecture completion unlocks the next item + overall %)                                           | [014](./user-stories/014-progress-tracking.md)                           | Pending | T-010               |
+| T-014 | Refund request + refund to student wallet, deduct from teacher & system wallet                                           | [015](./user-stories/015-refunds.md)                                     | Pending | T-011               |
+| T-015 | Course close (hidden for everyone except students who already purchased)                                                 | [034](./user-stories/034-course-closing.md)                              | Pending | T-008, T-010        |
+| T-034 | Course analytics for teacher & admin (owners, purchases, refunds, anonymized transactions, per-lecture completion)       | [031](./user-stories/031-course-analytics.md)                            | Pending | T-011, T-013, T-014 |
+| T-035 | IAM refactor — `iam/` module with one facade, one global `@Auth` guard, rotating refresh tokens, sessions for every role | [003](./user-stories/003-authN.md)<br>[004](./user-stories/004-authZ.md) | Done    | T-005               |
 
 ## Phase 2 — Teacher Platform & Monetization
 
@@ -105,9 +105,10 @@ whenever a status changes to `Blocked`, and remove it once the task moves on.
 - **Token transport** (T-004): refresh tokens are returned in the JSON body; an httpOnly-cookie
   transport for `apps/web` is deferred and is a controller-level change (`AuthService` never touches
   `Request`/`Response`, so it stays a controller-only change when this is revisited).
-- **Frontend catch-up** (T-035): the refresh response now carries a new `refresh_token`, and both
-  login and refresh return `refresh_expires_in`. The frontends must store the new token and retry on
-  401/403; until then refresh breaks. All sessions are invalidated once on deploy.
+- **Frontend catch-up** (T-035): landed on `refactor/auth.frontend`. `ApiClient` is browser-only (token
+  in `useAuthStore`, single-flight refresh through a same-origin route handler); httpOnly cookies are
+  set only by route handlers and expire with their tokens; pages fetch in the browser. The API needs
+  `CORS_ORIGINS`. All sessions are invalidated once on deploy.
 - **Rate-limit storage** (T-004): `ThrottlerModule` uses in-memory storage, so limits are per-replica.
   Switch to a Redis-backed store (e.g. `@nest-lab/throttler-storage-redis`, backed by the
   `RedisService` that now exists) before running more than one API instance.

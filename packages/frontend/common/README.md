@@ -5,7 +5,7 @@ utilities used by every frontend app in this repo (`apps/client`, and future
 frontend apps).
 
 This package holds only things **more than one app could reuse**. Anything that
-belongs to a single product surface — pages, server actions, API types, page
+belongs to a single product surface — pages, actions, API types, page
 layouts — lives in [`@repo/frontend-features`](../features/README.md) instead.
 
 ## Adding a new shadcn component
@@ -54,20 +54,25 @@ second package because splitting them out bought nothing but a second manifest,
 a second tsconfig and a second entry in every consumer's `transpilePackages`.
 
 - `src/utils/api-client` → `@repo/frontend/utils/api-client`. Exports the
-  static-only `ApiClient` class: `ApiClient.get/post/put/patch/delete`. Calls send
-  the access-token cookie unless given `{ guest: true }`. The app must call
-  `ApiClient.configure({ refreshUrl })` once (`endpoints.ts` does) so the client
-  knows where to refresh. **It never throws** — every path resolves to
-  a discriminated `ApiClientResponse<T>`, so callers branch on `success` rather
-  than wrapping calls in `try`/`catch`. On a 401/403 it refreshes the access
-  token once and replays the original request; a second failure is returned as
-  the final error. Concurrent refreshes share one in-flight promise.
+  static-only, **browser-only** `ApiClient` class: `ApiClient.get/post/put/patch/delete`.
+  Calls send the token from `useAuthStore` as a bearer header unless given
+  `{ guest: true }`. The app must call `ApiClient.configure({ refreshUrl })` once
+  (`endpoints.ts` does) so the client knows where to refresh. **It never
+  throws** — every path resolves to a discriminated `ApiClientResponse<T>`, so
+  callers branch on `success` rather than wrapping calls in `try`/`catch`. On a
+  401 it refreshes the token once through the same-origin refresh route and
+  replays the request. If refresh fails, or the replay is 401 again, the session
+  ends and the page reloads. Concurrent refreshes share one in-flight promise.
+- `src/utils/auth-store` → `@repo/frontend/utils/auth-store`. `useAuthStore`, a
+  zustand store holding the access token in memory only. React code subscribes;
+  `ApiClient` reads it with `useAuthStore.getState()`. A reload re-hydrates it
+  from the httpOnly cookie (see `layout/auth-provider` in features).
 - `src/utils/img-url` → `@repo/frontend/utils/img-url`. `imgUrl(path)` builds an image URL from
   `NEXT_PUBLIC_STATIC_IMAGES_URL` (the files app; default `/`) and a path, with one `/` between.
 - `src/utils/cookies` → `@repo/frontend/utils/cookies`. `"use server"` accessors
   over `next/headers`, keyed by the `Cookies` enum. Auth tokens are stored
-  httpOnly, so they are readable from server actions only — never from the
-  browser.
+  httpOnly, so they are readable from the server only — never from the
+  browser — and are set or cleared only by the route handlers in features.
 
 Both are `index.ts`, not `index.tsx`, so each needs an exact key in the
 `package.json` `exports` map — the `./*` wildcard only resolves `.tsx` barrels.
