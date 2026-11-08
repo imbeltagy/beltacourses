@@ -10,11 +10,15 @@ import type {
 } from "../types/api/users";
 import { toFormData } from "../utils/to-form-data";
 
-/** The signed-in moderator. `null` rather than an error when unauthenticated. */
-export async function getCurrentUserAction(): Promise<User | null> {
+/** The signed-in user. A failure carries the error code. */
+export async function getCurrentUserAction(): Promise<DataResult<User>> {
   const result = await ApiClient.get<User>(endpoints.users.me());
 
-  return result.success ? result.data : null;
+  if (!result.success) {
+    return { success: false, error: result.error };
+  }
+
+  return { success: true, data: result.data };
 }
 
 export async function listUsersAction(

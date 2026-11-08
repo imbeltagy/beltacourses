@@ -20,17 +20,15 @@ import {
   NAVBAR_WIDTH,
   type NavbarType,
 } from "../constants";
-import type { User } from "../../../types/api/users";
+import { useCurrentUser } from "../../../hooks/use-current-user";
 import { AccountMenu } from "./account-menu";
 import { Navbar } from "./navbar";
 
 export function DashboardShell({
   children,
-  user,
   initialNavbarType,
 }: {
   children: React.ReactNode;
-  user: User | null;
   initialNavbarType: NavbarType;
 }) {
   const t = useTranslations("nav");
@@ -38,6 +36,7 @@ export function DashboardShell({
   const [navbarType, setNavbarType] = useState<NavbarType>(initialNavbarType);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
+  const { user } = useCurrentUser();
 
   // The original left the mobile drawer open across navigation, so tapping a
   // link moved the page behind a drawer the user then had to dismiss.

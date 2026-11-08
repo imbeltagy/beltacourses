@@ -2,8 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Shield, Users } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@repo/frontend/ui";
 import { Link } from "@repo/frontend/i18n/navigation";
-import { getCurrentUserAction } from "../../../actions/users-actions";
-import { PageWrapper } from "../../../components/page-wrapper";
+import { WelcomeWrapper } from "./components/welcome-wrapper";
 
 const SECTIONS = [
   { href: "/users", icon: Users, id: "users", body: "usersBody" },
@@ -11,21 +10,13 @@ const SECTIONS = [
 ] as const;
 
 export default async function AdminHomePage() {
-  const [user, t, tNav] = await Promise.all([
-    getCurrentUserAction(),
+  const [t, tNav] = await Promise.all([
     getTranslations("admin.home"),
     getTranslations("nav.items"),
   ]);
 
   return (
-    <PageWrapper
-      title={
-        user
-          ? t("welcomeNamed", { name: user.name.split(" ")[0] ?? user.name })
-          : t("welcome")
-      }
-      description={t("description")}
-    >
+    <WelcomeWrapper description={t("description")}>
       <div className="grid gap-4 sm:grid-cols-2">
         {SECTIONS.map(({ href, icon: Icon, id, body }) => (
           <Link key={href} href={href} className="group">
@@ -41,6 +32,6 @@ export default async function AdminHomePage() {
           </Link>
         ))}
       </div>
-    </PageWrapper>
+    </WelcomeWrapper>
   );
 }
