@@ -1,6 +1,6 @@
 /**
  * Wire shapes for `apps/api`'s `auth` controller. Hand-mirrored from its DTOs
- * (`apps/api/src/auth/dto/`) — snake_case is deliberate, it is what the API
+ * (`apps/api/src/iam/dto/`) — snake_case is deliberate, it is what the API
  * sends.
  */
 
@@ -35,5 +35,16 @@ export type LoginResponse = {
   refresh_expires_in: number;
 };
 
-/** `POST /auth/refresh`. No `refresh_token` — the API does not rotate them. */
-export type RefreshResponse = Omit<LoginResponse, "refresh_token">;
+/**
+ * `POST /auth/refresh`. Refresh tokens rotate: the response carries the
+ * replacement `refresh_token`, and the one just used no longer works.
+ */
+export type RefreshResponse = LoginResponse;
+
+/**
+ * What the app's own `/api/auth/*` route handlers return to the browser. The
+ * refresh token never leaves the httpOnly cookie.
+ */
+export type SessionResponse = {
+  access_token: string;
+};

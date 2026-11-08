@@ -6,6 +6,7 @@
     "./actions/*": "./src/actions/*.ts",
     "./types/*": "./src/types/*.ts",
     "./configs/*": "./src/configs/*.ts",
+    "./route-handlers/*": "./src/route-handlers/*.ts",
     "./*": "./src/*/index.tsx"
   },
   "scripts": {

@@ -24,6 +24,7 @@ export const endpoints = {
     moderatorLogin: () => `${apiBaseUrl}/auth/moderators/login`,
     register: () => `${apiBaseUrl}/auth/register`,
     logout: () => `${apiBaseUrl}/auth/logout`,
+    refresh: () => `${apiBaseUrl}/auth/refresh`,
   },
   users: {
     list: () => `${apiBaseUrl}/users`,

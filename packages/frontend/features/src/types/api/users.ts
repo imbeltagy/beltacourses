@@ -1,7 +1,7 @@
 import type { Paginated, PaginationQuery } from "./common";
 
 /**
- * Mirrors `UserResponse` in `apps/api/src/users/dto/response/user.dto.ts`.
+ * Mirrors `UserResponse` in `apps/api/src/iam/dto/response/user.dto.ts`.
  * Dates are ISO strings here — they are `Date` on the API side but arrive
  * serialized.
  */
