@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/frontend/ui";
-import { useRouter } from "@repo/frontend/i18n/navigation";
 import { assignUserToGroupAction } from "../../../../actions/groups-actions";
 import type { Group } from "../../../../types/api/groups";
 import type { User } from "../../../../types/api/users";
@@ -29,14 +28,15 @@ const NONE = "none";
 export function UserGroupCard({
   user,
   groups,
+  onSaved,
 }: {
   user: User;
   groups: Group[];
+  onSaved: () => void;
 }) {
   const t = useTranslations("admin.users.group");
   const tErrors = useTranslations("errors");
   const tActions = useTranslations("actions");
-  const router = useRouter();
   const [pending, setPending] = useState(false);
 
   const change = async (next: string) => {
@@ -55,7 +55,7 @@ export function UserGroupCard({
     }
 
     toast.success(tActions("groupAssignmentUpdated"));
-    router.refresh();
+    onSaved();
   };
 
   return (

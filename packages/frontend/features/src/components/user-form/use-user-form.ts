@@ -57,7 +57,7 @@ const buildSchema = (t: T, isEdit: boolean) =>
 
 export type UserFormInputs = yup.InferType<ReturnType<typeof buildSchema>>;
 
-export function useUserForm(user?: User) {
+export function useUserForm(user?: User, onSaved?: () => void) {
   const isEdit = !!user;
   const router = useRouter();
   const locale = useLocale();
@@ -103,8 +103,8 @@ export function useUserForm(user?: User) {
       }
 
       toast.success(tActions("userUpdated"));
-      // Re-run the server page so the header and avatar show the saved values.
-      router.refresh();
+      // Refetch so the header and avatar show the saved values.
+      onSaved?.();
       return;
     }
 

@@ -11,11 +11,20 @@ import type { User } from "../../types/api/users";
 import { useUserForm } from "./use-user-form";
 
 /** Create when `user` is absent, edit when present. */
-export function UserForm({ user }: { user?: User }) {
+export function UserForm({
+  user,
+  onSaved,
+}: {
+  user?: User;
+  /** Edit only: called after a successful save. */
+  onSaved?: () => void;
+}) {
   const t = useTranslations("admin.users.form");
   const tCommon = useTranslations("common");
-  const { form, isEdit, onSubmit, roleOptions, genderOptions } =
-    useUserForm(user);
+  const { form, isEdit, onSubmit, roleOptions, genderOptions } = useUserForm(
+    user,
+    onSaved,
+  );
   const { isSubmitting } = form.formState;
 
   return (
