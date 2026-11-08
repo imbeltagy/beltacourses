@@ -5,6 +5,7 @@ import { fontVariables } from "@repo/frontend/fonts";
 import { I18nProvider } from "@repo/frontend/components/i18n-provider";
 import { getDirection, isLocale } from "@repo/frontend/i18n/routing";
 import { AppTheme } from "@repo/frontend/theme/app-theme";
+import { AuthProvider } from "@repo/frontend-features/layout/auth-provider";
 import "../globals.css";
 
 export async function generateMetadata({
@@ -34,7 +35,9 @@ export default async function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <I18nProvider locale={locale}>
-          <AppTheme>{children}</AppTheme>
+          <AppTheme>
+            <AuthProvider>{children}</AuthProvider>
+          </AppTheme>
         </I18nProvider>
       </body>
     </html>
