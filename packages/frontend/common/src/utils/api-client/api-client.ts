@@ -11,15 +11,13 @@ import {
   ClientErrorCode,
   RequestOptions,
 } from "./types";
-import { getCookie, setCookie, Cookies } from "../cookies";
 import { ErrorNotifier } from "../error-notifier";
+import { useAuthStore } from "../auth-store";
 
 type RefreshResult = { success: true } | ApiClientErrorResponse;
 
 type RefreshResponsePayload = {
   access_token: string;
-  token_type: "Bearer";
-  expires_in: number;
 };
 
 /** An error response the client produced itself, with no API body behind it. */
@@ -40,14 +38,17 @@ function failure(
 
 /**
  * Static-only: there is one client, and the token-refresh state lives on it.
- * Authenticated by default; pass `{ guest: true }` for calls that must not
- * carry the access-token cookie (login, register).
+ * Browser-only: the access token is kept in `useAuthStore`, and the httpOnly
+ * cookies are owned by the same-origin route handlers it calls to refresh or
+ * end the session. Authenticated by default; pass `{ guest: true }` for calls
+ * that must not carry the access token (login, register).
  */
 export class ApiClient {
   // Set once by `configure`. This package cannot import the endpoint map from
-  // `@repo/frontend-features` (that would invert the dependency), so the one
-  // URL it needs to build itself is injected instead of read from the env.
+  // `@repo/frontend-features` (that would invert the dependency), so the URLs
+  // it needs to call itself are injected instead of read from the env.
   private static refreshUrl: string | undefined;
+  private static logoutUrl: string | undefined;
 
   // Concurrent 401/403s all await this same in-flight refresh instead of each
   // firing their own request against the refresh endpoint.
@@ -55,27 +56,27 @@ export class ApiClient {
 
   private constructor() {}
 
-  static configure({ refreshUrl }: { refreshUrl: string }) {
+  static configure({
+    refreshUrl,
+    logoutUrl,
+  }: {
+    refreshUrl: string;
+    logoutUrl: string;
+  }) {
     ApiClient.refreshUrl = refreshUrl;
+    ApiClient.logoutUrl = logoutUrl;
   }
 
   private static async performRefresh(): Promise<RefreshResult> {
     if (!ApiClient.refreshUrl) {
       throw new Error(
-        "ApiClient.configure({ refreshUrl }) must be called before an authenticated request can refresh its token.",
+        "ApiClient.configure({ refreshUrl, logoutUrl }) must be called before an authenticated request can refresh its token.",
       );
     }
 
-    const refreshToken = await getCookie(Cookies.REFRESH_TOKEN);
-    if (!refreshToken) {
-      return failure(401, ClientErrorCode.NO_REFRESH_TOKEN);
-    }
-
-    const res = await fetch(ApiClient.refreshUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
+    // Same-origin: the browser sends the httpOnly refresh cookie by itself.
+    // On failure the route handler has already cleared the cookies.
+    const res = await fetch(ApiClient.refreshUrl, { method: "POST" });
 
     const isJson = res.headers
       .get("content-type")
@@ -98,14 +99,13 @@ export class ApiClient {
           );
     }
 
-    // No refresh_token rotation — only the access token cookie is refreshed.
-    const { access_token, expires_in } = payload as RefreshResponsePayload;
-    await setCookie(Cookies.ACCESS_TOKEN, access_token, expires_in);
+    const { access_token } = payload as RefreshResponsePayload;
+    useAuthStore.getState().setAccessToken(access_token);
 
     return { success: true };
   }
 
-  private static refreshAccessToken(): Promise<RefreshResult> {
+  private static refreshSession(): Promise<RefreshResult> {
     if (!ApiClient.refreshPromise) {
       ApiClient.refreshPromise = ApiClient.performRefresh()
         .catch((): RefreshResult => failure(0, ClientErrorCode.NETWORK_ERROR))
@@ -115,6 +115,28 @@ export class ApiClient {
     }
 
     return ApiClient.refreshPromise;
+  }
+
+  private static reload() {
+    window.location.reload();
+  }
+
+  /**
+   * Ends the session: the route handler revokes it and clears the cookies, the
+   * in-memory token is dropped, and the reload lets the server guards redirect.
+   * Used by the logout button, and when a retried request still gets a 401.
+   */
+  static async logout(): Promise<void> {
+    try {
+      if (ApiClient.logoutUrl) {
+        await fetch(ApiClient.logoutUrl, { method: "POST" });
+      }
+    } catch {
+      // Best effort — the local session is dropped either way.
+    }
+
+    useAuthStore.getState().setAccessToken(undefined);
+    ApiClient.reload();
   }
 
   /** Reports a failed response to the error notifier, then returns it. */
@@ -153,6 +175,20 @@ export class ApiClient {
     const fullUrl = buildUrl(url, options?.params, options?.queries);
 
     try {
+      // No access token in memory (fresh page load): hydrate one from the
+      // refresh cookie before the first authenticated request.
+      if (!options?.guest && !useAuthStore.getState().accessToken) {
+        const refreshResult = await ApiClient.refreshSession();
+
+        if (!refreshResult.success) {
+          ApiClient.reload();
+          return ApiClient.fail(
+            { method, url: fullUrl, body: options?.body },
+            refreshResult,
+          );
+        }
+      }
+
       const headers: Record<string, string> = {};
 
       if (!(options?.body instanceof FormData)) {
@@ -160,7 +196,7 @@ export class ApiClient {
       }
 
       if (!options?.guest) {
-        const accessToken = await getCookie(Cookies.ACCESS_TOKEN);
+        const accessToken = useAuthStore.getState().accessToken;
         if (accessToken) {
           headers["Authorization"] = `Bearer ${accessToken}`;
         }
@@ -198,23 +234,29 @@ export class ApiClient {
       }
 
       // Auth recovery: on 401/403, refresh once and replay the original
-      // request. No logout here — a failed refresh (or a second 401/403 on
-      // the replay) is just returned as the final error.
+      // request. A failed refresh reloads (the route handler already cleared
+      // the cookies). A 401 on the replay ends the session; a 403 on the
+      // replay is a genuine permission error and is returned as-is.
       if (
         (res.status === 401 || res.status === 403) &&
         !retried &&
         !options?.guest
       ) {
-        const refreshResult = await ApiClient.refreshAccessToken();
+        const refreshResult = await ApiClient.refreshSession();
 
         if (refreshResult.success) {
           return ApiClient.apiRequest<ResponseType>(url, method, options, true);
         }
 
+        ApiClient.reload();
         return ApiClient.fail(
           { method, url: fullUrl, body: options?.body },
           refreshResult,
         );
+      }
+
+      if (retried && res.status === 401 && !options?.guest) {
+        await ApiClient.logout();
       }
 
       const body = parseErrorBody(payload);

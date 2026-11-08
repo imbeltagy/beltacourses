@@ -8,9 +8,23 @@ if (!apiBaseUrl) {
   );
 }
 
+/**
+ * Same-origin route handlers that own the httpOnly cookies. The browser calls
+ * these (relative URLs), never the API's own auth endpoints.
+ */
+const session = {
+  login: "/api/auth/login",
+  moderatorLogin: "/api/auth/moderators/login",
+  refresh: "/api/auth/refresh",
+  logout: "/api/auth/logout",
+} as const;
+
 // Every action imports this file, so the client is configured before its first
-// request. It is the only place the refresh URL is built.
-ApiClient.configure({ refreshUrl: `${apiBaseUrl}/auth/refresh` });
+// request. It is the only place the session URLs are handed to the client.
+ApiClient.configure({
+  refreshUrl: session.refresh,
+  logoutUrl: session.logout,
+});
 
 /**
  * Every API URL the frontend knows, grouped by the API area that owns it.
@@ -18,6 +32,7 @@ ApiClient.configure({ refreshUrl: `${apiBaseUrl}/auth/refresh` });
  * hand the api-client an absolute URL.
  */
 export const endpoints = {
+  session,
   auth: {
     login: () => `${apiBaseUrl}/auth/login`,
     /** Staff sign-in. Rejects anyone who is not an admin or super_admin. */

@@ -39,7 +39,7 @@ export const ClientErrorCode = {
   NETWORK_ERROR: "NETWORK_ERROR",
   /** A non-2xx response whose body was not `{ code, error, message? }`. */
   INVALID_ERROR_RESPONSE: "INVALID_ERROR_RESPONSE",
-  /** A 401/403 with no refresh-token cookie to recover with. */
+  /** The refresh route handler found no refresh-token cookie to recover with. */
   NO_REFRESH_TOKEN: "NO_REFRESH_TOKEN",
 } as const;
 
