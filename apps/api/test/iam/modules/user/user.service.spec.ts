@@ -1,11 +1,11 @@
-import { errorWith } from '../../helpers/error-with';
-import { userRow } from '../../helpers/rows';
+import { errorWith } from '../../../helpers/error-with';
+import { userRow } from '../../../helpers/rows';
 import { ErrorCode } from '@repo/backend/errors';
 import { Role } from '@repo/db';
-import { PasswordService } from '../../../src/iam/auth/password.service';
-import { UserRepository } from '../../../src/iam/user/user.repository';
-import { UserService } from '../../../src/iam/user/user.service';
-import { StorageService } from '../../../src/storage/storage.service';
+import { PasswordService } from '../../../../src/iam/modules/auth/password.service';
+import { UserRepository } from '../../../../src/iam/modules/user/user.repository';
+import { UserService } from '../../../../src/iam/modules/user/user.service';
+import { StorageService } from '../../../../src/storage/storage.service';
 
 // Loose overrides: tests pass partial relations (e.g. an avatar with only id + url).
 const user = (overrides: Partial<Record<string, unknown>> = {}) => ({

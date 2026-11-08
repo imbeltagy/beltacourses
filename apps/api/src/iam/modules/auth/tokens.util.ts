@@ -11,14 +11,14 @@ import {
   MODERATOR_LOGIN_PATH,
   REFRESH_TOKEN_SECRET,
   refreshTokenTtl,
-} from '../constants/iam.constants';
+} from '../../constants/iam.constants';
 import type {
   AccessClaims,
   AuthKind,
   RefreshClaims,
   TokenPair,
   TokenSubject,
-} from '../types/iam.types';
+} from '../../types/iam.types';
 
 const ALGORITHM = 'HS256';
 const ACCESS_TYP = 'at+jwt';

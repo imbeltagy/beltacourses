@@ -1,11 +1,11 @@
-import { errorWith } from '../../helpers/error-with';
+import { errorWith } from '../../../helpers/error-with';
 import { ErrorCode } from '@repo/backend/errors';
 import { Role } from '@repo/db';
-import { AuthService } from '../../../src/iam/auth/auth.service';
-import type { PasswordService } from '../../../src/iam/auth/password.service';
-import type { SessionService } from '../../../src/iam/auth/session.service';
-import type { TokensUtil } from '../../../src/iam/auth/tokens.util';
-import type { UserWithRelations } from '../../../src/iam/types/iam.types';
+import { AuthService } from '../../../../src/iam/modules/auth/auth.service';
+import type { PasswordService } from '../../../../src/iam/modules/auth/password.service';
+import type { SessionService } from '../../../../src/iam/modules/auth/session.service';
+import type { TokensUtil } from '../../../../src/iam/modules/auth/tokens.util';
+import type { UserWithRelations } from '../../../../src/iam/types/iam.types';
 
 const clientUser = (overrides: Partial<Record<string, unknown>> = {}) =>
   ({

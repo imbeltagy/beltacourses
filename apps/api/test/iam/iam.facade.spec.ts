@@ -3,10 +3,10 @@ import { userRow } from '../helpers/rows';
 import { AppException, ErrorCode } from '@repo/backend/errors';
 import { Role } from '@repo/db';
 import { IamFacade } from '../../src/iam/iam.facade';
-import type { SessionService } from '../../src/iam/auth/session.service';
-import type { AuthService } from '../../src/iam/auth/auth.service';
-import type { UserService } from '../../src/iam/user/user.service';
-import type { GroupsService } from '../../src/iam/groups/groups.service';
+import type { SessionService } from '../../src/iam/modules/auth/session.service';
+import type { AuthService } from '../../src/iam/modules/auth/auth.service';
+import type { UserService } from '../../src/iam/modules/user/user.service';
+import type { GroupsService } from '../../src/iam/modules/groups/groups.service';
 import type { AccountEmailsService } from '../../src/email/account-emails.service';
 
 const user = (overrides: Partial<Record<string, unknown>> = {}) => ({

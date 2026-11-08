@@ -4,8 +4,8 @@ import { AppException, ErrorCode } from '@repo/backend/errors';
 import { Role } from '@repo/db';
 import type { Request } from 'express';
 import { AUTH_OPTIONS_KEY, isModerator } from '../constants/iam.constants';
-import { TokensUtil } from '../auth/tokens.util';
-import { SessionService } from '../auth/session.service';
+import { TokensUtil } from '../modules/auth/tokens.util';
+import { SessionService } from '../modules/auth/session.service';
 import type { AuthOptions, RequestUser } from '../types/iam.types';
 import { hasAllPermissions } from '../utils/permissions.util';
 

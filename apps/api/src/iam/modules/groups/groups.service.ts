@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { AppException, ErrorCode } from '@repo/backend/errors';
-import { PERMISSION_GROUPS } from '../constants/permissions.constants';
+import { PERMISSION_GROUPS } from '../../constants/permissions.constants';
 import type { Paginated } from '@repo/backend/pagination';
-import type { CreateGroupDto } from '../dto/request/create-group.dto';
-import type { ListGroupsQueryDto } from '../dto/request/list-groups.dto';
-import type { UpdateGroupDto } from '../dto/request/update-group.dto';
+import type { CreateGroupDto } from '../../dto/request/create-group.dto';
+import type { ListGroupsQueryDto } from '../../dto/request/list-groups.dto';
+import type { UpdateGroupDto } from '../../dto/request/update-group.dto';
 import { GroupsRepository } from './groups.repository';
-import type { GroupWithRelations } from '../types/iam.types';
+import type { GroupWithRelations } from '../../types/iam.types';
 
 @Injectable()
 export class GroupsService {

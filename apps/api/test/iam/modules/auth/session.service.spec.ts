@@ -1,9 +1,9 @@
 import { Role } from '@repo/db';
-import type { SessionRepository } from '../../../src/iam/auth/session.repository';
-import type { Session } from '../../../src/iam/types/iam.types';
+import type { SessionRepository } from '../../../../src/iam/modules/auth/session.repository';
+import type { Session } from '../../../../src/iam/types/iam.types';
 
 type SessionServiceCtor =
-  typeof import('../../../src/iam/auth/session.service').SessionService;
+  typeof import('../../../../src/iam/modules/auth/session.service').SessionService;
 
 const client = (): Session => ({
   userId: 'user-1',
@@ -19,7 +19,7 @@ function load(secret?: string): SessionServiceCtor {
   if (secret === undefined) delete process.env.REFRESH_TOKEN_HASH_SECRET;
   else process.env.REFRESH_TOKEN_HASH_SECRET = secret;
   // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-return
-  return require('../../../src/iam/auth/session.service').SessionService;
+  return require('../../../../src/iam/modules/auth/session.service').SessionService;
 }
 
 describe('SessionService', () => {

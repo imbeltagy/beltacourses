@@ -1,5 +1,5 @@
 type PasswordServiceCtor =
-  typeof import('../../../src/iam/auth/password.service').PasswordService;
+  typeof import('../../../../src/iam/modules/auth/password.service').PasswordService;
 
 /**
  * `iam.constants.ts` reads `process.env` at import time, so each scenario needs a
@@ -18,7 +18,7 @@ function loadPasswordService(env: {
   setEnv('PASSWORD_SALT', env.PASSWORD_SALT);
   setEnv('PASSWORD_SALT_ROUNDS', env.PASSWORD_SALT_ROUNDS);
   // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-return
-  return require('../../../src/iam/auth/password.service').PasswordService;
+  return require('../../../../src/iam/modules/auth/password.service').PasswordService;
 }
 
 describe('PasswordService', () => {

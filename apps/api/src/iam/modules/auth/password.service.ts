@@ -3,7 +3,7 @@ import * as bcrypt from 'bcrypt';
 import {
   PASSWORD_SALT,
   PASSWORD_SALT_ROUNDS,
-} from '../constants/iam.constants';
+} from '../../constants/iam.constants';
 
 const DEFAULT_SALT_ROUNDS = 12;
 const MIN_SALT_ROUNDS = 4;

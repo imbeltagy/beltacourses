@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { AppException, ErrorCode } from '@repo/backend/errors';
 import { randomUUID } from 'node:crypto';
-import type { LoginResponseDto } from '../dto/response/login.dto';
-import type { RefreshResponseDto } from '../dto/response/refresh.dto';
+import type { LoginResponseDto } from '../../dto/response/login.dto';
+import type { RefreshResponseDto } from '../../dto/response/refresh.dto';
 import type {
   AuthKind,
   RefreshClaims,
   Session,
   TokenPair,
   UserWithRelations,
-} from '../types/iam.types';
+} from '../../types/iam.types';
 import { PasswordService } from './password.service';
 import { SessionService } from './session.service';
 import { TokensUtil } from './tokens.util';

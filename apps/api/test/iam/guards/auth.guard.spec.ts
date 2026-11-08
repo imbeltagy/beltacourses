@@ -2,8 +2,8 @@ import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@repo/db';
 import { AppException, ErrorCode } from '@repo/backend/errors';
-import type { SessionService } from '../../../src/iam/auth/session.service';
-import type { TokensUtil } from '../../../src/iam/auth/tokens.util';
+import type { SessionService } from '../../../src/iam/modules/auth/session.service';
+import type { TokensUtil } from '../../../src/iam/modules/auth/tokens.util';
 import { AUTH_OPTIONS_KEY } from '../../../src/iam/constants/iam.constants';
 import { AuthGuard } from '../../../src/iam/guards/auth.guard';
 import type {

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '@repo/backend/prisma';
-import { GroupsRepository } from '../../../src/iam/groups/groups.repository';
+import { GroupsRepository } from '../../../../src/iam/modules/groups/groups.repository';
 
 const row = (overrides: Partial<Record<string, unknown>> = {}) => ({
   id: 'group-1',

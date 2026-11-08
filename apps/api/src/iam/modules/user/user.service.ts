@@ -2,14 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { AppException, ErrorCode } from '@repo/backend/errors';
 import { PasswordService } from '../auth/password.service';
 import type { User } from '@repo/db';
-import { StorageService } from '../../storage/storage.service';
-import type { FileToUpload } from '../../storage/storage.types';
+import { StorageService } from '../../../storage/storage.service';
+import type { FileToUpload } from '../../../storage/storage.types';
 import { UserRepository } from './user.repository';
-import type { CreateUserDto } from '../dto/request/create-user.dto';
-import type { ListUsersQueryDto } from '../dto/request/list-users.dto';
-import type { UpdateUserDto } from '../dto/request/update-user.dto';
+import type { CreateUserDto } from '../../dto/request/create-user.dto';
+import type { ListUsersQueryDto } from '../../dto/request/list-users.dto';
+import type { UpdateUserDto } from '../../dto/request/update-user.dto';
 import type { Paginated } from '@repo/backend/pagination';
-import type { UserWithRelations } from '../types/iam.types';
+import type { UserWithRelations } from '../../types/iam.types';
 
 @Injectable()
 export class UserService {

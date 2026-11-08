@@ -85,7 +85,7 @@ expires_in, refresh_expires_in }`.
 ## Tokens
 
 - JWT access + refresh via `@nestjs/jwt`, signed with **separate secrets** (`ACCESS_TOKEN_SECRET`,
-  `REFRESH_TOKEN_SECRET`). `TokensUtil` (`apps/api/src/iam/auth/tokens.util.ts`) is the only code
+  `REFRESH_TOKEN_SECRET`). `TokensUtil` (`apps/api/src/iam/modules/auth/tokens.util.ts`) is the only code
   that signs or verifies.
 - Header `alg` is pinned to `HS256` on sign and verify; any other algorithm is rejected. Header `typ`
   is `at+jwt` for access and `rt+jwt` for refresh, and verify rejects a mismatch, so one cannot be
