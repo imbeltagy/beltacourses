@@ -1,5 +1,3 @@
-"use server";
-
 import { ApiClient } from "@repo/frontend/utils/api-client";
 import { endpoints } from "../configs/endpoints";
 import type { ActionResult, DataResult } from "../types/action";

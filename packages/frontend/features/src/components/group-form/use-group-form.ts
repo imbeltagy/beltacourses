@@ -38,7 +38,7 @@ const buildSchema = (t: T) =>
 
 export type GroupFormInputs = yup.InferType<ReturnType<typeof buildSchema>>;
 
-export function useGroupForm(group?: Group) {
+export function useGroupForm(group?: Group, onSaved?: () => void) {
   const router = useRouter();
   const tValidation = useTranslations("validation");
   const tErrors = useTranslations("errors");
@@ -67,7 +67,8 @@ export function useGroupForm(group?: Group) {
       }
 
       toast.success(tActions("groupUpdated"));
-      router.refresh();
+      // Refetch so the header shows the saved values.
+      onSaved?.();
       return;
     }
 

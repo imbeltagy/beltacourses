@@ -1,34 +1,27 @@
 import { getTranslations } from "next-intl/server";
 import { Plus } from "lucide-react";
-import { Alert, AlertTitle, Button } from "@repo/frontend/ui";
+import { Button } from "@repo/frontend/ui";
 import { Link } from "@repo/frontend/i18n/navigation";
-import { listGroupsAction } from "../../../actions/groups-actions";
 import { PageWrapper } from "../../../components/page-wrapper";
-import { TablePagination } from "../../../components/table-pagination";
 import { TableSearch } from "../../../components/table-search";
-import { localizeError } from "../../../utils/localize-error";
-import { DEFAULT_PAGE_SIZE } from "../../../types/api/common";
-import { GroupsTable } from "./components/groups-table";
+import { GroupsList } from "./components/groups-list";
 
+/**
+ * List state comes from the URL, so this stays a server component: it reads
+ * `searchParams` and passes them to `GroupsList`, which fetches in the browser.
+ */
 export default async function GroupsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [params, t, tErrors] = await Promise.all([
+  const [params, t] = await Promise.all([
     searchParams,
     getTranslations("admin.groups"),
-    getTranslations("errors"),
   ]);
 
   const page = toPositiveInt(params.page) ?? 1;
   const search = typeof params.search === "string" ? params.search : undefined;
-
-  const result = await listGroupsAction({
-    page,
-    limit: DEFAULT_PAGE_SIZE,
-    search,
-  });
 
   return (
     <PageWrapper
@@ -50,22 +43,7 @@ export default async function GroupsPage({
         />
       </div>
 
-      {!result.success ? (
-        <Alert variant="destructive">
-          <AlertTitle>
-            {localizeError(tErrors, result.error, "listGroups")}
-          </AlertTitle>
-        </Alert>
-      ) : (
-        <>
-          <GroupsTable groups={result.data.data} />
-          <TablePagination
-            page={result.data.meta.page}
-            limit={result.data.meta.limit}
-            total={result.data.meta.total}
-          />
-        </>
-      )}
+      <GroupsList page={page} search={search} />
     </PageWrapper>
   );
 }

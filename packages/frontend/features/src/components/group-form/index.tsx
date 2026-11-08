@@ -12,13 +12,16 @@ import { useGroupForm } from "./use-group-form";
 export function GroupForm({
   group,
   catalog,
+  onSaved,
 }: {
   group?: Group;
   catalog: PermissionCatalog;
+  /** Edit only: called after a successful save. */
+  onSaved?: () => void;
 }) {
   const t = useTranslations("admin.groups.form");
   const tCommon = useTranslations("common");
-  const { form, isEdit, onSubmit } = useGroupForm(group);
+  const { form, isEdit, onSubmit } = useGroupForm(group, onSaved);
   const { isSubmitting } = form.formState;
 
   return (
