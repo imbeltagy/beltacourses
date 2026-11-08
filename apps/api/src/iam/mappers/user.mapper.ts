@@ -2,7 +2,7 @@ import { plainToInstance } from 'class-transformer';
 import type { Paginated } from '@repo/backend/pagination';
 import { ListUsersResponseDto } from '../dto/response/list-users.dto';
 import { UserResponseDto } from '../dto/response/user.dto';
-import type { UserWithRelations } from '../types/iam.types';
+import type { UserWithRelations } from '../types/auth.types';
 
 export class UserMapper {
   static toDto(user: UserWithRelations): UserResponseDto {

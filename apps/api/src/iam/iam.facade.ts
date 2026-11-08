@@ -25,7 +25,8 @@ import type {
   GroupWithRelations,
   RequestUser,
   UserWithRelations,
-} from './types/iam.types';
+} from './types/auth.types';
+import { PasswordService } from './modules/auth/password.service';
 
 /**
  * The only entry point controllers use. Holds every rule that spans more
@@ -35,6 +36,7 @@ import type {
 export class IamFacade {
   constructor(
     private readonly authService: AuthService,
+    private readonly passwordService: PasswordService,
     private readonly sessionService: SessionService,
     private readonly userService: UserService,
     private readonly groupsService: GroupsService,
@@ -43,28 +45,27 @@ export class IamFacade {
 
   // ---- auth ----
 
-  register(
+  async register(
     dto: RegisterDto,
     avatar?: FileToUpload,
   ): Promise<UserWithRelations> {
+    const hashedPassword = await this.passwordService.hash(dto.password);
     return this.userService.create(
       {
         email: dto.email,
-        password: dto.password,
         name: dto.name,
         role: dto.role,
         confirmed: false,
       },
+      hashedPassword,
       avatar,
     );
   }
 
-  /** POST /auth/login — clients only. */
   async login(dto: LoginDto): Promise<LoginResponseDto> {
     return this.signIn(dto, 'client');
   }
 
-  /** POST /auth/moderators/login — staff only. */
   async loginModerator(dto: LoginDto): Promise<LoginResponseDto> {
     return this.signIn(dto, 'moderator');
   }
@@ -82,7 +83,7 @@ export class IamFacade {
       ) {
         // Deleted since login: the session must not outlive the account.
         await this.sessionService.remove(claims.sid, claims.userId);
-        throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+        throw new AppException(ErrorCode.UNAUTHORIZED);
       }
       throw error;
     }
@@ -104,7 +105,6 @@ export class IamFacade {
     return this.authService.login(user, kind, permissions);
   }
 
-  /** An admin's group permissions; every other role has none. */
   private async loadPermissions(user: UserWithRelations): Promise<string[]> {
     if (user.role !== Role.admin || !user.group_id) return [];
     return this.groupsService.findPermissions(user.group_id);
@@ -124,13 +124,14 @@ export class IamFacade {
 
   // ---- users ----
 
-  /** Staff-created account: the new user is emailed in `locale`. */
   async createUser(
     dto: CreateUserDto,
     avatar: FileToUpload | undefined,
     locale: EmailLocale,
   ): Promise<UserWithRelations> {
-    const user = await this.userService.create(dto, avatar);
+    const hashedPassword = await this.passwordService.hash(dto.password);
+
+    const user = await this.userService.create(dto, hashedPassword, avatar);
     await this.accountEmails.sendAccountCreated(user, locale);
     return user;
   }
@@ -151,15 +152,13 @@ export class IamFacade {
     return this.userService.update(id, dto, avatar);
   }
 
-  /** Soft delete also ends every live session of the user. */
   async deleteUser(id: string): Promise<void> {
     await this.userService.softDelete(id);
     await this.sessionService.removeAllForUser(id);
   }
 
-  // TODO(T-018): reset-password must call SessionService.removeAllForUser(userId) after changing the password
+  // TODO: (T-018): reset-password must call SessionService.removeAllForUser(userId) after changing the password
 
-  /** Ends the admin's live sessions so their permissions refresh. */
   async assignGroup(
     userId: string,
     groupId: string,
@@ -179,7 +178,6 @@ export class IamFacade {
     return updated;
   }
 
-  /** Clears the admin's group and ends their live sessions. */
   async unassignGroup(userId: string): Promise<void> {
     await this.userService.findById(userId);
     await this.userService.setGroup(userId, null);
@@ -206,7 +204,6 @@ export class IamFacade {
     return this.groupsService.findById(id);
   }
 
-  /** A permissions change ends the sessions of every member of the group. */
   async updateGroup(
     id: string,
     dto: UpdateGroupDto,
@@ -221,7 +218,6 @@ export class IamFacade {
     return updated;
   }
 
-  /** Members are read before the delete: the FK then nulls their group_id. */
   async deleteGroup(id: string): Promise<void> {
     const memberIds = await this.userService.findIdsByGroup(id);
     await this.groupsService.delete(id);

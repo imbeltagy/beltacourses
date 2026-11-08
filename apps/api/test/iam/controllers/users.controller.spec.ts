@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Role } from '@repo/db';
-import type { RequestUser } from '../../../src/iam/types/iam.types';
+import type { RequestUser } from '../../../src/iam/types/auth.types';
 import { UsersController } from '../../../src/iam/controllers/users.controller';
 import { IamFacade } from '../../../src/iam/iam.facade';
 import { UserResponseDto } from '../../../src/iam/dto/response/user.dto';

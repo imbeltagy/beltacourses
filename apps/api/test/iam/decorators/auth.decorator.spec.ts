@@ -1,6 +1,6 @@
 import { Reflector } from '@nestjs/core';
 import { Role } from '@repo/db';
-import { AUTH_OPTIONS_KEY } from '../../../src/iam/constants/iam.constants';
+import { AUTH_OPTIONS_KEY } from '../../../src/iam/constants/auth.constants';
 import { Auth } from '../../../src/iam/decorators/auth.decorator';
 
 /**

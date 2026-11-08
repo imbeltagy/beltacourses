@@ -1,7 +1,7 @@
 import type { RedisService } from '@repo/backend/redis';
 import { Role } from '@repo/db';
 import { SessionRepository } from '../../../../src/iam/modules/auth/session.repository';
-import type { Session } from '../../../../src/iam/types/iam.types';
+import type { Session } from '../../../../src/iam/types/session.types';
 
 const SESSION: Session = {
   userId: 'user-1',

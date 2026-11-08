@@ -3,8 +3,8 @@ import { RedisService } from '@repo/backend/redis';
 import {
   SESSION_KEY_PREFIX,
   USER_SESSIONS_KEY_PREFIX,
-} from '../../constants/iam.constants';
-import type { Session } from '../../types/iam.types';
+} from '../../constants/session.constants';
+import type { Session } from '../../types/session.types';
 
 /**
  * Compare-and-swap: overwrite the session only while its stored refresh hash is

@@ -10,7 +10,7 @@ import {
   MinLength,
   ValidateIf,
 } from 'class-validator';
-import { blankToNull } from '../../utils/transforms.util';
+import { blankToNull } from '@repo/backend/transforms';
 
 /**
  * Forms can't send JSON `null`, so a nullable field is cleared by sending it blank.

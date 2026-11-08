@@ -1,6 +1,8 @@
 import { Role } from '@repo/db';
-import type { GroupWithRelations } from '../../src/iam/types/iam.types';
-import type { UserWithRelations } from '../../src/iam/types/iam.types';
+import type {
+  GroupWithRelations,
+  UserWithRelations,
+} from '../../src/iam/types/auth.types';
 
 const DATE = new Date('2026-08-01T00:00:00.000Z');
 

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { AppException, ErrorCode } from '@repo/backend/errors';
-import { PasswordService } from '../auth/password.service';
 import type { User } from '@repo/db';
 import { StorageService } from '../../../storage/storage.service';
 import type { FileToUpload } from '../../../storage/storage.types';
@@ -9,51 +8,68 @@ import type { CreateUserDto } from '../../dto/request/create-user.dto';
 import type { ListUsersQueryDto } from '../../dto/request/list-users.dto';
 import type { UpdateUserDto } from '../../dto/request/update-user.dto';
 import type { Paginated } from '@repo/backend/pagination';
-import type { UserWithRelations } from '../../types/iam.types';
+import type { UserWithRelations } from '../../types/auth.types';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly usersRepository: UserRepository,
-    private readonly passwordService: PasswordService,
     private readonly storageService: StorageService,
   ) {}
 
+  // FIXME: don't use password service here. also update the existing user with deletedAt with the new details but same password
+
   async create(
-    input: CreateUserDto,
+    input: Omit<CreateUserDto, 'password'>,
+    hashedPassword: string,
     avatar?: FileToUpload,
   ): Promise<UserWithRelations> {
     const existing = await this.usersRepository.findIdByEmail(input.email);
-    if (existing) throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
+    if (existing && !existing.deleted_at)
+      throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
 
-    const hashed_password = await this.passwordService.hash(input.password);
     const uploadedAvatar = avatar
       ? await this.storageService.upload(avatar)
       : undefined;
 
-    let created: UserWithRelations;
+    const sharedFields = {
+      hashed_password: hashedPassword,
+      name: input.name,
+      role: input.role,
+      confirmed: input.confirmed,
+      bio: input.bio,
+      gender: input.gender,
+      date_of_birth: input.date_of_birth
+        ? new Date(input.date_of_birth)
+        : undefined,
+      avatar_id: uploadedAvatar?.id,
+    };
+
+    let entity: UserWithRelations;
     try {
-      created = await this.usersRepository.create({
-        email: input.email,
-        hashed_password,
-        name: input.name,
-        role: input.role,
-        confirmed: input.confirmed,
-        bio: input.bio,
-        gender: input.gender,
-        date_of_birth: input.date_of_birth
-          ? new Date(input.date_of_birth)
-          : undefined,
-        avatar_id: uploadedAvatar?.id,
-      });
-    } catch (error) {
-      if (uploadedAvatar) {
-        await this.storageService.softDelete(uploadedAvatar.id).catch(() => {});
+      if (existing) {
+        entity = await this.usersRepository.update(existing.id, {
+          ...sharedFields,
+        });
+
+        if (existing.avatar_id)
+          await this.storageService
+            .softDelete(existing.avatar_id)
+            .catch(() => {});
+      } else {
+        entity = await this.usersRepository.create({
+          email: input.email,
+          ...sharedFields,
+        });
       }
+    } catch (error) {
+      if (uploadedAvatar)
+        await this.storageService.softDelete(uploadedAvatar.id).catch(() => {});
+
       throw error;
     }
 
-    return created;
+    return entity;
   }
 
   async findById(id: string): Promise<UserWithRelations> {

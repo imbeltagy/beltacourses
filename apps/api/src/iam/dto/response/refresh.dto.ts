@@ -1,9 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-/**
- * Refresh tokens rotate: the one presented to `POST /auth/refresh` is spent,
- * and the response carries its replacement (same session).
- */
 export class RefreshResponseDto {
   @ApiProperty({
     description:

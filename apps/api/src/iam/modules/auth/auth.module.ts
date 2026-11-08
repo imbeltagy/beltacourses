@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { PasswordService } from './password.service';
 import { SessionRepository } from './session.repository';
 import { SessionService } from './session.service';
-import { TokensUtil } from './tokens.util';
+import { TokensUtil } from '../../utils/tokens.util';
 
 @Module({
   providers: [
@@ -13,6 +13,6 @@ import { TokensUtil } from './tokens.util';
     SessionService,
     SessionRepository,
   ],
-  exports: [AuthService, SessionService, TokensUtil],
+  exports: [AuthService, SessionService, TokensUtil, PasswordService],
 })
 export class AuthModule {}

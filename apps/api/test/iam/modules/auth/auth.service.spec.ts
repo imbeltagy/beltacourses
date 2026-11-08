@@ -4,8 +4,8 @@ import { Role } from '@repo/db';
 import { AuthService } from '../../../../src/iam/modules/auth/auth.service';
 import type { PasswordService } from '../../../../src/iam/modules/auth/password.service';
 import type { SessionService } from '../../../../src/iam/modules/auth/session.service';
-import type { TokensUtil } from '../../../../src/iam/modules/auth/tokens.util';
-import type { UserWithRelations } from '../../../../src/iam/types/iam.types';
+import type { TokensUtil } from '../../../../src/iam/utils/tokens.util';
+import type { UserWithRelations } from '../../../../src/iam/types/auth.types';
 
 const clientUser = (overrides: Partial<Record<string, unknown>> = {}) =>
   ({

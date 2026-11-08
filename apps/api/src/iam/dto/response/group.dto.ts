@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import type { GroupWithRelations } from '../../types/iam.types';
+import type { GroupWithRelations } from '../../types/auth.types';
 
 type Source = { obj: GroupWithRelations };
 

@@ -10,7 +10,6 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
 import {
-  ApiBody,
   ApiConflictResponse,
   ApiConsumes,
   ApiCreatedResponse,
@@ -22,13 +21,9 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { CurrentUser } from '../decorators/current-user.decorator';
-import type { RequestUser } from '../types/iam.types';
+import type { RequestUser } from '../types/auth.types';
 import { UserResponseDto } from '../dto/response/user.dto';
-import {
-  AUTH_THROTTLE_LIMIT,
-  AUTH_THROTTLE_TTL,
-  REGISTERABLE_ROLES,
-} from '../constants/iam.constants';
+import { AUTH_THROTTLE } from '../constants/auth.constants';
 import { UserMapper } from '../mappers/user.mapper';
 import { IamFacade } from '../iam.facade';
 import { Auth } from '../decorators/auth.decorator';
@@ -37,31 +32,6 @@ import { RefreshDto } from '../dto/request/refresh.dto';
 import { RegisterDto } from '../dto/request/register.dto';
 import { LoginResponseDto } from '../dto/response/login.dto';
 import { RefreshResponseDto } from '../dto/response/refresh.dto';
-
-const REGISTER_BODY = {
-  schema: {
-    type: 'object' as const,
-    required: ['email', 'password', 'name', 'role'],
-    properties: {
-      email: { type: 'string', example: 'student@beltacourses.com' },
-      password: { type: 'string', example: 'correcthorse' },
-      name: { type: 'string', example: 'Jane Doe' },
-      role: { type: 'string', enum: [...REGISTERABLE_ROLES] },
-      avatar: {
-        type: 'string',
-        format: 'binary',
-        description: 'Optional avatar image file.',
-      },
-    },
-  },
-};
-
-const AUTH_THROTTLE = {
-  default: {
-    limit: AUTH_THROTTLE_LIMIT,
-    ttl: AUTH_THROTTLE_TTL,
-  },
-};
 
 @ApiTags('auth')
 @Controller('auth')
@@ -72,7 +42,6 @@ export class AuthController {
   @Auth({ public: true })
   @UseInterceptors(FileInterceptor('avatar'))
   @ApiConsumes('multipart/form-data')
-  @ApiBody(REGISTER_BODY)
   @ApiOperation({ summary: 'Register as a student or a teacher' })
   @ApiCreatedResponse({ type: UserResponseDto })
   @ApiConflictResponse({

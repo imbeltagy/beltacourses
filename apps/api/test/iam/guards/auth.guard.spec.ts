@@ -3,14 +3,12 @@ import { Reflector } from '@nestjs/core';
 import { Role } from '@repo/db';
 import { AppException, ErrorCode } from '@repo/backend/errors';
 import type { SessionService } from '../../../src/iam/modules/auth/session.service';
-import type { TokensUtil } from '../../../src/iam/modules/auth/tokens.util';
-import { AUTH_OPTIONS_KEY } from '../../../src/iam/constants/iam.constants';
+import type { TokensUtil } from '../../../src/iam/utils/tokens.util';
+import { AUTH_OPTIONS_KEY } from '../../../src/iam/constants/auth.constants';
 import { AuthGuard } from '../../../src/iam/guards/auth.guard';
-import type {
-  AccessClaims,
-  AuthOptions,
-  Session,
-} from '../../../src/iam/types/iam.types';
+import type { AccessClaims } from '../../../src/iam/types/token.types';
+import type { AuthOptions } from '../../../src/iam/types/auth.types';
+import type { Session } from '../../../src/iam/types/session.types';
 import { errorWith } from '../../helpers/error-with';
 
 class Controller {

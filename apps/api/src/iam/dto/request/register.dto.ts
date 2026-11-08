@@ -1,7 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '@repo/db';
-import { IsEmail, IsIn, IsString, MaxLength, MinLength } from 'class-validator';
-import { REGISTERABLE_ROLES } from '../../constants/iam.constants';
+import {
+  IsEmail,
+  IsIn,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
+import { REGISTERABLE_ROLES } from '../../constants/auth.constants';
 
 export class RegisterDto {
   @ApiProperty({ example: 'student@beltacourses.com' })
@@ -23,4 +30,13 @@ export class RegisterDto {
   @ApiProperty({ enum: REGISTERABLE_ROLES })
   @IsIn(REGISTERABLE_ROLES)
   role: Role;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description: 'Optional avatar image file.',
+  })
+  @IsOptional()
+  @IsString()
+  avatar?: Express.Multer.File;
 }

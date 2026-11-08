@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-/**
- * `POST /auth/login` and `POST /auth/moderators/login` return the identical
- * schema, so both use this same class — a second class could not drift from
- * the first because both are produced by the same service method
- * (`AuthService.login`).
- */
 export class LoginResponseDto {
   @ApiProperty({
     description:

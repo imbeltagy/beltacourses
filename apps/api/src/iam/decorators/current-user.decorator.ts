@@ -1,6 +1,6 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import type { Request } from 'express';
-import type { RequestUser } from '../types/iam.types';
+import type { RequestUser } from '../types/auth.types';
 
 /** `null` on a `@Auth({ public: true })` route. */
 export const CurrentUser = createParamDecorator(

@@ -22,7 +22,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Auth } from '../iam/decorators/auth.decorator';
-import { MODERATOR_ROLES } from '../iam/constants/iam.constants';
+import { MODERATOR_ROLES } from '../iam/constants/auth.constants';
 import { StorageService } from './storage.service';
 import type { UploadedFile } from './storage.types';
 import { SoftDeleteFilesDto } from './dto/request/soft-delete-files.dto';

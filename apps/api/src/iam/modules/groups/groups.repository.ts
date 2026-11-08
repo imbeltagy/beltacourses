@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@repo/backend/prisma';
 import type { Prisma } from '@repo/db';
 import type { ListGroupsQueryDto } from '../../dto/request/list-groups.dto';
-import { GROUP_INCLUDE, type GroupWithRelations } from '../../types/iam.types';
+import { GROUP_INCLUDE, type GroupWithRelations } from '../../types/auth.types';
 
 @Injectable()
 export class GroupsRepository {

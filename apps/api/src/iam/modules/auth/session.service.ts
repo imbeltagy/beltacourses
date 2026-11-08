@@ -3,14 +3,10 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import {
   REFRESH_TOKEN_HASH_SECRET,
   refreshTokenTtl,
-} from '../../constants/iam.constants';
-import type { Session } from '../../types/iam.types';
+} from '../../constants/token.constants';
+import type { Session } from '../../types/session.types';
 import { SessionRepository } from './session.repository';
 
-/**
- * Session policy: TTL per role (the refresh lifetime) and the refresh-token
- * hash. Storage is `SessionRepository`'s job.
- */
 @Injectable()
 export class SessionService {
   private readonly hashSecret: string;

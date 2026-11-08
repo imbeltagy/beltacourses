@@ -1,10 +1,10 @@
 import { JwtService } from '@nestjs/jwt';
 import { ErrorCode } from '@repo/backend/errors';
 import { Role } from '@repo/db';
-import { errorWith } from '../../../helpers/error-with';
+import { errorWith } from '../../helpers/error-with';
 
 type TokensUtilCtor =
-  typeof import('../../../../src/iam/modules/auth/tokens.util').TokensUtil;
+  typeof import('../../../src/iam/utils/tokens.util').TokensUtil;
 
 const ACCESS = 'access-secret';
 const REFRESH = 'refresh-secret';
@@ -38,7 +38,7 @@ function load(env: {
   set('REFRESH_TOKEN_SECRET', env.refresh);
   set('API_DOMAIN', env.domain);
   // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-return
-  return require('../../../../src/iam/modules/auth/tokens.util').TokensUtil;
+  return require('../../../src/iam/utils/tokens.util').TokensUtil;
 }
 
 describe('TokensUtil', () => {

@@ -1,8 +1,3 @@
-/**
- * Pure functions only — no Nest, no DB. Wildcard matching is per-segment, the
- * Apache Shiro convention.
- */
-
 /** One granted string vs one required string. */
 export function matchesPermission(granted: string, required: string): boolean {
   if (granted === '*') return true;

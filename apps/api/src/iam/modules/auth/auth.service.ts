@@ -3,16 +3,12 @@ import { AppException, ErrorCode } from '@repo/backend/errors';
 import { randomUUID } from 'node:crypto';
 import type { LoginResponseDto } from '../../dto/response/login.dto';
 import type { RefreshResponseDto } from '../../dto/response/refresh.dto';
-import type {
-  AuthKind,
-  RefreshClaims,
-  Session,
-  TokenPair,
-  UserWithRelations,
-} from '../../types/iam.types';
+import type { AuthKind, UserWithRelations } from '../../types/auth.types';
+import type { RefreshClaims, TokenPair } from '../../types/token.types';
+import type { Session } from '../../types/session.types';
 import { PasswordService } from './password.service';
 import { SessionService } from './session.service';
-import { TokensUtil } from './tokens.util';
+import { TokensUtil } from '../../utils/tokens.util';
 
 @Injectable()
 export class AuthService {
@@ -22,11 +18,6 @@ export class AuthService {
     private readonly sessionService: SessionService,
   ) {}
 
-  /**
-   * Shared by both login endpoints. A role/flow mismatch is the same generic
-   * 401 as a wrong password, so neither endpoint reveals whether an address is
-   * staff. `permissions` is the snapshot the facade loaded for the session.
-   */
   async login(
     user: UserWithRelations,
     kind: AuthKind,
@@ -47,23 +38,17 @@ export class AuthService {
     return pair;
   }
 
-  /** Verifies the refresh token's signature, alg, typ, aud, iss and expiry. */
   verifyRefreshToken(refreshToken: string): RefreshClaims {
     return this.tokensUtil.verifyRefresh(refreshToken);
   }
 
-  /**
-   * POST /auth/refresh. `user` and `permissions` are freshly loaded by the
-   * facade. Single use: the session is swapped by compare-and-swap on the
-   * stored hash, so of two concurrent refreshes with one token the loser 401s.
-   */
   async refresh(
     claims: RefreshClaims,
     refreshToken: string,
     user: UserWithRelations,
     permissions: string[],
   ): Promise<RefreshResponseDto> {
-    const invalid = new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+    const invalid = new AppException(ErrorCode.UNAUTHORIZED);
 
     const session = await this.sessionService.get(claims.sid);
     if (
@@ -93,12 +78,10 @@ export class AuthService {
     return pair;
   }
 
-  /** POST /auth/logout — ends only the caller's session. */
   async logout(user: { id: string; sid: string }): Promise<void> {
     await this.sessionService.remove(user.sid, user.id);
   }
 
-  /** Throws the generic INVALID_CREDENTIALS unless `password` matches `hash`. */
   async verifyPassword(password: string, hash: string): Promise<void> {
     const valid = await this.passwordService.compare(password, hash);
     if (!valid) throw new AppException(ErrorCode.INVALID_CREDENTIALS);

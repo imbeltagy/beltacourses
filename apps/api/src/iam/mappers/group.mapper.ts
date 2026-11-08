@@ -2,7 +2,7 @@ import { plainToInstance } from 'class-transformer';
 import type { Paginated } from '@repo/backend/pagination';
 import { GroupResponseDto } from '../dto/response/group.dto';
 import { ListGroupsResponseDto } from '../dto/response/list-groups.dto';
-import type { GroupWithRelations } from '../types/iam.types';
+import type { GroupWithRelations } from '../types/auth.types';
 
 export class GroupMapper {
   static toDto(group: GroupWithRelations): GroupResponseDto {

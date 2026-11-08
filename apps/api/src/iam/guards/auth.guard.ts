@@ -3,10 +3,11 @@ import { Reflector } from '@nestjs/core';
 import { AppException, ErrorCode } from '@repo/backend/errors';
 import { Role } from '@repo/db';
 import type { Request } from 'express';
-import { AUTH_OPTIONS_KEY, isModerator } from '../constants/iam.constants';
-import { TokensUtil } from '../modules/auth/tokens.util';
+import { AUTH_OPTIONS_KEY, isModerator } from '../constants/auth.constants';
+import { TokensUtil } from '../utils/tokens.util';
 import { SessionService } from '../modules/auth/session.service';
-import type { AuthOptions, RequestUser } from '../types/iam.types';
+import type { AuthOptions, RequestUser } from '../types/auth.types';
+import type { AccessClaims } from '../types/token.types';
 import { hasAllPermissions } from '../utils/permissions.util';
 
 function toArray<T>(value: T | readonly T[] | undefined): readonly T[] {
@@ -14,13 +15,6 @@ function toArray<T>(value: T | readonly T[] | undefined): readonly T[] {
   return Array.isArray(value) ? (value as readonly T[]) : [value as T];
 }
 
-/**
- * The one guard, registered globally. Reads `@Auth()` metadata, verifies the
- * access token and fills `request.user`.
- *
- * Clients: token only, no Redis. Moderators: the Redis session must be alive,
- * and an admin's permissions come from the session snapshot (no DB hit).
- */
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
@@ -45,41 +39,50 @@ export class AuthGuard implements CanActivate {
       .switchToHttp()
       .getRequest<Request & { user: RequestUser | null }>();
 
-    if (options.public === true) {
+    const token = this.extractToken(request);
+    if (!token) {
+      if (!options.public) throw new AppException(ErrorCode.UNAUTHORIZED);
+
       request.user = null;
       return true;
     }
 
-    const token = this.extractToken(request);
-    if (!token) throw new AppException(ErrorCode.MISSING_ACCESS_TOKEN);
+    let claims: AccessClaims;
+    try {
+      claims = this.tokensUtil.verifyAccess(token);
+    } catch (err) {
+      if (!options.public) throw err;
 
-    const claims = this.tokensUtil.verifyAccess(token);
+      request.user = null;
+      return true;
+    }
 
+    // If roles are specified. Then it's not public and token is required.
     const roles = toArray(options.roles);
     if (roles.length > 0 && !roles.includes(claims.role)) {
       throw new AppException(ErrorCode.FORBIDDEN);
     }
     const required = toArray(options.permissions);
 
-    let groupId: string | null = null;
-    let permissions: string[] = [];
+    // Refuse Clients if routes requires permissions
+    if (required.length > 0 && !isModerator(claims.role))
+      throw new AppException(ErrorCode.FORBIDDEN);
 
-    if (isModerator(claims.role)) {
-      const session = await this.sessionService.get(claims.sid);
-      if (!session || session.userId !== claims.sub) {
-        throw new AppException(ErrorCode.SESSION_EXPIRED);
-      }
-      groupId = session.groupId;
-      permissions = session.permissions;
+    // Only valid session pass
+    const session = await this.sessionService.get(claims.sid);
+    if (!session || session.userId !== claims.sub) {
+      throw new AppException(ErrorCode.SESSION_EXPIRED);
+    }
 
-      if (
-        claims.role === Role.admin &&
-        !hasAllPermissions(permissions, required)
-      ) {
-        throw new AppException(ErrorCode.FORBIDDEN);
-      }
-    } else if (required.length > 0) {
-      // Permissions belong to staff; a client never satisfies them.
+    const groupId = session.groupId;
+    const permissions = session.permissions;
+
+    // Super admin pass anyway.
+    // Clients don't reach her if permissions are required.
+    if (
+      claims.role === Role.admin &&
+      !hasAllPermissions(permissions, required)
+    ) {
       throw new AppException(ErrorCode.FORBIDDEN);
     }
 

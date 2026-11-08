@@ -17,6 +17,6 @@ export const PERMISSION_CATALOG_SCHEMA = {
     type: 'object' as const,
     additionalProperties: { type: 'string' as const },
   },
-  example: PERMISSION_GROUPS,
+  example: { RESOURCE: { ACTION: 'resource:action' } },
   description: 'The hardcoded catalog of every assignable permission.',
 };

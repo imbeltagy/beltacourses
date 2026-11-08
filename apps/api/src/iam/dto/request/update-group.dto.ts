@@ -13,7 +13,6 @@ import {
   MinLength,
 } from 'class-validator';
 
-/** Sending `permissions` replaces the whole set — never a merge. */
 export class UpdateGroupDto {
   @ApiPropertyOptional({ minLength: 2, maxLength: 100 })
   @IsOptional()

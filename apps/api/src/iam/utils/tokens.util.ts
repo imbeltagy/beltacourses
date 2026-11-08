@@ -7,18 +7,18 @@ import {
   accessTokenTtl,
   API_DOMAIN,
   CLIENT_LOGIN_PATH,
-  isModerator,
   MODERATOR_LOGIN_PATH,
   REFRESH_TOKEN_SECRET,
   refreshTokenTtl,
-} from '../../constants/iam.constants';
+} from '../constants/token.constants';
+import { isModerator } from '../constants/auth.constants';
 import type {
   AccessClaims,
-  AuthKind,
   RefreshClaims,
   TokenPair,
   TokenSubject,
-} from '../../types/iam.types';
+} from '../types/token.types';
+import type { AuthKind } from '../types/auth.types';
 
 const ALGORITHM = 'HS256';
 const ACCESS_TYP = 'at+jwt';
@@ -56,7 +56,6 @@ export class TokensUtil {
     };
   }
 
-  /** The login flow a role belongs to. */
   kindOf(user: { role: TokenSubject['role'] }): AuthKind {
     return isModerator(user.role) ? 'moderator' : 'client';
   }
@@ -109,7 +108,7 @@ export class TokensUtil {
    * flow named by the issuer (a moderator role only under the moderators issuer).
    */
   verifyAccess(token: string): AccessClaims {
-    const error = ErrorCode.INVALID_ACCESS_TOKEN;
+    const error = ErrorCode.UNAUTHORIZED;
     const claims = this.verify<AccessClaims>(
       this.accessJwt,
       token,
@@ -128,7 +127,7 @@ export class TokensUtil {
 
   /** Same checks as `verifyAccess`, minus the role (refresh claims carry none). */
   verifyRefresh(token: string): RefreshClaims {
-    const error = ErrorCode.INVALID_REFRESH_TOKEN;
+    const error = ErrorCode.UNAUTHORIZED;
     const claims = this.verify<RefreshClaims>(
       this.refreshJwt,
       token,

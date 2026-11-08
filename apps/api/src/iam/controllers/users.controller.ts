@@ -28,11 +28,11 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { MODERATOR_ROLES } from '../constants/iam.constants';
+import { MODERATOR_ROLES } from '../constants/auth.constants';
 import { PERMISSIONS } from '../constants/permissions.constants';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { Role } from '@repo/db';
-import type { RequestUser } from '../types/iam.types';
+import type { RequestUser } from '../types/auth.types';
 import { EmailLocaleParam, type EmailLocale } from '@repo/backend/email';
 import { Auth } from '../decorators/auth.decorator';
 import { AssignUserGroupDto } from '../dto/request/assign-user-group.dto';
