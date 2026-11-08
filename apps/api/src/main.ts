@@ -36,6 +36,12 @@ async function bootstrap() {
     SwaggerModule.createDocument(app, config),
   );
 
+  // Browsers call the API directly with a Bearer header (no cookies), so no
+  // `credentials`. CORS_ORIGINS is comma-separated; unset means no origin allowed.
+  app.enableCors({
+    origin: process.env.CORS_ORIGINS?.split(',').map((o) => o.trim()) ?? false,
+  });
+
   await app.listen(process.env.PORT ?? 3000);
 }
 void bootstrap();
